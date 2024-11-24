@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}User index{% endblock %}
+
+{% block body %}
+{#    {{ dump(users[0].name) }}#}
+{#    {{ dump(usersData) }}#}
+    <div class="bg-gray-100 flex items-center justify-center min-h-screen">
+        <div class="max-w-fit mx-auto px-4">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4 underline decoration-blue-500">User index</h1>
+
+            <a class="addNew" href="{{ path('app_user_new') }}">Create new</a>
+
+            <div {{ react_component('DataTable', {'usersData': usersData}) }}></div>
+        </div>
+    </div>
+
+    {#    <div {{ react_component('DataTable',{'id':user.id,'name':user.name}) }}></div> #}
+
+    {#    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Wallet</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.wallet }}</td>
+                <td>
+                    <a href="{{ path('app_user_show', {'id': user.id}) }}">show</a>
+                    <a href="{{ path('app_user_edit', {'id': user.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table> #}
+
+{% endblock %}

@@ -28,6 +28,10 @@
         "build": "encore production --progress"
     },
     "dependencies": {
-        "@headlessui/react": "^1.7.17"
+        "@emotion/react": "^11.13.5",
+        "@emotion/styled": "^11.13.5",
+        "@headlessui/react": "^1.7.17",
+        "@mui/material": "^6.1.8",
+        "@mui/x-data-grid": "^7.22.3"
     }
 }

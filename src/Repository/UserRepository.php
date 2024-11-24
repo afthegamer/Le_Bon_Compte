@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -15,6 +16,38 @@ class UserRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, User::class);
     }
+
+//    public function findAllForInterface(): array
+//    {
+//        $users = $this->findAll();
+//        $usersArray = [];
+//        foreach ($users as $user) {
+//            $usersArray[] = [
+//                'id' => $user->getId(),   // ID nécessaire pour React DataGrid
+//                'wallet' => $user->getWallet(), // Le champ que tu veux tester
+//                'name' => $user->getName(), // Le champ que tu veux tester
+//            ];
+//        }
+//        return $usersArray;
+//    }
+    public function findAllForInterface(UrlGeneratorInterface $urlGenerator): array
+    {
+        $users = $this->findAll();
+        $usersArray = [];
+        foreach ($users as $user) {
+            $usersArray[] = [
+                'id' => $user->getId(),   // ID nécessaire pour React DataGrid
+                'wallet' => $user->getWallet(), // Existence d'un champ 'wallet'
+                'name' => $user->getName(),
+                'showUrl' => $urlGenerator->generate('app_user_show', ['id' => $user->getId()]),
+                'editUrl' => $urlGenerator->generate('app_user_edit', ['id' => $user->getId()]),
+            ];
+        }
+        return $usersArray;
+    }
+
+
+
 
     //    /**
     //     * @return User[] Returns an array of User objects
