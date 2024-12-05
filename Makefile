@@ -90,7 +90,7 @@ init:
 	docker compose up -d
 	composer install
 	echo "yes" | npm install
-	#echo "yes" | $(CONSOLE) doctrine:migrations:migrate
-	#echo "yes" | $(CONSOLE) doctrine:fixtures:load
+	echo "yes" | $(CONSOLE) doctrine:migrations:migrate
+	echo "yes" | $(CONSOLE) doctrine:fixtures:load
 	$(RUN) dev
 	symfony serve

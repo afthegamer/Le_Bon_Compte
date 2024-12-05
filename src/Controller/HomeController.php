@@ -51,7 +51,7 @@ class HomeController extends AbstractController
 
         // Trier par date en utilisant usort
         usort($combinedList, function($a, $b) {
-            return $a['date'] <=> $b['date']; // Comparaison d'objets DateTime
+            return $b['date'] <=> $a['date']; // Comparaison d'objets DateTime
         });
 
         // Passez $combinedList à la vue
