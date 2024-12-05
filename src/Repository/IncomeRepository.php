@@ -40,4 +40,12 @@ class IncomeRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+    public function findAllByDateAsc(): array
+    {
+        return $this->createQueryBuilder('i')
+            ->orderBy('i.date', 'ASC')
+            ->getQuery()
+            ->getResult()
+            ;
+    }
 }

@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Income{% endblock %}
+
+{% block body %}
+<div class="form">
+    <h1>Edit Income</h1>
+
+    {{ include('income/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_home_index') }}">back to list</a>
+
+    {{ include('income/_delete_form.html.twig') }}
+</div>
+{% endblock %}

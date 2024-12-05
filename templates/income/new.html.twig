@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Income{% endblock %}
+
+{% block body %}
+<div class="form">
+    <h1>Create new Income</h1>
+
+    {{ include('income/_form.html.twig') }}
+
+    <a href="{{ path('app_income_index') }}">back to list</a>
+</div>
+{% endblock %}
