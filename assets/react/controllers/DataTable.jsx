@@ -2,11 +2,11 @@ import * as React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 
-export default function DataTable({ usersData }) {
-    console.log(usersData);
+export default function DataTable({ Data }) {
+    console.log(Data);
     // Générer dynamiquement les colonnes de base
 
-    const baseColumns = Object.keys(usersData[0] || {})
+    const baseColumns = Object.keys(Data[0] || {})
         .filter((key) => !['showUrl', 'editUrl'].includes(key)) // Exclure les colonnes inutiles
         .map((key) => ({
             field: key,
@@ -36,7 +36,7 @@ export default function DataTable({ usersData }) {
     return (
         <Paper sx={{ height: 400, width: '100%' }}>
             <DataGrid
-                rows={usersData} // Données dynamiques
+                rows={Data} // Données dynamiques
                 columns={columns} // Colonnes avec actions
                 initialState={{
                     pagination: { paginationModel: { page: 0, pageSize: 5 } },
