@@ -13,6 +13,19 @@
         {% endblock %}
     </head>
     <body>
-        {% block body %}{% endblock %}
+    <header>
+        {% if app.user %}
+            <p>
+                Vous êtes connecté en tant que {{ app.user.email }} |
+                <a href="{{ path('app_logout') }}">Déconnexion</a>
+            </p>
+        {% else %}
+            <p>
+                <a href="{{ path('app_login') }}">Connexion</a> |
+                <a href="{{ path('app_register') }}">Inscription</a>
+            </p>
+        {% endif %}
+    </header>
+    <main>{% block body %}{% endblock %}</main>
     </body>
 </html>

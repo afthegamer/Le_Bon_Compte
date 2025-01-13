@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen flex items-center justify-center ">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+            <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Connexion</h1>
+
+            {% if error %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ path('app_login') }}" class="space-y-6">
+                <div>
+                    <label for="inputEmail" class="block text-sm font-medium text-gray-700">Adresse Email</label>
+                    <input type="text" name="_username" id="inputEmail"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           value="{{ last_username }}" required autofocus>
+                </div>
+
+                <div>
+                    <label for="inputPassword" class="block text-sm font-medium text-gray-700">Mot de Passe</label>
+                    <input type="password" name="_password" id="inputPassword"
+                           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           required>
+                </div>
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                <div>
+                    <button type="submit"
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Se connecter
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray-600">
+                    Pas encore inscrit ?
+                    <a href="{{ path('app_register') }}" class="text-blue-600 hover:text-blue-500 font-medium">Créez un compte</a>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
