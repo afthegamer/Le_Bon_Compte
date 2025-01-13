@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserEntityRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -44,6 +46,24 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(nullable: true)]
     private ?int $wallet = null;
+
+    /**
+     * @var Collection<int, ExpenseEntity>
+     */
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: ExpenseEntity::class)]
+    private Collection $expense;
+
+    /**
+     * @var Collection<int, IncomeEntity>
+     */
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: IncomeEntity::class)]
+    private Collection $incomeEntities;
+
+    public function __construct()
+    {
+        $this->expense = new ArrayCollection();
+        $this->incomeEntities = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -164,6 +184,66 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     public function setWallet(?int $wallet): static
     {
         $this->wallet = $wallet;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ExpenseEntity>
+     */
+    public function getExpense(): Collection
+    {
+        return $this->expense;
+    }
+
+    public function addExpense(ExpenseEntity $expense): static
+    {
+        if (!$this->expense->contains($expense)) {
+            $this->expense->add($expense);
+            $expense->setUserEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeExpense(ExpenseEntity $expense): static
+    {
+        if ($this->expense->removeElement($expense)) {
+            // set the owning side to null (unless already changed)
+            if ($expense->getUserEntity() === $this) {
+                $expense->setUserEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, IncomeEntity>
+     */
+    public function getIncomeEntities(): Collection
+    {
+        return $this->incomeEntities;
+    }
+
+    public function addIncomeEntity(IncomeEntity $incomeEntity): static
+    {
+        if (!$this->incomeEntities->contains($incomeEntity)) {
+            $this->incomeEntities->add($incomeEntity);
+            $incomeEntity->setUserEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeIncomeEntity(IncomeEntity $incomeEntity): static
+    {
+        if ($this->incomeEntities->removeElement($incomeEntity)) {
+            // set the owning side to null (unless already changed)
+            if ($incomeEntity->getUserEntity() === $this) {
+                $incomeEntity->setUserEntity(null);
+            }
+        }
 
         return $this;
     }
