@@ -5,7 +5,9 @@ namespace App\Form;
 use App\Entity\UserEntity;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\IsTrue;
@@ -42,6 +44,18 @@ class RegistrationFormType extends AbstractType
                         'max' => 4096,
                     ]),
                 ],
+            ])
+            ->add('firstName', TextType::class, [
+                'label' => 'Prénom',
+                'required' => true,
+            ])
+            ->add('lastName', TextType::class, [
+                'label' => 'Nom',
+                'required' => true,
+            ])
+            ->add('wallet', IntegerType::class, [
+                'label' => 'Portefeuille',
+                'required' => false,
             ])
         ;
     }

@@ -14,18 +14,43 @@
             {% endfor %}
 
             {{ form_start(registrationForm, { 'attr': { 'class': 'space-y-6' } }) }}
+
+            <!-- Champ Email -->
             <div>
                 {{ form_label(registrationForm.email, 'Adresse Email', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(registrationForm.email, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(registrationForm.email) }}
             </div>
 
+            <!-- Champ First Name -->
+            <div>
+                {{ form_label(registrationForm.firstName, 'Prénom', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(registrationForm.firstName, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(registrationForm.firstName) }}
+            </div>
+
+            <!-- Champ Last Name -->
+            <div>
+                {{ form_label(registrationForm.lastName, 'Nom', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(registrationForm.lastName, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(registrationForm.lastName) }}
+            </div>
+
+            <!-- Champ Wallet -->
+            <div>
+                {{ form_label(registrationForm.wallet, 'Portefeuille (Optionnel)', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(registrationForm.wallet, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm', 'placeholder': 'Ex : 1000' } }) }}
+                {{ form_errors(registrationForm.wallet) }}
+            </div>
+
+            <!-- Champ Password -->
             <div>
                 {{ form_label(registrationForm.plainPassword, 'Mot de Passe', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(registrationForm.plainPassword, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(registrationForm.plainPassword) }}
             </div>
 
+            <!-- Champ Agree Terms -->
             <div class="flex items-center">
                 {{ form_widget(registrationForm.agreeTerms, { 'attr': { 'class': 'h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded' } }) }}
                 <label for="{{ registrationForm.agreeTerms.vars.id }}" class="ml-2 block text-sm text-gray-700">
@@ -34,14 +59,17 @@
                 {{ form_errors(registrationForm.agreeTerms) }}
             </div>
 
+            <!-- Bouton de soumission -->
             <div>
                 <button type="submit"
                         class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                     S'inscrire
                 </button>
             </div>
+
             {{ form_end(registrationForm) }}
 
+            <!-- Lien vers la page de connexion -->
             <div class="mt-6 text-center">
                 <p class="text-sm text-gray-600">
                     Déjà inscrit ?
