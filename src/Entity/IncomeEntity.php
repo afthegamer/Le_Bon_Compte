@@ -32,6 +32,9 @@ class IncomeEntity
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $date = null;
 
+    #[ORM\ManyToOne(inversedBy: 'income')]
+    private ?UserProfileEntity $userProfileEntity = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -115,6 +118,18 @@ class IncomeEntity
     public function setDate(\DateTimeInterface $date): static
     {
         $this->date = $date;
+
+        return $this;
+    }
+
+    public function getUserProfileEntity(): ?UserProfileEntity
+    {
+        return $this->userProfileEntity;
+    }
+
+    public function setUserProfileEntity(?UserProfileEntity $userProfileEntity): static
+    {
+        $this->userProfileEntity = $userProfileEntity;
 
         return $this;
     }

@@ -59,10 +59,17 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: IncomeEntity::class)]
     private Collection $incomeEntities;
 
+    /**
+     * @var Collection<int, UserProfileEntity>
+     */
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: UserProfileEntity::class)]
+    private Collection $userProfileEntities;
+
     public function __construct()
     {
         $this->expense = new ArrayCollection();
         $this->incomeEntities = new ArrayCollection();
+        $this->userProfileEntities = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -242,6 +249,36 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($incomeEntity->getUserEntity() === $this) {
                 $incomeEntity->setUserEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserProfileEntity>
+     */
+    public function getUserProfileEntities(): Collection
+    {
+        return $this->userProfileEntities;
+    }
+
+    public function addUserProfileEntity(UserProfileEntity $userProfileEntity): static
+    {
+        if (!$this->userProfileEntities->contains($userProfileEntity)) {
+            $this->userProfileEntities->add($userProfileEntity);
+            $userProfileEntity->setUserEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserProfileEntity(UserProfileEntity $userProfileEntity): static
+    {
+        if ($this->userProfileEntities->removeElement($userProfileEntity)) {
+            // set the owning side to null (unless already changed)
+            if ($userProfileEntity->getUserEntity() === $this) {
+                $userProfileEntity->setUserEntity(null);
             }
         }
 
