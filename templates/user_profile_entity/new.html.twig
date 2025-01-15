@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New UserProfileEntity{% endblock %}
+
+{% block body %}
+    <h1>Create new UserProfileEntity</h1>
+
+    {{ include('user_profile_entity/_form.html.twig') }}
+
+    <a href="{{ path('app_user_profile_entity_index') }}">back to list</a>
+{% endblock %}

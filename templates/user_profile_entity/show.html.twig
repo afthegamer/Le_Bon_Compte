@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UserProfileEntity{% endblock %}
+
+{% block body %}
+    <h1>UserProfileEntity</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ user_profile_entity.id }}</td>
+            </tr>
+            <tr>
+                <th>FirstName</th>
+                <td>{{ user_profile_entity.firstName }}</td>
+            </tr>
+            <tr>
+                <th>LastName</th>
+                <td>{{ user_profile_entity.lastName }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_user_profile_entity_index') }}">back to list</a>
+
+    <a href="{{ path('app_user_profile_entity_edit', {'id': user_profile_entity.id}) }}">edit</a>
+
+    {{ include('user_profile_entity/_delete_form.html.twig') }}
+{% endblock %}

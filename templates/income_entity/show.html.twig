@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}IncomeEntity{% endblock %}
+
+{% block body %}
+    <h1>IncomeEntity</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ income_entity.id }}</td>
+            </tr>
+            <tr>
+                <th>Name</th>
+                <td>{{ income_entity.name }}</td>
+            </tr>
+            <tr>
+                <th>Amount</th>
+                <td>{{ income_entity.amount }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{{ income_entity.type }}</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>{{ income_entity.date ? income_entity.date|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_income_entity_index') }}">back to list</a>
+
+    <a href="{{ path('app_income_entity_edit', {'id': income_entity.id}) }}">edit</a>
+
+    {{ include('income_entity/_delete_form.html.twig') }}
+{% endblock %}
