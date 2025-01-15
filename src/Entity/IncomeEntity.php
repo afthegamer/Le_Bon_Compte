@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\IncomeEntityRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: IncomeEntityRepository::class)]
@@ -27,6 +28,9 @@ class IncomeEntity
 
     #[ORM\OneToOne(mappedBy: 'incomeEntity', cascade: ['persist', 'remove'])]
     private ?CategoryEntity $categoryEntity = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private ?\DateTimeInterface $date = null;
 
     public function getId(): ?int
     {
@@ -99,6 +103,18 @@ class IncomeEntity
         }
 
         $this->categoryEntity = $categoryEntity;
+
+        return $this;
+    }
+
+    public function getDate(): ?\DateTimeInterface
+    {
+        return $this->date;
+    }
+
+    public function setDate(\DateTimeInterface $date): static
+    {
+        $this->date = $date;
 
         return $this;
     }
