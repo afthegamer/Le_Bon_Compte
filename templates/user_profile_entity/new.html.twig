@@ -23,13 +23,6 @@
                 {{ form_errors(form.lastName) }}
             </div>
 
-            <!-- Champ UserEntity -->
-            <div>
-                {{ form_label(form.userEntity, 'User Entity', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
-                {{ form_widget(form.userEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 shadow-sm' } }) }}
-                {{ form_errors(form.userEntity) }}
-            </div>
-
             <!-- Bouton de soumission -->
             <div>
                 <button type="submit"

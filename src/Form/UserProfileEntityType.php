@@ -16,10 +16,10 @@ class UserProfileEntityType extends AbstractType
         $builder
             ->add('firstName')
             ->add('lastName')
-            ->add('userEntity', EntityType::class, [
-                'class' => UserEntity::class,
-                'choice_label' => 'id',
-            ])
+//            ->add('userEntity', EntityType::class, [
+//                'class' => UserEntity::class,
+//                'choice_label' => 'id',
+//            ])
         ;
     }
 

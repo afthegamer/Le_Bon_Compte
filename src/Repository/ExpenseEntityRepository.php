@@ -41,23 +41,6 @@ class ExpenseEntityRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
-    public function findAllByDateAsc(): array
-    {
-        return $this->createQueryBuilder('i')
-            ->orderBy('i.date', 'ASC')
-            ->getQuery()
-            ->getResult()
-            ;
-    }
-    public function findAllByUserProfile($userProfile)
-    {
-        return $this->createQueryBuilder('e')
-            ->where('e.userProfileEntity = :userProfile')
-            ->setParameter('userProfile', $userProfile)
-            ->orderBy('e.date', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
     public function findAllByUser(UserEntity $user): array
     {
         return $this->createQueryBuilder('e')

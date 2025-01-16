@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\UserEntity;
 use App\Entity\UserProfileEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -40,4 +41,13 @@ class UserProfileEntityRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+    public function findAllByUser(UserEntity $user): array
+    {
+        return $this->createQueryBuilder('e')
+            ->where('e.userEntity = :user')
+            ->setParameter('user', $user)
+//            ->orderBy('e.date', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

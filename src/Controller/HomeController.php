@@ -20,6 +20,7 @@ class HomeController extends AbstractController
     {
         // Récupérer l'utilisateur connecté
         $user = $this->getUser();
+//        dd($user);
         if (!$user) {
             throw $this->createAccessDeniedException('Vous devez être connecté pour accéder à cette page.');
         }
