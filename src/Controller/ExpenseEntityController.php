@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\ExpenseEntity;
 use App\Form\ExpenseEntityType;
 use App\Repository\ExpenseEntityRepository;
+use App\Service\UserProfileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,12 +21,13 @@ final class ExpenseEntityController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $expenseEntity = new ExpenseEntity();
-        $form = $this->createForm(ExpenseEntityType::class, $expenseEntity);
+        $form = $this->createForm(ExpenseEntityType::class, $expenseEntity, [
+            'connected_user' => $this->getUser(), // Passer l'utilisateur connecté au formulaire
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $user = $this->getUser(); // Récupère l'utilisateur connecté
-            $expenseEntity->setUserEntity($user);
+            $expenseEntity->setUserEntity($this->getUser()); // Associer l'utilisateur connecté
             $entityManager->persist($expenseEntity);
             $entityManager->flush();
 
@@ -36,6 +38,27 @@ final class ExpenseEntityController extends AbstractController
             'form' => $form->createView(),
         ]);
     }
+
+//    #[Route('/new', name: 'app_expense_entity_new', methods: ['GET', 'POST'])]
+//    public function new(Request $request, EntityManagerInterface $entityManager): Response
+//    {
+//        $expenseEntity = new ExpenseEntity();
+//        $form = $this->createForm(ExpenseEntityType::class, $expenseEntity);
+//        $form->handleRequest($request);
+//
+//        if ($form->isSubmitted() && $form->isValid()) {
+//            $user = $this->getUser(); // Récupère l'utilisateur connecté
+//            $expenseEntity->setUserEntity($user);
+//            $entityManager->persist($expenseEntity);
+//            $entityManager->flush();
+//
+//            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+//        }
+//
+//        return $this->render('expense_entity/new.html.twig', [
+//            'form' => $form->createView(),
+//        ]);
+//    }
 
     #[Route('/{id}', name: 'app_expense_entity_show', methods: ['GET'])]
     public function show(ExpenseEntity $expenseEntity,
@@ -78,7 +101,9 @@ final class ExpenseEntityController extends AbstractController
             // Sinon, redirige vers une route par défaut
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
-        $form = $this->createForm(ExpenseEntityType::class, $expenseEntity);
+        $form = $this->createForm(ExpenseEntityType::class, $expenseEntity, [
+            'connected_user' => $this->getUser(), // Passer l'utilisateur connecté au formulaire
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

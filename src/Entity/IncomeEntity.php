@@ -7,7 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: IncomeEntityRepository::class)]
-class IncomeEntity
+class IncomeEntity implements UserRelatedEntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]

@@ -20,7 +20,9 @@ final class IncomeEntityController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $incomeEntity = new IncomeEntity();
-        $form = $this->createForm(IncomeEntityType::class, $incomeEntity);
+        $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
+            'connected_user' => $this->getUser(), // Passer l'utilisateur connecté au formulaire
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -79,7 +81,9 @@ final class IncomeEntityController extends AbstractController
             // Sinon, redirige vers une route par défaut
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
-        $form = $this->createForm(IncomeEntityType::class, $incomeEntity);
+        $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
+            'connected_user' => $this->getUser(), // Passer l'utilisateur connecté au formulaire
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
