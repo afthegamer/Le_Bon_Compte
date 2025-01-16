@@ -17,14 +17,13 @@ final class ExpenseEntityController extends AbstractController
 {
 
     #[Route('/new', name: 'app_expense_entity_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager,): Response
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $expenseEntity = new ExpenseEntity();
         $form = $this->createForm(ExpenseEntityType::class, $expenseEntity);
         $form->handleRequest($request);
-//        dd($form);
+
         if ($form->isSubmitted() && $form->isValid()) {
-            // Associer automatiquement l'utilisateur connecté
             $user = $this->getUser(); // Récupère l'utilisateur connecté
             $expenseEntity->setUserEntity($user);
             $entityManager->persist($expenseEntity);
@@ -34,8 +33,7 @@ final class ExpenseEntityController extends AbstractController
         }
 
         return $this->render('expense_entity/new.html.twig', [
-            'expense_entity' => $expenseEntity,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 

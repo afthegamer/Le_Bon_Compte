@@ -22,10 +22,6 @@ class IncomeEntityType extends AbstractType
             ->add('date', null, [
                 'widget' => 'single_text',
             ])
-            ->add('userEntity', EntityType::class, [
-                'class' => UserEntity::class,
-                'choice_label' => 'id',
-            ])
             ->add('categoryEntity', EntityType::class, [
                 'class' => CategoryEntity::class,
                 'choice_label' => 'id',

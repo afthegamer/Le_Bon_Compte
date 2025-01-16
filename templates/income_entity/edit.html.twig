@@ -3,11 +3,73 @@
 {% block title %}Edit IncomeEntity{% endblock %}
 
 {% block body %}
-    <h1>Edit IncomeEntity</h1>
+    <div class="min-h-screen flex items-center justify-center bg-gray-100 py-8">
+        <div class="w-full max-w-4xl bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Edit IncomeEntity</h1>
 
-    {{ include('income_entity/_form.html.twig', {'button_label': 'Update'}) }}
+            {{ form_start(form, { 'attr': { 'class': 'space-y-6' } }) }}
 
-    <a href="{{ path('app_home_index') }}">back to list</a>
+            <!-- Champ Amount -->
+            <div>
+                {{ form_label(form.amount, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.amount, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.amount) }}
+            </div>
 
-    {{ include('income_entity/_delete_form.html.twig') }}
+            <!-- Champ Name -->
+            <div>
+                {{ form_label(form.name, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.name, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.name) }}
+            </div>
+
+            <!-- Champ Type -->
+            <div>
+                {{ form_label(form.type, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.type, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.type) }}
+            </div>
+
+            <!-- Champ Date -->
+            <div>
+                {{ form_label(form.date, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.date, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.date) }}
+            </div>
+
+            <!-- Champ Category Entity -->
+            <div>
+                {{ form_label(form.categoryEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.categoryEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.categoryEntity) }}
+            </div>
+
+            <!-- Champ User Profile Entity -->
+            <div>
+                {{ form_label(form.userProfileEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.userProfileEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.userProfileEntity) }}
+            </div>
+
+            <div>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Update Income
+                </button>
+            </div>
+
+
+            {{ form_end(form) }}
+
+
+            <div class="mt-6 flex justify-between">
+                <a href="{{ path('app_home_index') }}"
+                   class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700">
+                    Back to List
+                </a>
+
+                {{ include('income_entity/_delete_form.html.twig', { 'attr': { 'class': 'inline' } }) }}
+            </div>
+        </div>
+    </div>
 {% endblock %}

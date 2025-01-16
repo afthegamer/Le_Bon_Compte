@@ -102,6 +102,6 @@ final class IncomeEntityController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('app_income_entity_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
     }
 }

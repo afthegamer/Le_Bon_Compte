@@ -1,38 +1,89 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}IncomeEntity{% endblock %}
+{% block title %}Income Details{% endblock %}
 
 {% block body %}
-    <h1>IncomeEntity</h1>
+    <div class="min-h-screen flex items-center justify-center bg-gray-100 py-8">
+        <div class="w-full max-w-4xl bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Income Details</h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ income_entity.id }}</td>
-            </tr>
-            <tr>
-                <th>Name</th>
-                <td>{{ income_entity.name }}</td>
-            </tr>
-            <tr>
-                <th>Amount</th>
-                <td>{{ income_entity.amount }}</td>
-            </tr>
-            <tr>
-                <th>Type</th>
-                <td>{{ income_entity.type }}</td>
-            </tr>
-            <tr>
-                <th>Date</th>
-                <td>{{ income_entity.date ? income_entity.date|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-        </tbody>
-    </table>
+            <!-- Tableau des détails -->
+            <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+                <tbody>
+                <tr class="border-t border-gray-200">
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Id</th>
+                    <td class="px-4 py-2 text-gray-800">{{ income_entity.id }}</td>
+                </tr>
+                <tr class="border-t border-gray-200">
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Name</th>
+                    <td class="px-4 py-2 text-gray-800">{{ income_entity.name }}</td>
+                </tr>
+                <tr class="border-t border-gray-200">
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Amount</th>
+                    <td class="px-4 py-2 text-gray-800">{{ income_entity.amount }}</td>
+                </tr>
+                <tr class="border-t border-gray-200">
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Type</th>
+                    <td class="px-4 py-2 text-gray-800">{{ income_entity.type }}</td>
+                </tr>
+                <tr class="border-t border-gray-200">
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Date</th>
+                    <td class="px-4 py-2 text-gray-800">
+                        {{ income_entity.date ? income_entity.date|date('Y-m-d H:i:s') : 'N/A' }}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
 
-    <a href="{{ path('app_home_index') }}">back to list</a>
+            <div>
+                <a href="{{ path('app_income_entity_edit', {'id': income_entity.id}) }}">
+                    <button type="button"
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        edit
+                    </button>
+                </a>
+            </div>
 
-    <a href="{{ path('app_income_entity_edit', {'id': income_entity.id}) }}">edit</a>
 
-    {{ include('income_entity/_delete_form.html.twig') }}
+            <div class="mt-6 flex justify-between">
+                <!-- Lien vers la liste -->
+                <a href="{{ path('app_home_index') }}"
+                   class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700">
+                    Back to List
+                </a>
+
+                <!-- Formulaire de suppression -->
+                {{ include('income_entity/_delete_form.html.twig', { 'attr': { 'class': 'inline' } }) }}
+            </div>
+
+
+
+{#
+            <!-- Boutons d'actions -->
+            <div class="flex justify-between mt-6">
+                <!-- Retour à la liste -->
+                <a href="{{ path('app_home_index') }}"
+                   class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500">
+                    Back to List
+                </a>
+
+                <!-- Édition -->
+                <a href="{{ path('app_income_entity_edit', {'id': income_entity.id}) }}"
+                   class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
+                    Edit
+                </a>
+
+                <!-- Suppression -->
+                <form method="post" action="{{ path('app_income_entity_delete', {'id': income_entity.id}) }}"
+                      onsubmit="return confirm('Are you sure you want to delete this item?');"
+                      class="inline-block">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ income_entity.id) }}">
+                    <button type="submit"
+                            class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500">
+                        Delete
+                    </button>
+                </form>
+            </div>#}
+        </div>
+    </div>
 {% endblock %}
