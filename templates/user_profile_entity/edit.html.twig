@@ -1,13 +1,55 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit UserProfileEntity{% endblock %}
+{% block title %}Edit User Profile{% endblock %}
 
 {% block body %}
-    <h1>Edit UserProfileEntity</h1>
+    <div class="min-h-screen flex items-center justify-center py-8 bg-gray-100">
+        <div class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Edit User Profile</h1>
 
-    {{ include('user_profile_entity/_form.html.twig', {'button_label': 'Update'}) }}
+            {{ form_start(form, { 'attr': { 'class': 'space-y-6' } }) }}
 
-    <a href="{{ path('app_user_profile_entity_index') }}">back to list</a>
+            <!-- Champ First Name -->
+            <div>
+                {{ form_label(form.firstName, 'First Name', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.firstName, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 shadow-sm', 'placeholder': 'Enter your first name' } }) }}
+                {{ form_errors(form.firstName) }}
+            </div>
 
-    {{ include('user_profile_entity/_delete_form.html.twig') }}
+            <!-- Champ Last Name -->
+            <div>
+                {{ form_label(form.lastName, 'Last Name', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.lastName, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 shadow-sm', 'placeholder': 'Enter your last name' } }) }}
+                {{ form_errors(form.lastName) }}
+            </div>
+
+            <!-- Champ User Entity -->
+            <div>
+                {{ form_label(form.userEntity, 'User Entity', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.userEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 shadow-sm' } }) }}
+                {{ form_errors(form.userEntity) }}
+            </div>
+
+            <!-- Bouton de mise à jour -->
+            <div>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Update
+                </button>
+            </div>
+
+            {{ form_end(form) }}
+
+            <div class="mt-6 flex justify-between">
+                <!-- Lien vers la liste -->
+                <a href="{{ path('app_user_profile_entity_index') }}"
+                   class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700">
+                    Back to List
+                </a>
+
+                <!-- Formulaire de suppression -->
+                {{ include('user_profile_entity/_delete_form.html.twig', { 'attr': { 'class': 'inline' } }) }}
+            </div>
+        </div>
+    </div>
 {% endblock %}

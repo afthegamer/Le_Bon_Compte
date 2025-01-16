@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/user/profile/entity')]
+#[Route('/user_profile/')]
 final class UserProfileEntityController extends AbstractController
 {
     #[Route(name: 'app_user_profile_entity_index', methods: ['GET'])]
@@ -27,6 +27,7 @@ final class UserProfileEntityController extends AbstractController
     {
         $userProfileEntity = new UserProfileEntity();
         $form = $this->createForm(UserProfileEntityType::class, $userProfileEntity);
+//        dd($form);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

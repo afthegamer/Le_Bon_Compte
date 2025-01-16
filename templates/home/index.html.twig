@@ -3,18 +3,29 @@
 {% block title %}Hello HomeController!{% endblock %}
 
 {% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-6xl px-4 py-6 bg-white shadow-md rounded-lg">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Data Table</h1>
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+            <!-- Boutons alignés -->
+            <div class="flex space-x-4 mb-6">
+                <!-- Bouton pour ajouter une dépense -->
+                <a href="{{ path('app_expense_entity_new') }}"
+                   class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-center">
+                    Add New Expense
+                </a>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>/home/braddos/symfony-react-starter/src/Controller/HomeController.php</code></li>
-        <li>Your template at <code>/home/braddos/symfony-react-starter/templates/home/index.html.twig</code></li>
-    </ul>
-</div>
+                <!-- Bouton pour ajouter un revenu -->
+                <a href="{{ path('app_income_entity_new') }}"
+                   class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center">
+                    Add New Income
+                </a>
+            </div>
+
+            <!-- Conteneur pour le composant React -->
+            <div class="overflow-hidden">
+                <div {{ react_component('DataTable', {'Data': combinedList}) }}></div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

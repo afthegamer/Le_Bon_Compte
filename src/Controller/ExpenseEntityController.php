@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/expense/entity')]
+#[Route('/expense')]
 final class ExpenseEntityController extends AbstractController
 {
     #[Route(name: 'app_expense_entity_index', methods: ['GET'])]
@@ -27,6 +27,7 @@ final class ExpenseEntityController extends AbstractController
     {
         $expenseEntity = new ExpenseEntity();
         $form = $this->createForm(ExpenseEntityType::class, $expenseEntity);
+//        dd($form);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

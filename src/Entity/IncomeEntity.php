@@ -23,7 +23,8 @@ class IncomeEntity
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $type = null;
 
-    #[ORM\ManyToOne(inversedBy: 'incomeEntities')]
+    #[ORM\ManyToOne(targetEntity: UserEntity::class,inversedBy: 'incomeEntities')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?UserEntity $userEntity = null;
 
     #[ORM\OneToOne(mappedBy: 'incomeEntity', cascade: ['persist', 'remove'])]

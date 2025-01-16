@@ -23,7 +23,8 @@ class ExpenseEntity
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $type = null;
 
-    #[ORM\ManyToOne(inversedBy: 'expense')]
+    #[ORM\ManyToOne(targetEntity:UserEntity::class, inversedBy: 'expense')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?UserEntity $userEntity = null;
 
     #[ORM\OneToOne(mappedBy: 'expenseEntity', cascade: ['persist', 'remove'])]

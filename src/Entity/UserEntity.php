@@ -284,4 +284,22 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+    /**
+     * @ORM\OneToOne(targetEntity=UserProfileEntity::class, inversedBy="user")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $userProfileEntity;
+
+    public function getUserProfileEntity(): ?UserProfileEntity
+    {
+        return $this->userProfileEntity;
+    }
+
+    public function setUserProfileEntity(?UserProfileEntity $userProfileEntity): self
+    {
+        $this->userProfileEntity = $userProfileEntity;
+
+        return $this;
+    }
+
 }
