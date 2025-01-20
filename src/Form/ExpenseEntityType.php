@@ -8,6 +8,7 @@ use App\Entity\UserProfileEntity;
 use App\Service\UserProfileService;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -32,9 +33,10 @@ class ExpenseEntityType extends AbstractType
             ->add('date', null, [
                 'widget' => 'single_text',
             ])
-            ->add('categoryEntity', EntityType::class, [
-                'class' => CategoryEntity::class,
-                'choice_label' => 'id',
+            ->add('categoryEntity', TextType::class, [
+                'mapped' => false, // Ce champ ne correspond pas directement à une propriété
+                'required' => true,
+                'label' => 'Catégorie',
             ])
             ->add('userProfileEntity', EntityType::class, [
                 'class' => UserProfileEntity::class,

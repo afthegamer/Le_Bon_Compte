@@ -7,8 +7,10 @@ use App\Entity\IncomeEntity;
 use App\Entity\UserEntity;
 use App\Entity\UserProfileEntity;
 use App\Service\UserProfileService;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -32,9 +34,10 @@ class IncomeEntityType extends AbstractType
             ->add('date', null, [
                 'widget' => 'single_text',
             ])
-            ->add('categoryEntity', EntityType::class, [
-                'class' => CategoryEntity::class,
-                'choice_label' => 'name',
+            ->add('categoryEntity', TextType::class, [
+                'mapped' => false, // Ce champ ne correspond pas directement à une propriété
+                'required' => true,
+                'label' => 'Catégorie',
             ])
             ->add('userProfileEntity', EntityType::class, [
                 'class' => UserProfileEntity::class,

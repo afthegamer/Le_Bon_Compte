@@ -40,8 +40,14 @@
             <!-- Champ Category Entity -->
             <div>
                 {{ form_label(form.categoryEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
-                {{ form_widget(form.categoryEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
-                {{ form_errors(form.categoryEntity) }}
+                <div {{ react_component('CategoryInput', {
+                    predefinedCategories: categories,
+                    inputName: form.categoryEntity.vars.full_name
+                }) }}></div>
+
+                <!-- Champ masqué pour Symfony -->
+                {{ form_widget(form.categoryEntity, { 'attr': { 'style': 'display: none;' } }) }}
+
             </div>
 
             <!-- Champ User Profile Entity -->

@@ -70,6 +70,7 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
         $this->expense = new ArrayCollection();
         $this->incomeEntities = new ArrayCollection();
         $this->userProfileEntities = new ArrayCollection();
+        $this->categoryEntities = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -290,6 +291,12 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
      */
     private $userProfileEntity;
 
+    /**
+     * @var Collection<int, CategoryEntity>
+     */
+    #[ORM\OneToMany(mappedBy: 'users', targetEntity: CategoryEntity::class)]
+    private Collection $categoryEntities;
+
     public function getUserProfileEntity(): ?UserProfileEntity
     {
         return $this->userProfileEntity;
@@ -298,6 +305,36 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUserProfileEntity(?UserProfileEntity $userProfileEntity): self
     {
         $this->userProfileEntity = $userProfileEntity;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, CategoryEntity>
+     */
+    public function getCategoryEntities(): Collection
+    {
+        return $this->categoryEntities;
+    }
+
+    public function addCategoryEntity(CategoryEntity $categoryEntity): static
+    {
+        if (!$this->categoryEntities->contains($categoryEntity)) {
+            $this->categoryEntities->add($categoryEntity);
+            $categoryEntity->setUsers($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCategoryEntity(CategoryEntity $categoryEntity): static
+    {
+        if ($this->categoryEntities->removeElement($categoryEntity)) {
+            // set the owning side to null (unless already changed)
+            if ($categoryEntity->getUsers() === $this) {
+                $categoryEntity->setUsers(null);
+            }
+        }
 
         return $this;
     }

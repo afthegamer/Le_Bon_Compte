@@ -40,8 +40,16 @@
             <!-- Champ Category Entity -->
             <div>
                 {{ form_label(form.categoryEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
-                {{ form_widget(form.categoryEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
-                {{ form_errors(form.categoryEntity) }}
+                <div {{ react_component('CategoryInput', {
+                    predefinedCategories: categories,
+                    inputName: form.categoryEntity.vars.full_name,
+                    currentCategory: currentCategory
+                }) }}></div>
+
+
+                <!-- Champ masqué pour Symfony -->
+                {{ form_widget(form.categoryEntity, { 'attr': { 'style': 'display: none;' } }) }}
+
             </div>
 
             <!-- Champ User Profile Entity -->
@@ -52,13 +60,12 @@
             </div>
 
             <div>
-                <a href="{{ path('app_expense_entity_edit', {'id': expense_entity.id}) }}">
-                    <button type="button"
-                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        Update Expense
-                    </button>
-                </a>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Update Income
+                </button>
             </div>
+            {{ form_end(form) }}
 
 
             <div class="mt-6 flex justify-between">
@@ -72,21 +79,6 @@
                 {{ include('expense_entity/_delete_form.html.twig', { 'attr': { 'class': 'inline' } }) }}
             </div>
 
-
-
-            {#<!-- Boutons d'action -->
-            <div class="flex justify-between mt-6">
-                <a href="{{ path('app_home_index') }}"
-                   class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500">
-                    Back to List
-                </a>
-                <button type="submit"
-                        class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500">
-                    Update Expense
-                </button>
-            </div>#}
-
-            {{ form_end(form) }}
         </div>
     </div>
 {% endblock %}

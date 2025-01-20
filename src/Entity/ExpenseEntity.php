@@ -23,11 +23,11 @@ class ExpenseEntity implements UserRelatedEntityInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $type = null;
 
-    #[ORM\ManyToOne(targetEntity:UserEntity::class, inversedBy: 'expense')]
+    #[ORM\ManyToOne(targetEntity: UserEntity::class, inversedBy: 'expense')]
     #[ORM\JoinColumn(nullable: false)]
     private ?UserEntity $userEntity = null;
 
-    #[ORM\OneToOne(mappedBy: 'expenseEntity', cascade: ['persist', 'remove'])]
+    #[ORM\ManyToOne(targetEntity: CategoryEntity::class, inversedBy: 'expenseEntity')]
     private ?CategoryEntity $categoryEntity = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
@@ -96,16 +96,6 @@ class ExpenseEntity implements UserRelatedEntityInterface
 
     public function setCategoryEntity(?CategoryEntity $categoryEntity): static
     {
-        // unset the owning side of the relation if necessary
-        if ($categoryEntity === null && $this->categoryEntity !== null) {
-            $this->categoryEntity->setExpenseEntity(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($categoryEntity !== null && $categoryEntity->getExpenseEntity() !== $this) {
-            $categoryEntity->setExpenseEntity($this);
-        }
-
         $this->categoryEntity = $categoryEntity;
 
         return $this;

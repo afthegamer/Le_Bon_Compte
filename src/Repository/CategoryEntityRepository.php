@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\CategoryEntity;
+use App\Entity\UserEntity;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -40,4 +41,12 @@ class CategoryEntityRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+    public function findByUser(UserEntity $user): array
+    {
+        return $this->createQueryBuilder('c')
+            ->where('c.userEntity = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -18,11 +18,11 @@ class CategoryEntity
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\OneToOne(inversedBy: 'categoryEntity', cascade: ['persist', 'remove'])]
-    private ?IncomeEntity $incomeEntity = null;
+    #[ORM\OneToMany(mappedBy: 'categoryEntity', targetEntity: IncomeEntity::class)]
+    private Collection $incomeEntity;
 
-    #[ORM\OneToOne(inversedBy: 'categoryEntity', cascade: ['persist', 'remove'])]
-    private ?ExpenseEntity $expenseEntity = null;
+    #[ORM\OneToMany(mappedBy: 'categoryEntity', targetEntity: ExpenseEntity::class)]
+    private Collection $expenseEntity;
 
     /**
      * @var Collection<int, SubcategoryEntity>
@@ -30,9 +30,14 @@ class CategoryEntity
     #[ORM\OneToMany(mappedBy: 'categoryEntity', targetEntity: SubcategoryEntity::class)]
     private Collection $subcategoryEntities;
 
+    #[ORM\ManyToOne(targetEntity: UserEntity::class, inversedBy: 'categoryEntities')]
+    private ?UserEntity $userEntity = null;
+
     public function __construct()
     {
         $this->subcategoryEntities = new ArrayCollection();
+        $this->incomeEntity = new ArrayCollection();
+        $this->expenseEntity = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -52,26 +57,54 @@ class CategoryEntity
         return $this;
     }
 
-    public function getIncomeEntity(): ?IncomeEntity
+    public function getIncomeEntity(): Collection
     {
         return $this->incomeEntity;
     }
 
-    public function setIncomeEntity(?IncomeEntity $incomeEntity): static
+    public function addIncomeEntity(IncomeEntity $incomeEntity): static
     {
-        $this->incomeEntity = $incomeEntity;
+        if (!$this->incomeEntity->contains($incomeEntity)) {
+            $this->incomeEntity->add($incomeEntity);
+            $incomeEntity->setCategoryEntity($this);
+        }
 
         return $this;
     }
 
-    public function getExpenseEntity(): ?ExpenseEntity
+    public function removeIncomeEntity(IncomeEntity $incomeEntity): static
+    {
+        if ($this->incomeEntity->removeElement($incomeEntity)) {
+            if ($incomeEntity->getCategoryEntity() === $this) {
+                $incomeEntity->setCategoryEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getExpenseEntity(): Collection
     {
         return $this->expenseEntity;
     }
 
-    public function setExpenseEntity(?ExpenseEntity $expenseEntity): static
+    public function addExpenseEntity(ExpenseEntity $expenseEntity): static
     {
-        $this->expenseEntity = $expenseEntity;
+        if (!$this->expenseEntity->contains($expenseEntity)) {
+            $this->expenseEntity->add($expenseEntity);
+            $expenseEntity->setCategoryEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeExpenseEntity(ExpenseEntity $expenseEntity): static
+    {
+        if ($this->expenseEntity->removeElement($expenseEntity)) {
+            if ($expenseEntity->getCategoryEntity() === $this) {
+                $expenseEntity->setCategoryEntity(null);
+            }
+        }
 
         return $this;
     }
@@ -97,12 +130,22 @@ class CategoryEntity
     public function removeSubcategoryEntity(SubcategoryEntity $subcategoryEntity): static
     {
         if ($this->subcategoryEntities->removeElement($subcategoryEntity)) {
-            // set the owning side to null (unless already changed)
             if ($subcategoryEntity->getCategoryEntity() === $this) {
                 $subcategoryEntity->setCategoryEntity(null);
             }
         }
 
+        return $this;
+    }
+
+    public function getUserEntity(): ?UserEntity
+    {
+        return $this->userEntity;
+    }
+
+    public function setUserEntity(?UserEntity $userEntity): static
+    {
+        $this->userEntity = $userEntity;
         return $this;
     }
 }

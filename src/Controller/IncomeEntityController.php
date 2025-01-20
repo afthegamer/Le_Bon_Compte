@@ -2,9 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\CategoryEntity;
 use App\Entity\IncomeEntity;
 use App\Form\IncomeEntityType;
 use App\Repository\IncomeEntityRepository;
+use App\Service\CategoryService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,30 +19,49 @@ final class IncomeEntityController extends AbstractController
 {
 
     #[Route('/new', name: 'app_income_entity_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CategoryService $categoryService
+    ): Response {
+        $user = $this->getUser();
+
+        if (!$user) {
+            throw $this->createAccessDeniedException('Vous devez être connecté pour créer un revenu.');
+        }
+
         $incomeEntity = new IncomeEntity();
+
+        // Récupérer les catégories fusionnées
+        $categories = $categoryService->getMergedCategories($user);
+
+        // Créer le formulaire
         $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
-            'connected_user' => $this->getUser(), // Passer l'utilisateur connecté au formulaire
+            'connected_user' => $user,
         ]);
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Associer automatiquement l'utilisateur connecté
-            $user = $this->getUser(); // Récupère l'utilisateur connecté
+            $categoryName = $form->get('categoryEntity')->getData();
+
+            // Vérifier ou créer la catégorie
+            $category = $categoryService->findOrCreateCategory($categoryName, $user);
+
+            $incomeEntity->setCategoryEntity($category);
             $incomeEntity->setUserEntity($user);
+
             $entityManager->persist($incomeEntity);
             $entityManager->flush();
 
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
-
         return $this->render('income_entity/new.html.twig', [
             'income_entity' => $incomeEntity,
-            'form' => $form,
+            'form' => $form->createView(),
+            'categories' => $categories,
         ]);
     }
-
     #[Route('/{id}', name: 'app_income_entity_show', methods: ['GET'])]
     public function show(IncomeEntity $incomeEntity,
                          RequestStack $requestStack): Response
@@ -64,29 +85,43 @@ final class IncomeEntityController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_income_entity_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request,
-                         IncomeEntity $incomeEntity,
-                         EntityManagerInterface $entityManager,
-                         RequestStack $requestStack): Response
-    {
-        if ($incomeEntity->getUserEntity() !== $this->getUser()) {
-            $request = $requestStack->getCurrentRequest();
-            $referer = $request->headers->get('referer');
+    public function edit(
+        Request $request,
+        IncomeEntity $incomeEntity,
+        EntityManagerInterface $entityManager,
+        RequestStack $requestStack,
+        CategoryService $categoryService
+    ): Response {
+        $user = $this->getUser();
 
-            if ($referer) {
-                // Redirige vers la page précédente si disponible
-                return $this->redirect($referer);
-            }
-
-            // Sinon, redirige vers une route par défaut
-            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+        if ($incomeEntity->getUserEntity() !== $user) {
+            $referer = $requestStack->getCurrentRequest()->headers->get('referer');
+            return $referer
+                ? $this->redirect($referer)
+                : $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
+
+        // Récupérer les catégories fusionnées
+        $categories = $categoryService->getMergedCategories($user);
+
+        // Passer la catégorie actuelle associée à React
+        $currentCategory = $incomeEntity->getCategoryEntity() ? $incomeEntity->getCategoryEntity()->getName() : '';
+
+        // Créer le formulaire
         $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
-            'connected_user' => $this->getUser(), // Passer l'utilisateur connecté au formulaire
+            'connected_user' => $user,
         ]);
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $categoryName = $form->get('categoryEntity')->getData();
+
+            // Vérifier ou créer la catégorie
+            $category = $categoryService->findOrCreateCategory($categoryName, $user);
+
+            $incomeEntity->setCategoryEntity($category);
+
             $entityManager->flush();
 
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
@@ -94,7 +129,9 @@ final class IncomeEntityController extends AbstractController
 
         return $this->render('income_entity/edit.html.twig', [
             'income_entity' => $incomeEntity,
-            'form' => $form,
+            'form' => $form->createView(),
+            'categories' => $categories,
+            'currentCategory' => $currentCategory, // Passer la catégorie actuelle
         ]);
     }
 
