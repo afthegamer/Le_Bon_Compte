@@ -7,6 +7,7 @@ use App\Entity\IncomeEntity;
 use App\Form\IncomeEntityType;
 use App\Repository\IncomeEntityRepository;
 use App\Service\CategoryService;
+use App\Service\SubCategoryService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,7 +23,8 @@ final class IncomeEntityController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $entityManager,
-        CategoryService $categoryService
+        CategoryService $categoryService,
+        SubCategoryService $subCategoryService // Ajout du service pour les sous-catégories
     ): Response {
         $user = $this->getUser();
 
@@ -48,6 +50,12 @@ final class IncomeEntityController extends AbstractController
             // Vérifier ou créer la catégorie
             $category = $categoryService->findOrCreateCategory($categoryName, $user);
 
+            // Gestion de la sous-catégorie
+            $subCategoryName = $form->get('subcategoryEntity')->getData();
+            if ($subCategoryName) {
+                $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
+            }
+
             $incomeEntity->setCategoryEntity($category);
             $incomeEntity->setUserEntity($user);
 
@@ -56,12 +64,26 @@ final class IncomeEntityController extends AbstractController
 
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
+
+        // Sous-catégories dynamiques (en fonction de la première catégorie par défaut)
+        $defaultCategory = isset($categories[0])
+            ? $entityManager->getRepository(CategoryEntity::class)->findOneBy(['name' => $categories[0]])
+            : null;
+
+        $subcategories = $defaultCategory
+            ? $subCategoryService->getMergedSubCategories($defaultCategory)
+            : [];
+
+
         return $this->render('income_entity/new.html.twig', [
-            'income_entity' => $incomeEntity,
             'form' => $form->createView(),
+            'income_entity' => $incomeEntity,
             'categories' => $categories,
+            'selectedCategory' =>  null, // Ajoute la première catégorie comme sélectionnée par défaut
+            'subcategories' => $subcategories, // Ajout des sous-catégories pour React
         ]);
     }
+
     #[Route('/{id}', name: 'app_income_entity_show', methods: ['GET'])]
     public function show(IncomeEntity $incomeEntity,
                          RequestStack $requestStack): Response
@@ -90,7 +112,8 @@ final class IncomeEntityController extends AbstractController
         IncomeEntity $incomeEntity,
         EntityManagerInterface $entityManager,
         RequestStack $requestStack,
-        CategoryService $categoryService
+        CategoryService $categoryService,
+        SubCategoryService $subCategoryService // Ajout du service pour les sous-catégories
     ): Response {
         $user = $this->getUser();
 
@@ -104,8 +127,11 @@ final class IncomeEntityController extends AbstractController
         // Récupérer les catégories fusionnées
         $categories = $categoryService->getMergedCategories($user);
 
-        // Passer la catégorie actuelle associée à React
-        $currentCategory = $incomeEntity->getCategoryEntity() ? $incomeEntity->getCategoryEntity()->getName() : '';
+        // Récupérer les sous-catégories de la catégorie actuelle
+        $currentCategory = $incomeEntity->getCategoryEntity();
+        $subcategories = $currentCategory
+            ? $subCategoryService->getMergedSubCategories($currentCategory)
+            : [];
 
         // Créer le formulaire
         $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
@@ -120,6 +146,12 @@ final class IncomeEntityController extends AbstractController
             // Vérifier ou créer la catégorie
             $category = $categoryService->findOrCreateCategory($categoryName, $user);
 
+            // Gestion de la sous-catégorie
+            $subCategoryName = $form->get('subcategoryEntity')->getData();
+            if ($subCategoryName) {
+                $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
+            }
+
             $incomeEntity->setCategoryEntity($category);
 
             $entityManager->flush();
@@ -131,10 +163,10 @@ final class IncomeEntityController extends AbstractController
             'income_entity' => $incomeEntity,
             'form' => $form->createView(),
             'categories' => $categories,
-            'currentCategory' => $currentCategory, // Passer la catégorie actuelle
+            'currentCategory' => $currentCategory ? $currentCategory->getName() : '',
+            'subcategories' => $subcategories, // Ajout des sous-catégories pour React
         ]);
     }
-
     #[Route('/{id}', name: 'app_income_entity_delete', methods: ['POST'])]
     public function delete(Request $request, IncomeEntity $incomeEntity, EntityManagerInterface $entityManager): Response
     {

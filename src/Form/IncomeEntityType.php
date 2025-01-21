@@ -39,6 +39,11 @@ class IncomeEntityType extends AbstractType
                 'required' => true,
                 'label' => 'Catégorie',
             ])
+            ->add('subcategoryEntity', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'Sous-catégorie',
+            ])
             ->add('userProfileEntity', EntityType::class, [
                 'class' => UserProfileEntity::class,
                 'choices' => $this->userProfileService->getUserProfiles($connectedUser),
@@ -47,13 +52,6 @@ class IncomeEntityType extends AbstractType
                 },
                 'label' => 'Assign to Profile',
             ]);
-//            ->add('userProfileEntity', EntityType::class, [
-//                'class' => UserProfileEntity::class,
-//                'choices' => $this->userProfileService->getUserProfiles($connectedUser),
-//                'choice_label' => 'firstName', // Affiche le prénom des profils
-//                'label' => 'Assign to Profile',
-//            ]);
-        ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
