@@ -75,6 +75,7 @@ final class IncomeEntityController extends AbstractController
             : [];
 
 
+        //dd($categories);
         return $this->render('income_entity/new.html.twig', [
             'form' => $form->createView(),
             'income_entity' => $incomeEntity,

@@ -42,27 +42,16 @@
                 {{ form_label(form.categoryEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 <div {{ react_component('CategoryInput', {
                     predefinedCategories: categories,
-                    inputName: form.categoryEntity.vars.full_name
+                    inputName: form.categoryEntity.vars.full_name,
+                    subcatInputName: form.subcategoryEntity.vars.full_name
                 }) }}></div>
 
                 <!-- Champ masqué pour Symfony -->
                 {{ form_widget(form.categoryEntity, { 'attr': { 'style': 'display: none;' } }) }}
-
-            </div>
-            <!-- Champ SubCategory Entity -->
-            <div>
-                {{ form_label(form.subcategoryEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
-                <div {{ react_component('SubCategoryInput', {
-                    inputName: form.subcategoryEntity.vars.full_name,
-                    selectedCategory: selectedCategory
-                }) }}></div>
-
-                <!-- Champ masqué pour Symfony -->
                 {{ form_widget(form.subcategoryEntity, { 'attr': { 'style': 'display: none;' } }) }}
 
-
-
             </div>
+
 
             <!-- Champ User Profile Entity -->
             <div>
