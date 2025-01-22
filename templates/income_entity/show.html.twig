@@ -27,6 +27,10 @@
                     <td class="px-4 py-2 text-gray-800">{{ income_entity.type }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">user cause dépense</th>
+                    <td class="px-4 py-2 text-gray-800">{{ income_entity.userProfileEntity.firstName }} {{ income_entity.userProfileEntity.lastName }}</td>
+                </tr>
+                <tr class="border-t border-gray-200">
                     <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Date</th>
                     <td class="px-4 py-2 text-gray-800">
                         {{ income_entity.date ? income_entity.date|date('Y-m-d H:i:s') : 'N/A' }}
