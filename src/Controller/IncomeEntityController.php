@@ -2,10 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\CategoryEntity;
 use App\Entity\IncomeEntity;
 use App\Form\IncomeEntityType;
-use App\Repository\IncomeEntityRepository;
 use App\Service\CategoryService;
 use App\Service\SubCategoryService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,7 +18,11 @@ final class IncomeEntityController extends AbstractController
 {
 
     #[Route('/new', name: 'app_income_entity_new', methods: ['GET', 'POST'])]
-    public function new(Request $request,EntityManagerInterface $entityManager, CategoryService $categoryService, SubCategoryService $subCategoryService
+    public function new(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        CategoryService $categoryService,
+        SubCategoryService $subCategoryService
     ): Response {
         $user = $this->getUser();
 

@@ -6,6 +6,7 @@ use App\Entity\ExpenseEntity;
 use App\Form\ExpenseEntityType;
 use App\Repository\ExpenseEntityRepository;
 use App\Service\CategoryService;
+use App\Service\SubCategoryService;
 use App\Service\UserProfileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,12 +23,13 @@ final class ExpenseEntityController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $entityManager,
-        CategoryService $categoryService
+        CategoryService $categoryService,
+        SubCategoryService $subCategoryService
     ): Response {
         $user = $this->getUser();
 
         if (!$user) {
-            throw $this->createAccessDeniedException('Vous devez être connecté pour créer une dépense.');
+            throw $this->createAccessDeniedException('Vous devez être connecté pour créer un revenu.');
         }
 
         $expenseEntity = new ExpenseEntity();
@@ -48,18 +50,25 @@ final class ExpenseEntityController extends AbstractController
             // Vérifier ou créer la catégorie
             $category = $categoryService->findOrCreateCategory($categoryName, $user);
 
+            // Gestion de la sous-catégorie
+            $subCategoryName = $form->get('subcategoryEntity')->getData();
+            if ($subCategoryName) {
+                $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
+                $expenseEntity->setSubcategoryEntity($subcategory);
+            }
+
             $expenseEntity->setCategoryEntity($category);
             $expenseEntity->setUserEntity($user);
 
             $entityManager->persist($expenseEntity);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_home_index');
         }
 
         return $this->render('expense_entity/new.html.twig', [
             'form' => $form->createView(),
-            'categories' => $categories, // Passer les catégories fusionnées
+            'categories' => $categories,
         ]);
     }
 
@@ -92,7 +101,8 @@ final class ExpenseEntityController extends AbstractController
         ExpenseEntity $expenseEntity,
         EntityManagerInterface $entityManager,
         RequestStack $requestStack,
-        CategoryService $categoryService
+        CategoryService $categoryService,
+        SubCategoryService $subCategoryService // Ajout pour gérer la sous-catégorie
     ): Response {
         $user = $this->getUser();
 
@@ -108,6 +118,7 @@ final class ExpenseEntityController extends AbstractController
 
         // Passer la catégorie actuelle associée à React
         $currentCategory = $expenseEntity->getCategoryEntity() ? $expenseEntity->getCategoryEntity()->getName() : '';
+        $currentSubcategory = $expenseEntity->getSubcategoryEntity() ? $expenseEntity->getSubcategoryEntity()->getName() : '';
 
         // Créer le formulaire
         $form = $this->createForm(ExpenseEntityType::class, $expenseEntity, [
@@ -117,12 +128,27 @@ final class ExpenseEntityController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Gestion de la catégorie
             $categoryName = $form->get('categoryEntity')->getData();
+            if ($categoryName) {
+                $category = $categoryService->findOrCreateCategory($categoryName, $user);
+                $expenseEntity->setCategoryEntity($category);
+            } else {
+                // Ne réinitialisez la catégorie que si explicitement vide
+                if (!$expenseEntity->getCategoryEntity()) {
+                    $expenseEntity->setCategoryEntity(null);
+                }
+            }
 
-            // Vérifier ou créer la catégorie
-            $category = $categoryService->findOrCreateCategory($categoryName, $user);
-
-            $expenseEntity->setCategoryEntity($category);
+            // Gestion de la sous-catégorie
+            $subCategoryName = $form->get('subcategoryEntity')->getData();
+            if ($subCategoryName) {
+                $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $expenseEntity->getCategoryEntity());
+                $expenseEntity->setSubcategoryEntity($subcategory);
+            } else {
+                // Réinitialisez uniquement la sous-catégorie
+                $expenseEntity->setSubcategoryEntity(null);
+            }
 
             $entityManager->flush();
 
@@ -133,7 +159,8 @@ final class ExpenseEntityController extends AbstractController
             'expense_entity' => $expenseEntity,
             'form' => $form->createView(),
             'categories' => $categories,
-            'currentCategory' => $currentCategory, // Passer la catégorie actuelle
+            'currentCategory' => $currentCategory,
+            'currentSubcategory' => $currentSubcategory,
         ]);
     }
 

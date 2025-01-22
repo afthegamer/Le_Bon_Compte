@@ -35,8 +35,13 @@ class ExpenseEntityType extends AbstractType
             ])
             ->add('categoryEntity', TextType::class, [
                 'mapped' => false, // Ce champ ne correspond pas directement à une propriété
-                'required' => true,
+                'required' => false,
                 'label' => 'Catégorie',
+            ])
+            ->add('subcategoryEntity', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'Sous-catégorie',
             ])
             ->add('userProfileEntity', EntityType::class, [
                 'class' => UserProfileEntity::class,
