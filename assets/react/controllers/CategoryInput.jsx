@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, currentCategory }) => {
+const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, currentCategory, currentSubcategory }) => {
     const [categories] = useState(predefinedCategories);
     const [filteredCategories, setFilteredCategories] = useState(predefinedCategories);
     const [value, setValue] = useState(currentCategory || "");
@@ -8,8 +8,11 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
 
     const [subcategories, setSubcategories] = useState([]);
     const [filteredSubcategories, setFilteredSubcategories] = useState([]);
-    const [selectedSubcategory, setSelectedSubcategory] = useState("");
+    const [selectedSubcategory, setSelectedSubcategory] = useState(currentSubcategory || "");
     const [isSubcategoryFocused, setIsSubcategoryFocused] = useState(false);
+
+    const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
+    const [isSubcategoryInputVisible, setIsSubcategoryInputVisible] = useState(currentSubcategory !== "");
 
     const handleFocus = () => setIsFocused(true);
 
@@ -27,36 +30,44 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = inputValue;
-
-            // Charger les sous-catégories en fonction du nom de la catégorie
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(inputValue)}`)
-                .then((response) => response.json())
-                .then((data) => {
-                    setSubcategories(data);
-                    setFilteredSubcategories(data);
-                })
-                .catch((error) => console.error("Erreur lors du chargement des sous-catégories", error));
         }
+
+        // Afficher la case à cocher si un nom de catégorie est saisi
+        setIsCheckboxVisible(inputValue.trim() !== "");
+
+        // Charger les sous-catégories en fonction du nom de la catégorie
+        fetch(`/api/subcategories/by-name/${encodeURIComponent(inputValue)}`)
+            .then((response) => response.json())
+            .then((data) => {
+                setSubcategories(data);
+                setFilteredSubcategories(data);
+            })
+            .catch((error) => console.error("Erreur lors du chargement des sous-catégories", error));
     };
 
     const handleSuggestionClick = (category) => {
         setValue(category);
         setFilteredCategories([]);
         setIsFocused(false);
+        setIsCheckboxVisible(false);
 
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = category;
-
-            // Charger les sous-catégories en fonction du nom de la catégorie
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(category)}`)
-                .then((response) => response.json())
-                .then((data) => {
-                    setSubcategories(data);
-                    setFilteredSubcategories(data);
-                })
-                .catch((error) => console.error("Erreur lors du chargement des sous-catégories", error));
         }
+
+        // Charger les sous-catégories en fonction du nom de la catégorie
+        fetch(`/api/subcategories/by-name/${encodeURIComponent(category)}`)
+            .then((response) => response.json())
+            .then((data) => {
+                setSubcategories(data);
+                setFilteredSubcategories(data);
+            })
+            .catch((error) => console.error("Erreur lors du chargement des sous-catégories", error));
+    };
+
+    const handleCheckboxChange = (event) => {
+        setIsSubcategoryInputVisible(event.target.checked);
     };
 
     const handleSubcategoryFocus = () => setIsSubcategoryFocused(true);
@@ -89,6 +100,30 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
         }
     };
 
+    useEffect(() => {
+        // Afficher la case à cocher si une valeur est déjà définie dans le champ
+        if (value.trim() !== "") {
+            setIsCheckboxVisible(true);
+        }
+
+        // Charger les sous-catégories actuelles si une sous-catégorie est déjà définie
+        if (currentCategory) {
+            fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategory)}`)
+                .then((response) => response.json())
+                .then((data) => {
+                    setSubcategories(data);
+                    setFilteredSubcategories(data);
+                })
+                .catch((error) => console.error("Erreur lors du chargement des sous-catégories", error));
+        }
+
+        // Rendre le champ sous-catégorie visible si une sous-catégorie est déjà définie
+        if (currentSubcategory) {
+            setIsSubcategoryInputVisible(true);
+            setIsCheckboxVisible(true); // Garder la case cochée si une sous-catégorie est présente
+        }
+    }, [value, currentCategory, currentSubcategory]);
+
     return (
         <div className="relative">
             {/* Champ catégorie */}
@@ -115,8 +150,23 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
                 </ul>
             )}
 
+            {/* Checkbox pour afficher le champ des sous-catégories */}
+            {isCheckboxVisible && (
+                <div className="mt-2">
+                    <label className="inline-flex items-center">
+                        <input
+                            type="checkbox"
+                            className="form-checkbox text-blue-600"
+                            onChange={handleCheckboxChange}
+                            checked={isSubcategoryInputVisible}
+                        />
+                        <span className="ml-2 text-gray-700">Ajouter une sous-catégorie</span>
+                    </label>
+                </div>
+            )}
+
             {/* Champ sous-catégorie */}
-            {subcategories.length > 0 && (
+            {isSubcategoryInputVisible && (
                 <div className="mt-4 relative">
                     <label htmlFor="subcategory">Sous-catégorie :</label>
                     <input

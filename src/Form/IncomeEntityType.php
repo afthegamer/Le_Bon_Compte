@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\CategoryEntity;
 use App\Entity\IncomeEntity;
+use App\Entity\SubcategoryEntity;
 use App\Entity\UserEntity;
 use App\Entity\UserProfileEntity;
 use App\Service\UserProfileService;
@@ -36,7 +37,7 @@ class IncomeEntityType extends AbstractType
             ])
             ->add('categoryEntity', TextType::class, [
                 'mapped' => false, // Ce champ ne correspond pas directement à une propriété
-                'required' => true,
+                'required' => false,
                 'label' => 'Catégorie',
             ])
             ->add('subcategoryEntity', TextType::class, [

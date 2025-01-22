@@ -20,11 +20,7 @@ final class IncomeEntityController extends AbstractController
 {
 
     #[Route('/new', name: 'app_income_entity_new', methods: ['GET', 'POST'])]
-    public function new(
-        Request $request,
-        EntityManagerInterface $entityManager,
-        CategoryService $categoryService,
-        SubCategoryService $subCategoryService // Ajout du service pour les sous-catégories
+    public function new(Request $request,EntityManagerInterface $entityManager, CategoryService $categoryService, SubCategoryService $subCategoryService
     ): Response {
         $user = $this->getUser();
 
@@ -53,7 +49,8 @@ final class IncomeEntityController extends AbstractController
             // Gestion de la sous-catégorie
             $subCategoryName = $form->get('subcategoryEntity')->getData();
             if ($subCategoryName) {
-                $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
+                $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
+                $incomeEntity->setSubcategoryEntity($subcategory);
             }
 
             $incomeEntity->setCategoryEntity($category);
@@ -62,28 +59,15 @@ final class IncomeEntityController extends AbstractController
             $entityManager->persist($incomeEntity);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_home_index');
         }
 
-        // Sous-catégories dynamiques (en fonction de la première catégorie par défaut)
-        $defaultCategory = isset($categories[0])
-            ? $entityManager->getRepository(CategoryEntity::class)->findOneBy(['name' => $categories[0]])
-            : null;
-
-        $subcategories = $defaultCategory
-            ? $subCategoryService->getMergedSubCategories($defaultCategory)
-            : [];
-
-
-        //dd($categories);
         return $this->render('income_entity/new.html.twig', [
             'form' => $form->createView(),
-            'income_entity' => $incomeEntity,
             'categories' => $categories,
-            'selectedCategory' =>  null, // Ajoute la première catégorie comme sélectionnée par défaut
-            'subcategories' => $subcategories, // Ajout des sous-catégories pour React
         ]);
     }
+
 
     #[Route('/{id}', name: 'app_income_entity_show', methods: ['GET'])]
     public function show(IncomeEntity $incomeEntity,
@@ -114,7 +98,7 @@ final class IncomeEntityController extends AbstractController
         EntityManagerInterface $entityManager,
         RequestStack $requestStack,
         CategoryService $categoryService,
-        SubCategoryService $subCategoryService // Ajout du service pour les sous-catégories
+        SubCategoryService $subCategoryService // Ajout pour gérer la sous-catégorie
     ): Response {
         $user = $this->getUser();
 
@@ -128,11 +112,9 @@ final class IncomeEntityController extends AbstractController
         // Récupérer les catégories fusionnées
         $categories = $categoryService->getMergedCategories($user);
 
-        // Récupérer les sous-catégories de la catégorie actuelle
-        $currentCategory = $incomeEntity->getCategoryEntity();
-        $subcategories = $currentCategory
-            ? $subCategoryService->getMergedSubCategories($currentCategory)
-            : [];
+        // Passer la catégorie actuelle associée à React
+        $currentCategory = $incomeEntity->getCategoryEntity() ? $incomeEntity->getCategoryEntity()->getName() : '';
+        $currentSubcategory = $incomeEntity->getSubcategoryEntity() ? $incomeEntity->getSubcategoryEntity()->getName() : '';
 
         // Créer le formulaire
         $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
@@ -142,18 +124,27 @@ final class IncomeEntityController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Gestion de la catégorie
             $categoryName = $form->get('categoryEntity')->getData();
-
-            // Vérifier ou créer la catégorie
-            $category = $categoryService->findOrCreateCategory($categoryName, $user);
+            if ($categoryName) {
+                $category = $categoryService->findOrCreateCategory($categoryName, $user);
+                $incomeEntity->setCategoryEntity($category);
+            } else {
+                // Ne réinitialisez la catégorie que si explicitement vide
+                if (!$incomeEntity->getCategoryEntity()) {
+                    $incomeEntity->setCategoryEntity(null);
+                }
+            }
 
             // Gestion de la sous-catégorie
             $subCategoryName = $form->get('subcategoryEntity')->getData();
             if ($subCategoryName) {
-                $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
+                $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $incomeEntity->getCategoryEntity());
+                $incomeEntity->setSubcategoryEntity($subcategory);
+            } else {
+                // Réinitialisez uniquement la sous-catégorie
+                $incomeEntity->setSubcategoryEntity(null);
             }
-
-            $incomeEntity->setCategoryEntity($category);
 
             $entityManager->flush();
 
@@ -164,10 +155,11 @@ final class IncomeEntityController extends AbstractController
             'income_entity' => $incomeEntity,
             'form' => $form->createView(),
             'categories' => $categories,
-            'currentCategory' => $currentCategory ? $currentCategory->getName() : '',
-            'subcategories' => $subcategories, // Ajout des sous-catégories pour React
+            'currentCategory' => $currentCategory,
+            'currentSubcategory' => $currentSubcategory,
         ]);
     }
+
     #[Route('/{id}', name: 'app_income_entity_delete', methods: ['POST'])]
     public function delete(Request $request, IncomeEntity $incomeEntity, EntityManagerInterface $entityManager): Response
     {
