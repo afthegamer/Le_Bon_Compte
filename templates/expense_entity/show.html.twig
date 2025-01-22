@@ -32,6 +32,18 @@
                         {{ expense_entity.date ? expense_entity.date|date('Y-m-d H:i:s') : 'N/A' }}
                     </td>
                 </tr>
+                {% if expense_entity.categoryEntity %}
+                    <tr class="border-t border-gray-200">
+                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Category</th>
+                        <td class="px-4 py-2 text-gray-800">{{ expense_entity.categoryEntity.name }}</td>
+                    </tr>
+                {% endif %}
+                {% if expense_entity.subcategoryEntity %}
+                    <tr class="border-t border-gray-200">
+                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Subcategory</th>
+                        <td class="px-4 py-2 text-gray-800">{{ expense_entity.subcategoryEntity.name }}</td>
+                    </tr>
+                {% endif %}
                 </tbody>
             </table>
 
