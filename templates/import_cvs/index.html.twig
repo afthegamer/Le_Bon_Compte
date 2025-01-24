@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello ImportCVSController!{% endblock %}
+
+{% block body %}
+<style>
+    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+</style>
+
+<div class="example-wrapper">
+    <h1>Hello {{ controller_name }}! ✅</h1>
+
+    <form action="{{ path('upload_csv') }}" method="post" enctype="multipart/form-data" class="space-y-4 p-6 bg-white rounded-lg shadow-md w-full max-w-md mx-auto">
+        <label for="csv_file" class="block text-sm font-medium text-gray-700">Téléverser un fichier CSV :</label>
+        <input type="file" name="csv_file" id="csv_file" required
+               class="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2">
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            Envoyer
+        </button>
+    </form>
+
+</div>
+{% endblock %}
