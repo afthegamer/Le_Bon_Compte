@@ -1,6 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-body{
-    background-color: #3b82f6;
+/**
+ * test altération responsif
+ */
+@media (min-width: 768px) {
+    body {
+        background-color: #ff0000; /* Change le fond en rouge */
+    }
+}
+@media (min-width: 1024px) {
+    body {
+        background-color: #3b82f6; /* Change le fond en bleu */
+    }
 }
