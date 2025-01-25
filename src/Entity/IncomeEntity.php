@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\IncomeEntityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: IncomeEntityRepository::class)]
 class IncomeEntity implements UserRelatedEntityInterface
@@ -15,9 +16,11 @@ class IncomeEntity implements UserRelatedEntityInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
     private ?string $name = null;
 
     #[ORM\Column]
+    #[Assert\Positive]
     private ?int $amount = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -31,7 +34,7 @@ class IncomeEntity implements UserRelatedEntityInterface
     private ?CategoryEntity $categoryEntity = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $date = null;
+    private ?\DateTime $date = null;
 
     #[ORM\ManyToOne(inversedBy: 'income')]
     private ?UserProfileEntity $userProfileEntity = null;
@@ -104,12 +107,12 @@ class IncomeEntity implements UserRelatedEntityInterface
         return $this;
     }
 
-    public function getDate(): ?\DateTimeInterface
+    public function getDate(): ?\DateTime
     {
         return $this->date;
     }
 
-    public function setDate(\DateTimeInterface $date): static
+    public function setDate(\DateTime $date): static
     {
         $this->date = $date;
 

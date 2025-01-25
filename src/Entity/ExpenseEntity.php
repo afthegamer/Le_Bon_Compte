@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ExpenseEntityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ExpenseEntityRepository::class)]
 class ExpenseEntity implements UserRelatedEntityInterface
@@ -15,6 +16,7 @@ class ExpenseEntity implements UserRelatedEntityInterface
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Assert\Negative]
     private ?int $amount = null;
 
     #[ORM\Column(length: 255)]
@@ -31,7 +33,7 @@ class ExpenseEntity implements UserRelatedEntityInterface
     private ?CategoryEntity $categoryEntity = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $date = null;
+    private ?\DateTime $date = null;
 
     #[ORM\ManyToOne(inversedBy: 'expense')]
     private ?UserProfileEntity $userProfileEntity = null;
@@ -104,12 +106,12 @@ class ExpenseEntity implements UserRelatedEntityInterface
         return $this;
     }
 
-    public function getDate(): ?\DateTimeInterface
+    public function getDate(): ?\DateTime
     {
         return $this->date;
     }
 
-    public function setDate(\DateTimeInterface $date): static
+    public function setDate(\DateTime $date): static
     {
         $this->date = $date;
 
