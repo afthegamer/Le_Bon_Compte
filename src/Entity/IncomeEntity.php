@@ -39,8 +39,9 @@ class IncomeEntity implements UserRelatedEntityInterface
     #[ORM\ManyToOne(inversedBy: 'income')]
     private ?UserProfileEntity $userProfileEntity = null;
 
-    #[ORM\OneToOne(targetEntity: SubcategoryEntity::class , cascade: ['persist', 'remove'])]
+    #[ORM\ManyToOne(inversedBy: 'incomeEntity')]
     private ?SubcategoryEntity $subcategoryEntity = null;
+
 
     public function getId(): ?int
     {

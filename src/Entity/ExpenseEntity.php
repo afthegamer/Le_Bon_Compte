@@ -38,8 +38,11 @@ class ExpenseEntity implements UserRelatedEntityInterface
     #[ORM\ManyToOne(inversedBy: 'expense')]
     private ?UserProfileEntity $userProfileEntity = null;
 
-    #[ORM\OneToOne(targetEntity: SubcategoryEntity::class,cascade: ['persist', 'remove'])]
+    #[ORM\ManyToOne(targetEntity: SubcategoryEntity::class, inversedBy: 'expenseEntity')]
     private ?SubcategoryEntity $subcategoryEntity = null;
+
+//    #[ORM\ManyToOne(targetEntity: SubcategoryEntity::class, cascade: ['persist', 'remove'], inversedBy: 'expenses')]
+//    private ?SubcategoryEntity $subcategoryEntity = null;
 
     public function getId(): ?int
     {
