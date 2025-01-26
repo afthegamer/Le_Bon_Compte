@@ -75,22 +75,27 @@ class ImportCVSController extends AbstractController
 
     private function processRow(EntityManagerInterface $entityManager, array $mapping, array $row, array &$formattedData): void
     {
+        $user = $this->getUser(); // Récupération de l'utilisateur actuellement connecté
         $mappedRow = $this->mapRowToEntities($mapping, $row);
 
         // Reformater la date
         $date = !empty($mappedRow['Date']) ? \DateTime::createFromFormat('d/m/Y', $mappedRow['Date']) : null;
 
-        // Rechercher ou créer une catégorie unique
+        // Rechercher ou créer une catégorie unique associée à l'utilisateur
         $categoryEntity = null;
         if (!empty($mappedRow['CategoryEntity'])) {
             $categoryRepository = $entityManager->getRepository(CategoryEntity::class);
-            $categoryEntity = $categoryRepository->findOneBy(['name' => $mappedRow['CategoryEntity']]);
+            $categoryEntity = $categoryRepository->findOneBy([
+                'name' => $mappedRow['CategoryEntity'],
+                'userEntity' => $user,
+            ]);
 
             if (!$categoryEntity) {
                 $categoryEntity = new CategoryEntity();
                 $categoryEntity->setName($mappedRow['CategoryEntity']);
+                $categoryEntity->setUserEntity($user); // Associer à l'utilisateur
                 $entityManager->persist($categoryEntity);
-                $entityManager->flush(); // Sauvegarder immédiatement pour éviter des doublons
+                $entityManager->flush(); // Sauvegarder immédiatement pour éviter les doublons
             }
         }
 
@@ -100,7 +105,7 @@ class ImportCVSController extends AbstractController
             $subcategoryRepository = $entityManager->getRepository(SubcategoryEntity::class);
             $subcategoryEntity = $subcategoryRepository->findOneBy([
                 'name' => $mappedRow['SubcategoryEntity'],
-                'categoryEntity' => $categoryEntity
+                'categoryEntity' => $categoryEntity,
             ]);
 
             if (!$subcategoryEntity) {
@@ -108,7 +113,7 @@ class ImportCVSController extends AbstractController
                 $subcategoryEntity->setName($mappedRow['SubcategoryEntity']);
                 $subcategoryEntity->setCategoryEntity($categoryEntity);
                 $entityManager->persist($subcategoryEntity);
-                $entityManager->flush(); // Sauvegarder immédiatement pour éviter des doublons
+                $entityManager->flush(); // Sauvegarder immédiatement pour éviter les doublons
             }
         }
 
@@ -125,7 +130,7 @@ class ImportCVSController extends AbstractController
             $expense->setAmount($amount);
 
             // Associer à l'utilisateur actuel
-            $expense->setUserEntity($this->getUser());
+            $expense->setUserEntity($user);
 
             $entityManager->persist($expense);
             $formattedData[] = $mappedRow;
@@ -144,7 +149,7 @@ class ImportCVSController extends AbstractController
             $income->setAmount($amount);
 
             // Associer à l'utilisateur actuel
-            $income->setUserEntity($this->getUser());
+            $income->setUserEntity($user);
 
             $entityManager->persist($income);
             $formattedData[] = $mappedRow;
