@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SubcategoryEntityRepository::class)]
+#[ORM\UniqueConstraint(columns: ['name', 'category_entity_id'])]
 class SubcategoryEntity
 {
     #[ORM\Id]
