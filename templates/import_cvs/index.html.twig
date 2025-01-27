@@ -3,22 +3,33 @@
 {% block title %}Importer un Fichier CSV{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto p-4">
-        <h1 class="text-2xl font-bold text-center mb-6">Importer et Mapper un Fichier CSV</h1>
+    <div class="container mx-auto p-8 bg-white shadow-lg rounded-md mt-32">
+        <!-- Formulaire d'import -->
         <form id="csv-upload-form" action="{{ path('upload_csv') }}" method="post" enctype="multipart/form-data">
+            <!-- Bouton Retour -->
+            <div class="mb-12 flex justify-start">
+                <a href="{{ path('app_home_index') }}"
+                   class="bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 focus:ring-2 focus:ring-blue-400 focus:ring-offset-2">
+                    Retour Home Page
+                </a>
+            </div>
 
-            <div class="mb-4">
-                <h2 class="text-lg font-medium">Profils associés :</h2>
-                <select name="profile_id" class="form-select border border-gray-300 rounded-md p-2 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <!-- Sélection de profil -->
+            <div class="mb-12">
+                <h2 class="text-xl font-semibold mb-4">Profils associés :</h2>
+                <select name="profile_id" class="form-select border border-gray-300 rounded-md p-4 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     {% for profile in userProfiles %}
                         <option value="{{ profile.id }}">{{ profile.firstName }} {{ profile.lastName }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <div {{ react_component('MapperCSV') }}></div>
-            <input type="hidden" name="mapping" id="mapping" value="{}">
-            <input type="file" name="csv_file" id="csv_file" hidden>
+            <!-- Composant React pour MapperCSV -->
+            <div class="mb-12">
+                <h2 class="text-xl font-semibold mb-1">Mapper CSV :</h2>
+                <div {{ react_component('MapperCSV') }}></div>
+                <input type="hidden" name="mapping" id="mapping" value="{}">
+            </div>
         </form>
     </div>
 {% endblock %}

@@ -9,10 +9,10 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
     const [subcategories, setSubcategories] = useState([]);
     const [filteredSubcategories, setFilteredSubcategories] = useState([]);
     const [selectedSubcategory, setSelectedSubcategory] = useState(currentSubcategory || "");
-    const [isSubcategoryFocused, setIsSubcategoryFocused] = useState(false);
 
     const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
-    const [isSubcategoryInputVisible, setIsSubcategoryInputVisible] = useState(currentSubcategory !== "");
+    const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
+    const [isSubcategoryInputVisible, setIsSubcategoryInputVisible] = useState(false);
 
     const handleFocus = () => setIsFocused(true);
 
@@ -22,6 +22,7 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
         const inputValue = event.target.value;
         setValue(inputValue);
 
+        // Filtrer les catégories en fonction de l'entrée utilisateur
         const filtered = categories.filter((category) =>
             category.toLowerCase().includes(inputValue.toLowerCase())
         );
@@ -32,10 +33,19 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
             hiddenInput.value = inputValue;
         }
 
-        // Afficher la case à cocher si un nom de catégorie est saisi
+        // Afficher la case à cocher si une catégorie est entrée
         setIsCheckboxVisible(inputValue.trim() !== "");
 
-        // Charger les sous-catégories en fonction du nom de la catégorie
+        // Réinitialiser l'état de la case à cocher et du champ sous-catégorie
+        if (inputValue.trim() === "") {
+            setIsCheckboxChecked(false);
+            setIsSubcategoryInputVisible(false);
+            setSubcategories([]);
+            setFilteredSubcategories([]);
+            return;
+        }
+
+        // Charger les sous-catégories en fonction de la catégorie saisie
         fetch(`/api/subcategories/by-name/${encodeURIComponent(inputValue)}`)
             .then((response) => response.json())
             .then((data) => {
@@ -49,14 +59,16 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
         setValue(category);
         setFilteredCategories([]);
         setIsFocused(false);
-        setIsCheckboxVisible(false);
 
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = category;
         }
 
-        // Charger les sous-catégories en fonction du nom de la catégorie
+        // Afficher la case à cocher
+        setIsCheckboxVisible(true);
+
+        // Charger les sous-catégories pour la catégorie sélectionnée
         fetch(`/api/subcategories/by-name/${encodeURIComponent(category)}`)
             .then((response) => response.json())
             .then((data) => {
@@ -67,12 +79,12 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
     };
 
     const handleCheckboxChange = (event) => {
-        setIsSubcategoryInputVisible(event.target.checked);
+        const isChecked = event.target.checked;
+        setIsCheckboxChecked(isChecked);
+
+        // Afficher ou cacher le champ sous-catégorie
+        setIsSubcategoryInputVisible(isChecked);
     };
-
-    const handleSubcategoryFocus = () => setIsSubcategoryFocused(true);
-
-    const handleSubcategoryBlur = () => setTimeout(() => setIsSubcategoryFocused(false), 200);
 
     const handleSubcategoryChange = (event) => {
         const inputValue = event.target.value;
@@ -92,37 +104,12 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
     const handleSubcategorySuggestionClick = (subcategory) => {
         setSelectedSubcategory(subcategory.name);
         setFilteredSubcategories([]);
-        setIsSubcategoryFocused(false);
 
         const hiddenSubcategoryInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcategoryInput) {
             hiddenSubcategoryInput.value = subcategory.name;
         }
     };
-
-    useEffect(() => {
-        // Afficher la case à cocher si une valeur est déjà définie dans le champ
-        if (value.trim() !== "") {
-            setIsCheckboxVisible(true);
-        }
-
-        // Charger les sous-catégories actuelles si une sous-catégorie est déjà définie
-        if (currentCategory) {
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategory)}`)
-                .then((response) => response.json())
-                .then((data) => {
-                    setSubcategories(data);
-                    setFilteredSubcategories(data);
-                })
-                .catch((error) => console.error("Erreur lors du chargement des sous-catégories", error));
-        }
-
-        // Rendre le champ sous-catégorie visible si une sous-catégorie est déjà définie
-        if (currentSubcategory) {
-            setIsSubcategoryInputVisible(true);
-            setIsCheckboxVisible(true); // Garder la case cochée si une sous-catégorie est présente
-        }
-    }, [value, currentCategory, currentSubcategory]);
 
     return (
         <div className="relative">
@@ -158,7 +145,7 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
                             type="checkbox"
                             className="form-checkbox text-blue-600"
                             onChange={handleCheckboxChange}
-                            checked={isSubcategoryInputVisible}
+                            checked={isCheckboxChecked}
                         />
                         <span className="ml-2 text-gray-700">Ajouter une sous-catégorie</span>
                     </label>
@@ -173,12 +160,10 @@ const CategoryInput = ({ predefinedCategories, inputName, subcatInputName, curre
                         type="text"
                         value={selectedSubcategory}
                         onChange={handleSubcategoryChange}
-                        onFocus={handleSubcategoryFocus}
-                        onBlur={handleSubcategoryBlur}
                         className="border p-2 rounded w-full mt-2"
                         placeholder="Entrez ou sélectionnez une sous-catégorie"
                     />
-                    {isSubcategoryFocused && filteredSubcategories.length > 0 && (
+                    {filteredSubcategories.length > 0 && (
                         <ul className="absolute z-10 bg-white border mt-1 w-full max-h-40 overflow-y-auto shadow-lg">
                             {filteredSubcategories.map((subcategory) => (
                                 <li
