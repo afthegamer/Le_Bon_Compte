@@ -6,6 +6,7 @@ use App\Entity\CategoryEntity;
 use App\Entity\ExpenseEntity;
 use App\Entity\IncomeEntity;
 use App\Entity\SubcategoryEntity;
+use App\Entity\UserProfileEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +19,8 @@ class ImportCVSController extends AbstractController
     public function uploadCsv(Request $request, EntityManagerInterface $entityManager): Response
     {
         $csvFile = $request->files->get('csv_file');
-        $mapping = json_decode($request->get('mapping'), true); // Récupération du mappage
+        $mapping = json_decode($request->get('mapping'), true);
+        $profileId = $request->request->get('profile_id'); // Récupération de l'ID du profil utilisateur
 
         if ($csvFile === null || !$csvFile->isValid()) {
             return $this->json(['error' => 'Fichier CSV invalide'], Response::HTTP_BAD_REQUEST);
@@ -28,11 +30,16 @@ class ImportCVSController extends AbstractController
             return $this->json(['error' => 'Mappage des colonnes manquant ou invalide'], Response::HTTP_BAD_REQUEST);
         }
 
+        // Récupérer le profil utilisateur sélectionné
+        $profile = $entityManager->getRepository(UserProfileEntity::class)->find($profileId);
+        if (!$profile || $profile->getUserEntity() !== $this->getUser()) {
+            return $this->json(['error' => 'Profil utilisateur invalide'], Response::HTTP_BAD_REQUEST);
+        }
+
         $formattedData = [];
         $invalidRows = [];
         $headers = null;
 
-        // Détection du séparateur
         $separator = $this->detectSeparator($csvFile->getPathname());
 
         if (($handle = fopen($csvFile->getPathname(), 'r')) !== false) {
@@ -48,17 +55,17 @@ class ImportCVSController extends AbstractController
                 if (count($row) !== count($headers)) {
                     $correctedRow = $this->correctRow($headers, $row);
                     if ($correctedRow) {
-                        $this->processRow($entityManager, $mapping, $correctedRow, $formattedData);
+                        $this->processRow($entityManager, $mapping, $correctedRow, $formattedData, $profile);
                     } else {
                         $invalidRows[] = [
                             'row' => $rowNumber,
-                            'data' => $row
+                            'data' => $row,
                         ];
                     }
                     continue;
                 }
 
-                $this->processRow($entityManager, $mapping, array_combine($headers, $row), $formattedData);
+                $this->processRow($entityManager, $mapping, array_combine($headers, $row), $formattedData, $profile);
             }
 
             fclose($handle);
@@ -69,23 +76,25 @@ class ImportCVSController extends AbstractController
         return $this->json([
             'status' => 'success',
             'importedRows' => count($formattedData),
-            'invalidRows' => $invalidRows
+            'invalidRows' => $invalidRows,
         ]);
     }
 
-    private function processRow(EntityManagerInterface $entityManager, array $mapping, array $row, array &$formattedData): void
-    {
-        $user = $this->getUser(); // Récupération de l'utilisateur actuellement connecté
+    private function processRow(
+        EntityManagerInterface $entityManager,
+        array $mapping,
+        array $row,
+        array &$formattedData,
+        UserProfileEntity $profile
+    ): void {
+        $user = $this->getUser();
         $mappedRow = $this->mapRowToEntities($mapping, $row);
 
-        // Reformater la date
         $date = !empty($mappedRow['Date']) ? \DateTime::createFromFormat('d/m/Y', $mappedRow['Date']) : null;
 
-        // Rechercher ou créer une catégorie unique associée à l'utilisateur
         $categoryEntity = null;
         if (!empty($mappedRow['CategoryEntity'])) {
-            $categoryRepository = $entityManager->getRepository(CategoryEntity::class);
-            $categoryEntity = $categoryRepository->findOneBy([
+            $categoryEntity = $entityManager->getRepository(CategoryEntity::class)->findOneBy([
                 'name' => $mappedRow['CategoryEntity'],
                 'userEntity' => $user,
             ]);
@@ -93,17 +102,15 @@ class ImportCVSController extends AbstractController
             if (!$categoryEntity) {
                 $categoryEntity = new CategoryEntity();
                 $categoryEntity->setName($mappedRow['CategoryEntity']);
-                $categoryEntity->setUserEntity($user); // Associer à l'utilisateur
+                $categoryEntity->setUserEntity($user);
                 $entityManager->persist($categoryEntity);
-                $entityManager->flush(); // Sauvegarder immédiatement pour éviter les doublons
+                $entityManager->flush();
             }
         }
 
-        // Rechercher ou créer une sous-catégorie unique associée à la catégorie
         $subcategoryEntity = null;
         if (!empty($mappedRow['SubcategoryEntity'])) {
-            $subcategoryRepository = $entityManager->getRepository(SubcategoryEntity::class);
-            $subcategoryEntity = $subcategoryRepository->findOneBy([
+            $subcategoryEntity = $entityManager->getRepository(SubcategoryEntity::class)->findOneBy([
                 'name' => $mappedRow['SubcategoryEntity'],
                 'categoryEntity' => $categoryEntity,
             ]);
@@ -113,11 +120,10 @@ class ImportCVSController extends AbstractController
                 $subcategoryEntity->setName($mappedRow['SubcategoryEntity']);
                 $subcategoryEntity->setCategoryEntity($categoryEntity);
                 $entityManager->persist($subcategoryEntity);
-                $entityManager->flush(); // Sauvegarder immédiatement pour éviter les doublons
+                $entityManager->flush();
             }
         }
 
-        // Si c'est une dépense
         if (!empty($mappedRow['ExpenseEntity'])) {
             $amount = (int)(str_replace(',', '.', $mappedRow['ExpenseEntity']) * 100);
 
@@ -128,15 +134,13 @@ class ImportCVSController extends AbstractController
             $expense->setCategoryEntity($categoryEntity);
             $expense->setSubcategoryEntity($subcategoryEntity);
             $expense->setAmount($amount);
-
-            // Associer à l'utilisateur actuel
             $expense->setUserEntity($user);
+            $expense->setUserProfileEntity($profile); // Associer le profil utilisateur
 
             $entityManager->persist($expense);
             $formattedData[] = $mappedRow;
         }
 
-        // Si c'est un revenu
         if (!empty($mappedRow['IncomeEntity'])) {
             $amount = (int)(str_replace(',', '.', $mappedRow['IncomeEntity']) * 100);
 
@@ -147,18 +151,14 @@ class ImportCVSController extends AbstractController
             $income->setCategoryEntity($categoryEntity);
             $income->setSubcategoryEntity($subcategoryEntity);
             $income->setAmount($amount);
-
-            // Associer à l'utilisateur actuel
             $income->setUserEntity($user);
+            $income->setUserProfileEntity($profile); // Associer le profil utilisateur
 
             $entityManager->persist($income);
             $formattedData[] = $mappedRow;
         }
     }
 
-    /**
-     * Mappe une ligne du fichier CSV aux entités définies dans le mappage.
-     */
     private function mapRowToEntities(array $mapping, array $row): array
     {
         $mappedData = [];
@@ -167,13 +167,9 @@ class ImportCVSController extends AbstractController
                 $mappedData[$entityField] = $row[$column];
             }
         }
-
         return $mappedData;
     }
 
-    /**
-     * Détecte automatiquement le séparateur utilisé dans le fichier CSV.
-     */
     private function detectSeparator(string $filePath): string
     {
         $separators = [',', ';', '\t'];
@@ -185,13 +181,9 @@ class ImportCVSController extends AbstractController
         foreach ($separators as $separator) {
             $separatorCounts[$separator] = substr_count($line, $separator);
         }
-
         return array_search(max($separatorCounts), $separatorCounts);
     }
 
-    /**
-     * Tente de corriger une ligne mal formatée.
-     */
     private function correctRow(array $headers, array $row): ?array
     {
         if (count($row) > count($headers)) {
@@ -200,7 +192,6 @@ class ImportCVSController extends AbstractController
 
             return count($correctedRow) === count($headers) ? array_combine($headers, $correctedRow) : null;
         }
-
         return null;
     }
 
@@ -208,12 +199,15 @@ class ImportCVSController extends AbstractController
     public function index(): Response
     {
         $user = $this->getUser();
-
         if ($user === null) {
             return $this->redirectToRoute('app_login');
         }
+
+        $userProfiles = $user->getUserProfileEntities()->toArray();
+
         return $this->render('import_cvs/index.html.twig', [
             'controller_name' => 'ImportCVSController',
+            'userProfiles' => $userProfiles,
         ]);
     }
 }
