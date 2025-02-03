@@ -53,16 +53,20 @@ export default function PieChartExpenses({ expenses }) {
         timeFilter
     );
 
-    console.log("🎯 Dépenses après filtrage :", filteredExpenses);
-
     const hasData = filteredExpenses.length > 0;
 
     const categoryTotals = filteredExpenses.reduce((acc, expense) => {
         const category = expense.category || "Autre";
-        const amount = Math.abs(expense.amount);
+        const amount = Math.abs(expense.amount); // Assurer que les montants sont positifs
         acc[category] = (acc[category] || 0) + amount;
         return acc;
     }, {});
+
+// Assurer que toutes les valeurs sont positives
+    Object.keys(categoryTotals).forEach(category => {
+        categoryTotals[category] = Math.abs(categoryTotals[category]);
+    });
+
 
     const chartData = Object.keys(categoryTotals).map((category, index) => ({
         id: `cat-${index}`,
@@ -70,6 +74,10 @@ export default function PieChartExpenses({ expenses }) {
         label: category,
         color: getColor(index)
     }));
+    console.log("🔍 Dépenses après filtrage (unique):", [...new Set(filteredExpenses.map(e => e.id))].length);
+    filteredExpenses.forEach(exp => {
+        console.log(`🔎 Catégorie: ${exp.category}, Montant: ${exp.amount}`);
+    });
 
     return (
         <div className="flex flex-col items-center w-full space-y-6">
