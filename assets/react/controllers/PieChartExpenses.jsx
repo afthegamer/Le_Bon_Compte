@@ -3,77 +3,64 @@ import { PieChart } from "@mui/x-charts";
 import dayjs from "dayjs";
 
 export default function PieChartExpenses({ expenses }) {
-    // Extraire toutes les années disponibles à partir des données
-    const availableYears = [
-        ...new Set(expenses.map(exp => dayjs(exp.date, "YYYY-MM-DD HH:mm:ss").year()))
-    ].sort((a, b) => b - a); // Trier par ordre décroissant
-
-    // Année sélectionnée par défaut = plus récente
-    const [selectedYear, setSelectedYear] = React.useState(availableYears[0] || dayjs().year());
-    const [timeFilter, setTimeFilter] = React.useState("annuel");
-
-    // Extraire les mois disponibles pour l'année sélectionnée
-    const availableMonths = [
-        ...new Set(expenses
-            .filter(exp => dayjs(exp.date, "YYYY-MM-DD HH:mm:ss").year() === selectedYear)
-            .map(exp => dayjs(exp.date, "YYYY-MM-DD HH:mm:ss").month() + 1)
-        )
-    ].sort((a, b) => a - b);
-
-    // Définition par défaut des valeurs
-    const [selectedMonth, setSelectedMonth] = React.useState(availableMonths[0] || 1);
+    const [timeFilter, setTimeFilter] = React.useState("mois");
+    const [selectedYear, setSelectedYear] = React.useState(dayjs().year());
+    const [selectedMonth, setSelectedMonth] = React.useState(dayjs().month() + 1);
     const [selectedQuarter, setSelectedQuarter] = React.useState(1);
     const [selectedSemester, setSelectedSemester] = React.useState(1);
 
-    console.log("🚀 Années disponibles :", availableYears);
-    console.log("📅 Année sélectionnée :", selectedYear);
-    console.log("📆 Mois disponibles pour cette année :", availableMonths);
+    console.log("🚀 Données brutes des dépenses :", expenses);
+    console.log("📅 Période sélectionnée :", timeFilter);
 
-    const filterExpensesByTime = (expenses) => {
-        let startDate, endDate;
+    const availableYears = [...new Set(expenses.map(exp => dayjs(exp.date).year()))].sort((a, b) => b - a);
+    const availableMonths = Array.from({ length: 12 }, (_, i) => i + 1);
 
-        switch (timeFilter) {
+    const filterExpensesByTime = (expenses, period) => {
+        const now = dayjs();
+        let startDate;
+
+        switch (period) {
             case "annuel":
-                startDate = dayjs(`${selectedYear}-01-01`).startOf("year");
-                endDate = dayjs(`${selectedYear}-12-31`).endOf("year");
-                break;
-            case "mois":
-                startDate = dayjs(`${selectedYear}-${selectedMonth}-01`).startOf("month");
-                endDate = startDate.endOf("month");
-                break;
-            case "trimestriel":
-                startDate = dayjs(`${selectedYear}-01-01`).startOf("year").add((selectedQuarter - 1) * 3, "months");
-                endDate = startDate.add(2, "months").endOf("month");
+                startDate = dayjs(`${selectedYear}-01-01`);
                 break;
             case "semestriel":
-                startDate = dayjs(`${selectedYear}-01-01`).startOf("year").add((selectedSemester - 1) * 6, "months");
-                endDate = startDate.add(5, "months").endOf("month");
+                startDate = selectedSemester === 1
+                    ? dayjs(`${selectedYear}-01-01`)
+                    : dayjs(`${selectedYear}-07-01`);
+                break;
+            case "trimestriel":
+                startDate = dayjs(`${selectedYear}-${(selectedQuarter - 1) * 3 + 1}-01`);
+                break;
+            case "mois":
+                startDate = dayjs(`${selectedYear}-${selectedMonth}-01`);
                 break;
             case "semaine":
-                startDate = dayjs().subtract(1, "week").startOf("week");
-                endDate = startDate.endOf("week");
+                startDate = now.subtract(1, "week");
                 break;
             default:
                 return expenses;
         }
 
-        console.log(`📆 Filtrage : Dépenses entre ${startDate.format("YYYY-MM-DD")} et ${endDate.format("YYYY-MM-DD")}`);
-
         return expenses.filter(expense => {
             const expenseDate = dayjs(expense.date, "YYYY-MM-DD HH:mm:ss");
-            return expenseDate.isAfter(startDate) && expenseDate.isBefore(endDate);
+            console.log("📆 Comparaison :", expenseDate.format("YYYY-MM-DD"), "vs", startDate.format("YYYY-MM-DD"));
+            return expenseDate.isAfter(startDate);
         });
     };
 
     const filteredExpenses = filterExpensesByTime(
-        expenses.filter(exp => exp.type === "expense")
+        expenses.filter(exp => exp.type === "expense"),
+        timeFilter
     );
+
+    console.log("🎯 Dépenses après filtrage :", filteredExpenses);
 
     const hasData = filteredExpenses.length > 0;
 
     const categoryTotals = filteredExpenses.reduce((acc, expense) => {
         const category = expense.category || "Autre";
-        acc[category] = (acc[category] || 0) + Math.abs(expense.amount);
+        const amount = Math.abs(expense.amount);
+        acc[category] = (acc[category] || 0) + amount;
         return acc;
     }, {});
 
@@ -86,13 +73,12 @@ export default function PieChartExpenses({ expenses }) {
 
     return (
         <div className="flex flex-col items-center w-full space-y-6">
-            {/* Conteneur des filtres */}
-            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-4">
-                {/* Sélection de la période */}
-                <div>
-                    <label className="block text-gray-700 font-medium text-center mb-1">Filtrer par :</label>
+            {/* Sélecteurs */}
+            <div className="flex flex-wrap justify-center space-x-4 w-full">
+                <div className="w-1/4">
+                    <label className="block text-gray-700 font-medium mb-2 text-center">Filtrer par période :</label>
                     <select
-                        className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-auto"
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={timeFilter}
                         onChange={(e) => setTimeFilter(e.target.value)}
                     >
@@ -104,11 +90,10 @@ export default function PieChartExpenses({ expenses }) {
                     </select>
                 </div>
 
-                {/* Sélection de l'année */}
-                <div>
-                    <label className="block text-gray-700 font-medium text-center mb-1">Année :</label>
+                <div className="w-1/4">
+                    <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner une année :</label>
                     <select
-                        className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(Number(e.target.value))}
                     >
@@ -118,12 +103,11 @@ export default function PieChartExpenses({ expenses }) {
                     </select>
                 </div>
 
-                {/* Sélection du mois (visible uniquement si la période sélectionnée est "mois") */}
                 {timeFilter === "mois" && (
-                    <div>
-                        <label className="block text-gray-700 font-medium text-center mb-1">Mois :</label>
+                    <div className="w-1/4">
+                        <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner un mois :</label>
                         <select
-                            className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                            className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
                             value={selectedMonth}
                             onChange={(e) => setSelectedMonth(Number(e.target.value))}
                         >
@@ -134,12 +118,11 @@ export default function PieChartExpenses({ expenses }) {
                     </div>
                 )}
 
-                {/* Sélection du trimestre */}
                 {timeFilter === "trimestriel" && (
-                    <div>
-                        <label className="block text-gray-700 font-medium text-center mb-1">Trimestre :</label>
+                    <div className="w-1/4">
+                        <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner un trimestre :</label>
                         <select
-                            className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                            className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
                             value={selectedQuarter}
                             onChange={(e) => setSelectedQuarter(Number(e.target.value))}
                         >
@@ -150,12 +133,11 @@ export default function PieChartExpenses({ expenses }) {
                     </div>
                 )}
 
-                {/* Sélection du semestre */}
                 {timeFilter === "semestriel" && (
-                    <div>
-                        <label className="block text-gray-700 font-medium text-center mb-1">Semestre :</label>
+                    <div className="w-1/4">
+                        <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner un semestre :</label>
                         <select
-                            className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                            className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
                             value={selectedSemester}
                             onChange={(e) => setSelectedSemester(Number(e.target.value))}
                         >
@@ -167,11 +149,36 @@ export default function PieChartExpenses({ expenses }) {
                 )}
             </div>
 
+            {/* Graphique et légende séparés */}
             <div className="flex justify-center space-x-12 w-full">
-                {hasData ? (
-                    <PieChart series={[{ data: chartData, innerRadius: 50 }]} width={400} height={400} />
-                ) : (
-                    <p className="text-center text-gray-500 font-semibold">Aucune donnée à afficher</p>
+                <div className="w-1/3 rounded-lg p-6 h-auto ml-12 bg-white shadow-lg">
+                    {hasData ? (
+                        <PieChart
+                            series={[{ data: chartData, innerRadius: 50 }]}
+                            width={400}
+                            height={400}
+                            slotProps={{ legend: { hidden: true } }}
+                        />
+                    ) : (
+                        <p className="text-center text-gray-500 font-semibold">Aucune donnée à afficher</p>
+                    )}
+                </div>
+
+                {hasData && (
+                    <div className="w-1/3 bg-white shadow-md rounded-lg p-6 h-auto">
+                        <h3 className="text-lg font-bold text-gray-700 text-center mb-4">Détails des Catégories</h3>
+                        <ul className="space-y-3">
+                            {chartData.map((item, index) => (
+                                <li key={index} className="flex justify-between items-center border-b pb-2">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                        <span className="text-gray-800 font-medium">{item.label}</span>
+                                    </div>
+                                    <span className="text-gray-600 font-semibold">{item.value.toFixed(2)} €</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 )}
             </div>
         </div>
@@ -179,6 +186,6 @@ export default function PieChartExpenses({ expenses }) {
 }
 
 function getColor(index) {
-    const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FFD700"];
+    const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FFD700", "#00FFFF", "#800080", "#FF4500", "#008000", "#000080"];
     return colors[index % colors.length];
 }
