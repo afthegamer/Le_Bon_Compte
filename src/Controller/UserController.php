@@ -9,12 +9,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/user')]
 final class UserController extends AbstractController
 {
     #[Route(name: 'app_user_index', methods: ['GET'])]
+    #[isGranted('ROLE_ADMIN')]
     public function index(UserEntityRepository $userEntityRepository): Response
     {
         return $this->render('user/index.html.twig', [
@@ -43,6 +46,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_user_show', methods: ['GET'])]
+    #[isGranted('ROLE_ADMIN')]
     public function show(UserEntity $userEntity): Response
     {
         return $this->render('user/show.html.twig', [
@@ -50,21 +54,34 @@ final class UserController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_user_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, UserEntity $userEntity, EntityManagerInterface $entityManager): Response
+    #[Route('/user/edit', name: 'app_user_edit', methods: ['GET', 'POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function editUser(Request $request,
+                             EntityManagerInterface $entityManager,
+                             UserPasswordHasherInterface $userPasswordHasher,
+    ): Response
     {
-        $form = $this->createForm(UserEntityType::class, $userEntity);
+        /** @var UserEntity $user */
+        $user = $this->getUser(); // Récupérer l'utilisateur connecté
+
+        $form = $this->createForm(UserEntityType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($form->get('plainPassword')->getData()) {
+                $plainPassword = $form->get('plainPassword')->getData();
+                $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
+            }
+
+            $entityManager->persist($user);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+            $this->addFlash('success', 'Votre compte a été mis à jour.');
+            return $this->redirectToRoute('app_home_index');
         }
 
         return $this->render('user/edit.html.twig', [
-            'user_entity' => $userEntity,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 

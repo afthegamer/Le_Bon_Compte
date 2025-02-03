@@ -21,7 +21,7 @@ class IncomeEntity implements UserRelatedEntityInterface
 
     #[ORM\Column]
     #[Assert\Positive]
-    private ?int $amount = null;
+    private ?float $amount = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $type = null;
@@ -60,12 +60,12 @@ class IncomeEntity implements UserRelatedEntityInterface
         return $this;
     }
 
-    public function getAmount(): ?int
+    public function getAmount(): ?float
     {
         return $this->amount;
     }
 
-    public function setAmount(int $amount): static
+    public function setAmount(float $amount): static
     {
         $this->amount = $amount;
 

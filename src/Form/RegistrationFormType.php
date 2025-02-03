@@ -5,7 +5,7 @@ namespace App\Form;
 use App\Entity\UserEntity;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
+use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -53,7 +53,7 @@ class RegistrationFormType extends AbstractType
                 'label' => 'Nom',
                 'required' => true,
             ])
-            ->add('wallet', IntegerType::class, [
+            ->add('wallet', MoneyType::class, [
                 'label' => 'Portefeuille',
                 'required' => false,
             ])

@@ -27,7 +27,7 @@ class ExpenseEntity implements UserRelatedEntityInterface
 
     #[ORM\Column]
     #[Assert\Negative]
-    private ?int $amount = null;
+    private ?float $amount = null;
 
     #[ORM\Column(length: 255)]
     private ?string $name = null;
@@ -70,12 +70,12 @@ class ExpenseEntity implements UserRelatedEntityInterface
         return $this->id;
     }
 
-    public function getAmount(): ?int
+    public function getAmount(): ?float
     {
         return $this->amount;
     }
 
-    public function setAmount(int $amount): static
+    public function setAmount(float $amount): static
     {
         $this->amount = $amount;
 

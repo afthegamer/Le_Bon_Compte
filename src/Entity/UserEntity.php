@@ -45,7 +45,7 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $lastName = null;
 
     #[ORM\Column(nullable: true)]
-    private ?int $wallet = null;
+    private ?float $wallet = null;
 
     /**
      * @var Collection<int, ExpenseEntity>
@@ -184,12 +184,12 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getWallet(): ?int
+    public function getWallet(): ?float
     {
         return $this->wallet;
     }
 
-    public function setWallet(?int $wallet): static
+    public function setWallet(?float $wallet): static
     {
         $this->wallet = $wallet;
 
