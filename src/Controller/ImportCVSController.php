@@ -73,11 +73,22 @@ class ImportCVSController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->json([
-            'status' => 'success',
-            'importedRows' => count($formattedData),
-            'invalidRows' => $invalidRows,
-        ]);
+        // Compter le nombre de lignes importées et invalides
+        $importedCount = count($formattedData);
+        $invalidCount = count($invalidRows);
+
+        // Construire le message flash
+        if ($invalidCount > 0) {
+            $this->addFlash('warning', "Importation partielle : {$importedCount} lignes enregistrées, {$invalidCount} lignes invalides.");
+        } elseif ($importedCount > 0) {
+            $this->addFlash('success', "Importation réussie ! {$importedCount} lignes ont été enregistrées.");
+        } else {
+            $this->addFlash('error', "Échec de l'importation. Aucun enregistrement valide.");
+        }
+
+        // Rediriger vers la page d'accueil
+        return $this->redirectToRoute('app_home_index');
+
     }
 
     private function processRow(
