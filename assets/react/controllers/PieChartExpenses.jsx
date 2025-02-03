@@ -86,82 +86,86 @@ export default function PieChartExpenses({ expenses }) {
 
     return (
         <div className="flex flex-col items-center w-full space-y-6">
-            <div className="w-1/3">
-                <label className="block text-gray-700 font-medium mb-2 text-center">Filtrer par période :</label>
-                <select
-                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={timeFilter}
-                    onChange={(e) => setTimeFilter(e.target.value)}
-                >
-                    <option value="annuel">Annuel</option>
-                    <option value="semestriel">Semestriel</option>
-                    <option value="trimestriel">Trimestriel</option>
-                    <option value="mois">Mois</option>
-                    <option value="semaine">Semaine</option>
-                </select>
+            {/* Conteneur des filtres */}
+            <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-2 mb-4">
+                {/* Sélection de la période */}
+                <div>
+                    <label className="block text-gray-700 font-medium text-center mb-1">Filtrer par :</label>
+                    <select
+                        className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-auto"
+                        value={timeFilter}
+                        onChange={(e) => setTimeFilter(e.target.value)}
+                    >
+                        <option value="annuel">Annuel</option>
+                        <option value="semestriel">Semestriel</option>
+                        <option value="trimestriel">Trimestriel</option>
+                        <option value="mois">Mois</option>
+                        <option value="semaine">Semaine</option>
+                    </select>
+                </div>
+
+                {/* Sélection de l'année */}
+                <div>
+                    <label className="block text-gray-700 font-medium text-center mb-1">Année :</label>
+                    <select
+                        className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    >
+                        {availableYears.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Sélection du mois (visible uniquement si la période sélectionnée est "mois") */}
+                {timeFilter === "mois" && (
+                    <div>
+                        <label className="block text-gray-700 font-medium text-center mb-1">Mois :</label>
+                        <select
+                            className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                        >
+                            {availableMonths.map(month => (
+                                <option key={month} value={month}>{dayjs().month(month - 1).format("MMMM")}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {/* Sélection du trimestre */}
+                {timeFilter === "trimestriel" && (
+                    <div>
+                        <label className="block text-gray-700 font-medium text-center mb-1">Trimestre :</label>
+                        <select
+                            className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                            value={selectedQuarter}
+                            onChange={(e) => setSelectedQuarter(Number(e.target.value))}
+                        >
+                            {[1, 2, 3, 4].map(q => (
+                                <option key={q} value={q}>Trimestre {q}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {/* Sélection du semestre */}
+                {timeFilter === "semestriel" && (
+                    <div>
+                        <label className="block text-gray-700 font-medium text-center mb-1">Semestre :</label>
+                        <select
+                            className="p-2 border border-gray-300 rounded-md shadow-sm w-auto"
+                            value={selectedSemester}
+                            onChange={(e) => setSelectedSemester(Number(e.target.value))}
+                        >
+                            {[1, 2].map(s => (
+                                <option key={s} value={s}>{s}er Semestre</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </div>
-
-            {/* Sélection d'année dynamique */}
-            <div className="w-1/3">
-                <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner une année :</label>
-                <select
-                    className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                >
-                    {availableYears.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                    ))}
-                </select>
-            </div>
-
-            {/* Sélection dynamique de mois */}
-            {timeFilter === "mois" && (
-                <div className="w-1/3">
-                    <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner un mois :</label>
-                    <select
-                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    >
-                        {availableMonths.map(month => (
-                            <option key={month} value={month}>{dayjs().month(month - 1).format("MMMM")}</option>
-                        ))}
-                    </select>
-                </div>
-            )}
-
-            {/* Sélection dynamique de trimestre */}
-            {timeFilter === "trimestriel" && (
-                <div className="w-1/3">
-                    <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner un trimestre :</label>
-                    <select
-                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                        value={selectedQuarter}
-                        onChange={(e) => setSelectedQuarter(Number(e.target.value))}
-                    >
-                        {[1, 2, 3, 4].map(q => (
-                            <option key={q} value={q}>Trimestre {q}</option>
-                        ))}
-                    </select>
-                </div>
-            )}
-
-            {/* Sélection dynamique de semestre */}
-            {timeFilter === "semestriel" && (
-                <div className="w-1/3">
-                    <label className="block text-gray-700 font-medium mb-2 text-center">Sélectionner un semestre :</label>
-                    <select
-                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
-                        value={selectedSemester}
-                        onChange={(e) => setSelectedSemester(Number(e.target.value))}
-                    >
-                        {[1, 2].map(s => (
-                            <option key={s} value={s}>{s}er Semestre</option>
-                        ))}
-                    </select>
-                </div>
-            )}
 
             <div className="flex justify-center space-x-12 w-full">
                 {hasData ? (
