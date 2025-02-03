@@ -33,8 +33,10 @@
         "@headlessui/react": "^1.7.17",
         "@mui/icons-material": "^6.4.1",
         "@mui/material": "^6.4.0",
+        "@mui/x-charts": "^7.25.0",
         "@mui/x-data-grid": "^7.23.6",
         "@shadcn/ui": "^0.0.4",
+        "dayjs": "^1.11.13",
         "papaparse": "^5.5.1"
     }
 }

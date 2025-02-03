@@ -43,6 +43,7 @@ class HomeController extends AbstractController
                 'name' => $income->getName(),
                 'amount' => $income->getAmount(),
                 'date' => $income->getDate()->format('Y-m-d H:i:s'),
+                'category' => $income->getCategoryEntity()?$income->getCategoryEntity()->getName():'Autre',
                 'showUrl' => $urlGenerator->generate('app_income_entity_show', ['id' => $income->getId()]),
                 'editUrl' => $urlGenerator->generate('app_income_entity_edit', ['id' => $income->getId()]),
             ];
@@ -54,6 +55,7 @@ class HomeController extends AbstractController
                 'name' => $expense->getName(),
                 'amount' => $expense->getAmount(),
                 'date' => $expense->getDate()->format('Y-m-d H:i:s'),
+                'category' => $expense->getCategoryEntity()?$expense->getCategoryEntity()->getName():'Autre',
                 'showUrl' => $urlGenerator->generate('app_expense_entity_show', ['id' => $expense->getId()]),
                 'editUrl' => $urlGenerator->generate('app_expense_entity_edit', ['id' => $expense->getId()]),
             ];

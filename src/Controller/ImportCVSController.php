@@ -40,6 +40,13 @@ class ImportCVSController extends AbstractController
         $invalidRows = [];
         $headers = null;
 
+        // Lire le contenu et forcer l'encodage en UTF-8
+        $csvContent = file_get_contents($csvFile->getPathname());
+        if (!mb_check_encoding($csvContent, 'UTF-8')) {
+            $csvContent = mb_convert_encoding($csvContent, 'UTF-8', 'ISO-8859-1');
+            file_put_contents($csvFile->getPathname(), $csvContent);
+        }
+
         $separator = $this->detectSeparator($csvFile->getPathname());
 
         if (($handle = fopen($csvFile->getPathname(), 'r')) !== false) {

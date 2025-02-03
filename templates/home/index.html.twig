@@ -5,6 +5,10 @@
 {% block body %}
     <div class="flex items-center justify-center min-h-screen">
         <div class="w-full max-w-6xl px-4 py-6 bg-white shadow-md rounded-lg">
+            <div class="mt-8">
+                <h2 class="text-xl font-semibold text-gray-700">Expenses by Category</h2>
+                <div {{ react_component('PieChartExpenses', {'expenses': combinedList}) }}></div>
+            </div>
             <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Data Table</h1>
 
             <!-- Boutons alignés -->
