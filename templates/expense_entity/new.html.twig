@@ -59,6 +59,13 @@
                 {{ form_errors(form.userProfileEntity) }}
             </div>
 
+            <!-- Champ User Profile Entity -->
+            <div>
+                {{ form_label(form.invoiceFile, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.invoiceFile, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.invoiceFile) }}
+            </div>
+
             <!-- Boutons d'action -->
             <div class="flex justify-between mt-6">
                 <a href="{{ path('app_home_index') }}"

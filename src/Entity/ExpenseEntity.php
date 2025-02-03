@@ -6,14 +6,24 @@ use App\Repository\ExpenseEntityRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\HttpFoundation\File\File;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: ExpenseEntityRepository::class)]
+#[Vich\Uploadable]
 class ExpenseEntity implements UserRelatedEntityInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $invoice = null;
+
+    #[Vich\UploadableField(mapping: 'expense_invoices', fileNameProperty: 'invoice')]
+    private ?File $invoiceFile = null;
+
 
     #[ORM\Column]
     #[Assert\Negative]
@@ -41,8 +51,19 @@ class ExpenseEntity implements UserRelatedEntityInterface
     #[ORM\ManyToOne(targetEntity: SubcategoryEntity::class, inversedBy: 'expenseEntity')]
     private ?SubcategoryEntity $subcategoryEntity = null;
 
-//    #[ORM\ManyToOne(targetEntity: SubcategoryEntity::class, cascade: ['persist', 'remove'], inversedBy: 'expenses')]
-//    private ?SubcategoryEntity $subcategoryEntity = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTime $updatedAt = null;
+
+    public function getUpdatedAt(): ?\DateTime
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTime $updatedAt): void
+    {
+        $this->updatedAt = $updatedAt;
+    }
 
     public function getId(): ?int
     {
@@ -144,4 +165,30 @@ class ExpenseEntity implements UserRelatedEntityInterface
 
         return $this;
     }
+
+    public function setInvoiceFile(?File $invoiceFile = null): void
+    {
+        $this->invoiceFile = $invoiceFile;
+
+        if ($invoiceFile) {
+            $this->updatedAt = new \DateTime;
+        }
+    }
+
+    public function getInvoiceFile(): ?File
+    {
+        return $this->invoiceFile;
+    }
+
+    public function setInvoice(?string $invoice): self
+    {
+        $this->invoice = $invoice;
+        return $this;
+    }
+
+    public function getInvoice(): ?string
+    {
+        return $this->invoice;
+    }
+
 }

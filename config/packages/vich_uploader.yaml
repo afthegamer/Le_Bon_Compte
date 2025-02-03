@@ -1,0 +1,7 @@
+vich_uploader:
+    db_driver: orm
+    mappings:
+        expense_invoices:
+            uri_prefix: /uploads/invoices
+            upload_destination: '%kernel.project_dir%/public/uploads/invoices'
+            namer: Vich\UploaderBundle\Naming\SmartUniqueNamer

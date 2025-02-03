@@ -11,6 +11,8 @@ use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Vich\UploaderBundle\Form\Type\VichFileType;
 
 class ExpenseEntityType extends AbstractType
 {
@@ -50,6 +52,12 @@ class ExpenseEntityType extends AbstractType
                     return sprintf('%s %s', $profile->getFirstName(), $profile->getLastName());
                 },
                 'label' => 'Assign to Profile',
+            ])
+            ->add('invoiceFile', VichFileType::class, [
+                'required' => false,
+                'allow_delete' => true,
+                'download_uri' => true,
+                'download_label' => 'Télécharger la facture',
             ]);
     }
 

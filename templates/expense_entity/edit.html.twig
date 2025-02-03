@@ -61,6 +61,13 @@
                 {{ form_errors(form.userProfileEntity) }}
             </div>
 
+            <!-- Champ User Profile Entity -->
+            <div>
+                {{ form_label(form.invoiceFile, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_widget(form.invoiceFile, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
+                {{ form_errors(form.invoiceFile) }}
+            </div>
+
             <div>
                 <button type="submit"
                         class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
