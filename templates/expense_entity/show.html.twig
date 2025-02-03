@@ -48,20 +48,25 @@
                         <td class="px-4 py-2 text-gray-800">{{ expense_entity.subcategoryEntity.name }}</td>
                     </tr>
                 {% endif %}
-                <tr>
-                    {% if expense_entity.invoice %}
-                        <div>
-                            <p>Facture :</p>
-                            <a href="{{ asset('uploads/invoices/' ~ expense_entity.invoice) }}"
-                               class="text-blue-500 hover:underline"
-                               target="_blank">
-                                Voir la facture
-                            </a>
-                        </div>
-                    {% else %}
-                        <p>Aucune facture attachée.</p>
-                    {% endif %}
-                </tr>
+                {% if expense_entity.invoice %}
+                    <tr class="border-t border-gray-200">
+                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Facture</th>
+                        <td class="px-4 py-2 text-gray-800">
+                            <!-- Conteneur pour le composant React -->
+                            <div class="overflow-hidden">
+                                <div {{ react_component('InvoiceViewer', {'fileUrl': asset('uploads/invoices/' ~ expense_entity.invoice)}) }}></div>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr class="border-t border-gray-200">
+                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Facture</th>
+                        <td class="px-4 py-2 text-gray-800 text-red-500">
+                            Aucune facture attachée.
+                        </td>
+                    </tr>
+                {% endif %}
+
                 </tbody>
             </table>
 
@@ -69,7 +74,7 @@
                 <a href="{{ path('app_expense_entity_edit', {'id': expense_entity.id}) }}">
                     <button type="button"
                             class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        edit
+                        Edit
                     </button>
                 </a>
             </div>

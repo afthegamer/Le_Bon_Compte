@@ -61,11 +61,24 @@
                 {{ form_errors(form.userProfileEntity) }}
             </div>
 
-            <!-- Champ User Profile Entity -->
+
+            <!-- Gestion de la facture -->
             <div>
                 {{ form_label(form.invoiceFile, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.invoiceFile, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.invoiceFile) }}
+
+                {% if expense_entity.invoice %}
+                    <!-- Affichage de la facture actuelle -->
+                    <div class="mt-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                        <p class="text-gray-700 font-medium">Facture actuelle :</p>
+                        <div class="mt-2">
+                            <div {{ react_component('InvoiceViewer', {'fileUrl': asset('uploads/invoices/' ~ expense_entity.invoice)}) }}></div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="mt-2 text-red-500">Aucune facture attachée.</p>
+                {% endif %}
             </div>
 
             <div>
