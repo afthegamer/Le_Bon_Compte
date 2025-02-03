@@ -136,7 +136,8 @@ class ImportCVSController extends AbstractController
         }
 
         if (!empty($mappedRow['ExpenseEntity'])) {
-            $amount = (int)(str_replace(',', '.', $mappedRow['ExpenseEntity']) * 100);
+            // Convertir en float et multiplier par 100 pour stocker en centimes
+            $amount = (float) str_replace(',', '.', $mappedRow['ExpenseEntity']);
 
             $expense = new ExpenseEntity();
             $expense->setDate($date);
@@ -146,14 +147,14 @@ class ImportCVSController extends AbstractController
             $expense->setSubcategoryEntity($subcategoryEntity);
             $expense->setAmount($amount);
             $expense->setUserEntity($user);
-            $expense->setUserProfileEntity($profile); // Associer le profil utilisateur
+            $expense->setUserProfileEntity($profile);
 
             $entityManager->persist($expense);
             $formattedData[] = $mappedRow;
         }
 
         if (!empty($mappedRow['IncomeEntity'])) {
-            $amount = (int)(str_replace(',', '.', $mappedRow['IncomeEntity']) * 100);
+            $amount = (float) str_replace(',', '.', $mappedRow['IncomeEntity']);
 
             $income = new IncomeEntity();
             $income->setDate($date);
@@ -163,8 +164,7 @@ class ImportCVSController extends AbstractController
             $income->setSubcategoryEntity($subcategoryEntity);
             $income->setAmount($amount);
             $income->setUserEntity($user);
-            $income->setUserProfileEntity($profile); // Associer le profil utilisateur
-
+            $income->setUserProfileEntity($profile);
             $entityManager->persist($income);
             $formattedData[] = $mappedRow;
         }
