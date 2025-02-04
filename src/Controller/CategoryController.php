@@ -28,13 +28,19 @@ class CategoryController extends AbstractController
             return new JsonResponse(['error' => 'Catégorie non trouvée'], 404);
         }
 
-        // Supprimer les sous-catégories associées
+        // **1. Suppression récursive des sous-catégories**
         foreach (clone $category->getSubcategoryEntities() as $subcat) {
+            foreach (clone $subcat->getExpenseEntity() as $expense) {
+                $expense->setSubcategoryEntity(null);
+            }
+            foreach (clone $subcat->getIncomeEntity() as $income) {
+                $income->setSubcategoryEntity(null);
+            }
             $category->removeSubcategoryEntity($subcat);
             $entityManager->remove($subcat);
         }
 
-        // Dissocier les entités Income et Expense associées
+        // **2. Dissocier toutes les entités Income et Expense reliées à la catégorie**
         foreach ($category->getIncomeEntity() as $income) {
             $income->setCategoryEntity(null);
         }
@@ -42,10 +48,10 @@ class CategoryController extends AbstractController
             $expense->setCategoryEntity(null);
         }
 
-        // Supprimer la catégorie
+        // **3. Supprimer la catégorie maintenant qu'elle n'a plus d'attachements**
         $entityManager->remove($category);
         $entityManager->flush();
 
-        return new JsonResponse(['message' => 'Catégorie supprimée avec succès']);
+        return new JsonResponse(['message' => 'Catégorie et ses sous-catégories supprimées avec succès, mais les transactions associées ont été conservées.']);
     }
 }
