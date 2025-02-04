@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 
 const CategoryInput = ({
-                           predefinedCategories,
+                           predefinedCategories, // Tableau de chaînes représentant les catégories
                            inputName,
                            subcatInputName,
                            currentCategory,
                            currentSubcategory
                        }) => {
-    const [categories] = useState(predefinedCategories);
+    // On passe à une gestion d'état mutable pour pouvoir mettre à jour la liste après suppression
+    const [categories, setCategories] = useState(predefinedCategories);
     const [filteredCategories, setFilteredCategories] = useState(predefinedCategories);
     const [value, setValue] = useState(currentCategory || "");
     const [isFocused, setIsFocused] = useState(false);
@@ -32,7 +33,7 @@ const CategoryInput = ({
                 .then((data) => {
                     setSubcategories(data);
                     setFilteredSubcategories(data);
-                    // Si une sous-catégorie est déjà définie, cocher la case et afficher l'input
+                    // Si une sous-catégorie est déjà définie, on coche la case et on affiche l'input
                     if (currentSubcategory && currentSubcategory.trim() !== "") {
                         setIsCheckboxChecked(true);
                         setIsSubcategoryInputVisible(true);
@@ -86,6 +87,7 @@ const CategoryInput = ({
             );
     };
 
+    // Lorsqu'une suggestion de catégorie est cliquée, on met à jour l'input et on charge les sous-catégories associées.
     const handleSuggestionClick = (category) => {
         setValue(category);
         setFilteredCategories([]);
@@ -96,7 +98,7 @@ const CategoryInput = ({
             hiddenInput.value = category;
         }
 
-        // Vider l'input de sous-catégorie lors de la sélection d'une nouvelle catégorie
+        // Vider l'input de sous-catégorie lors du changement de catégorie
         setSelectedSubcategory("");
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcatInput) {
@@ -127,7 +129,7 @@ const CategoryInput = ({
         setSelectedSubcategory(inputValue);
 
         if (inputValue.trim() === "") {
-            // Si l'utilisateur a sélectionné l'input et n'a rien saisi, on réaffiche toutes les sous-catégories
+            // Si l'utilisateur n'a rien saisi, réafficher toutes les sous-catégories
             setFilteredSubcategories(subcategories);
         } else {
             const filtered = subcategories.filter((subcategory) =>
@@ -136,11 +138,9 @@ const CategoryInput = ({
             setFilteredSubcategories(filtered);
         }
 
-        const hiddenSubcategoryInput = document.querySelector(
-            `input[name="${subcatInputName}"]`
-        );
-        if (hiddenSubcategoryInput) {
-            hiddenSubcategoryInput.value = inputValue;
+        const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
+        if (hiddenSubcatInput) {
+            hiddenSubcatInput.value = inputValue;
         }
     };
 
@@ -148,11 +148,9 @@ const CategoryInput = ({
         setSelectedSubcategory(subcategory.name);
         setFilteredSubcategories([]);
 
-        const hiddenSubcategoryInput = document.querySelector(
-            `input[name="${subcatInputName}"]`
-        );
-        if (hiddenSubcategoryInput) {
-            hiddenSubcategoryInput.value = subcategory.name;
+        const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
+        if (hiddenSubcatInput) {
+            hiddenSubcatInput.value = subcategory.name;
         }
     };
 
@@ -177,6 +175,40 @@ const CategoryInput = ({
         }
     };
 
+    // Fonction pour supprimer une catégorie
+    const handleDeleteCategory = (category) => {
+        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
+            fetch(`/api/categories/${encodeURIComponent(category)}`, {
+                method: "DELETE"
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Erreur lors de la suppression");
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    // Mise à jour des listes en retirant la catégorie supprimée
+                    setCategories(prev => prev.filter(cat => cat !== category));
+                    setFilteredCategories(prev => prev.filter(cat => cat !== category));
+                    alert("Catégorie supprimée avec succès.");
+                    // Si la catégorie supprimée est celle actuellement sélectionnée, on vide l'input
+                    if (category === value) {
+                        setValue("");
+                        const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
+                        if (hiddenInput) {
+                            hiddenInput.value = "";
+                        }
+                        setSubcategories([]);
+                        setFilteredSubcategories([]);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Erreur lors de la suppression de la catégorie :", error);
+                    alert("Erreur lors de la suppression de la catégorie. Veuillez réessayer.");
+                });
+        }
+    };
 
     return (
         <div className="relative">
@@ -195,10 +227,20 @@ const CategoryInput = ({
                     {filteredCategories.map((category, index) => (
                         <li
                             key={index}
-                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                             onClick={() => handleSuggestionClick(category)}
                         >
-                            {category}
+                            <span>{category}</span>
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteCategory(category);
+                                }}
+                                className="text-red-500 hover:text-red-700"
+                            >
+                                Supprimer
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -253,7 +295,6 @@ const CategoryInput = ({
                                     >
                                         Supprimer
                                     </button>
-
                                 </li>
                             ))}
                         </ul>
