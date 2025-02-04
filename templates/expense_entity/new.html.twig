@@ -45,6 +45,8 @@
                     inputName: form.categoryEntity.vars.full_name,
                     subcatInputName: form.subcategoryEntity.vars.full_name
                 }) }}></div>
+                <input type="hidden" name="category" value={value} />
+                <input type="hidden" name="subcategory" value={selectedSubcategory} />
 
                 <!-- Champ masqué pour Symfony -->
                 {{ form_widget(form.categoryEntity, { 'attr': { 'style': 'display: none;' } }) }}

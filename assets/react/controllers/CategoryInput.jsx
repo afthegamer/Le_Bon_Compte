@@ -52,40 +52,25 @@ const CategoryInput = ({
         const inputValue = event.target.value;
         setValue(inputValue);
 
-        // Filtrer les catégories en fonction de l'entrée utilisateur
-        const filtered = categories.filter((category) =>
-            category.toLowerCase().includes(inputValue.toLowerCase())
-        );
-        setFilteredCategories(filtered);
-
+        // Mettre à jour l'input caché pour la catégorie
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = inputValue;
         }
 
-        // Afficher la case à cocher si une catégorie est saisie
-        setIsCheckboxVisible(inputValue.trim() !== "");
-
-        // Réinitialiser l'état de la case à cocher et du champ sous-catégorie si le champ est vide
-        if (inputValue.trim() === "") {
-            setIsCheckboxChecked(false);
-            setIsSubcategoryInputVisible(false);
-            setSubcategories([]);
-            setFilteredSubcategories([]);
-            return;
+        // Si l'utilisateur crée une nouvelle catégorie, on reset aussi la sous-catégorie
+        if (!predefinedCategories.includes(inputValue)) {
+            setSelectedSubcategory("");
+            const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
+            if (hiddenSubcatInput) {
+                hiddenSubcatInput.value = "";
+            }
         }
 
-        // Charger les sous-catégories selon la catégorie saisie
-        fetch(`/api/subcategories/by-name/${encodeURIComponent(inputValue)}`)
-            .then((response) => response.json())
-            .then((data) => {
-                setSubcategories(data);
-                setFilteredSubcategories(data);
-            })
-            .catch((error) =>
-                console.error("Erreur lors du chargement des sous-catégories", error)
-            );
+        // Afficher la case à cocher si une catégorie est saisie
+        setIsCheckboxVisible(inputValue.trim() !== "");
     };
+
 
     // Lorsqu'une suggestion de catégorie est cliquée, on met à jour l'input et on charge les sous-catégories associées.
     const handleSuggestionClick = (category) => {
@@ -128,21 +113,12 @@ const CategoryInput = ({
         const inputValue = event.target.value;
         setSelectedSubcategory(inputValue);
 
-        if (inputValue.trim() === "") {
-            // Si l'utilisateur n'a rien saisi, réafficher toutes les sous-catégories
-            setFilteredSubcategories(subcategories);
-        } else {
-            const filtered = subcategories.filter((subcategory) =>
-                subcategory.name.toLowerCase().includes(inputValue.toLowerCase())
-            );
-            setFilteredSubcategories(filtered);
-        }
-
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcatInput) {
             hiddenSubcatInput.value = inputValue;
         }
     };
+
 
     const handleSubcategorySuggestionClick = (subcategory) => {
         setSelectedSubcategory(subcategory.name);
