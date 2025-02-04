@@ -54,16 +54,29 @@ class SubCategoryController extends AbstractController
     #[Route('/api/subcategories/{id}', name: 'delete_subcategory', methods: ['DELETE'])]
     public function deleteSubcategory(int $id, EntityManagerInterface $entityManager): JsonResponse
     {
+        // Récupérer la sous-catégorie à supprimer
         $subcategory = $entityManager->getRepository(SubcategoryEntity::class)->find($id);
-
         if (!$subcategory) {
             return new JsonResponse(['error' => 'Sous-catégorie non trouvée'], 404);
         }
 
+        // Dissocier la sous-catégorie des entités Expense
+        foreach ($subcategory->getExpenseEntity() as $expense) {
+            // La méthode removeExpenseEntity() de la sous-catégorie gère la dissociation
+            // ou vous pouvez appeler directement le setter du côté Expense
+            $expense->setSubcategoryEntity(null);
+        }
+
+        // Dissocier la sous-catégorie des entités Income
+        foreach ($subcategory->getIncomeEntity() as $income) {
+            $income->setSubcategoryEntity(null);
+        }
+
+        // Maintenant, on peut supprimer la sous-catégorie
         $entityManager->remove($subcategory);
         $entityManager->flush();
 
-        return new JsonResponse(['message' => 'Sous-catégorie supprimée avec succès']);
+        return new JsonResponse(['message' => 'Sous-catégorie supprimée et dissociée avec succès']);
     }
 
     #[Route('/api/subcategories', name: 'create_subcategory', methods: ['POST'])]

@@ -178,9 +178,8 @@ const CategoryInput = ({
     // Fonction pour supprimer une catégorie
     const handleDeleteCategory = (category) => {
         if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
-            fetch(`/api/categories/${encodeURIComponent(category)}`, {
-                method: "DELETE"
-            })
+            // Utilisez category.id pour construire l'URL
+            fetch(`/api/categories/${encodeURIComponent(category.id)}`, { method: "DELETE" })
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error("Erreur lors de la suppression");
@@ -189,11 +188,11 @@ const CategoryInput = ({
                 })
                 .then(() => {
                     // Mise à jour des listes en retirant la catégorie supprimée
-                    setCategories(prev => prev.filter(cat => cat !== category));
-                    setFilteredCategories(prev => prev.filter(cat => cat !== category));
+                    setCategories(prev => prev.filter(cat => cat.id !== category.id));
+                    setFilteredCategories(prev => prev.filter(cat => cat.id !== category.id));
                     alert("Catégorie supprimée avec succès.");
                     // Si la catégorie supprimée est celle actuellement sélectionnée, on vide l'input
-                    if (category === value) {
+                    if (category.name === value) {
                         setValue("");
                         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
                         if (hiddenInput) {
@@ -209,7 +208,6 @@ const CategoryInput = ({
                 });
         }
     };
-
     return (
         <div className="relative">
             {/* Input de catégorie */}
