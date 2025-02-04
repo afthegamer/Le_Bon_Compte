@@ -7,38 +7,45 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class CategoryController extends AbstractController
 {
-    #[Route('/api/categories/{id}', name: 'delete_category', methods: ['DELETE'])]
-    public function deleteCategory(int $id, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/api/categories/{name}', name: 'delete_category', methods: ['DELETE'])]
+    public function deleteCategory(string $name, EntityManagerInterface $entityManager, UserInterface $user): JsonResponse
     {
-        // Récupérer la catégorie par son identifiant
-        $category = $entityManager->getRepository(CategoryEntity::class)->find($id);
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non authentifié'], 401);
+        }
+
+        // Trouver la catégorie par son nom et l'utilisateur
+        $category = $entityManager->getRepository(CategoryEntity::class)->findOneBy([
+            'name' => $name,
+            'userEntity' => $user
+        ]);
+
         if (!$category) {
             return new JsonResponse(['error' => 'Catégorie non trouvée'], 404);
         }
 
-        // Dissocier les revenus associés à cette catégorie
+        // Supprimer les sous-catégories associées
+        foreach (clone $category->getSubcategoryEntities() as $subcat) {
+            $category->removeSubcategoryEntity($subcat);
+            $entityManager->remove($subcat);
+        }
+
+        // Dissocier les entités Income et Expense associées
         foreach ($category->getIncomeEntity() as $income) {
             $income->setCategoryEntity(null);
         }
-
-        // Dissocier les dépenses associées à cette catégorie
         foreach ($category->getExpenseEntity() as $expense) {
             $expense->setCategoryEntity(null);
-        }
-
-        // Dissocier les sous-catégories associées à cette catégorie
-        foreach ($category->getSubcategoryEntities() as $subcat) {
-            // Vous pouvez soit décider de dissocier, soit supprimer la sous-catégorie en fonction de votre logique
-            $subcat->setCategoryEntity(null);
         }
 
         // Supprimer la catégorie
         $entityManager->remove($category);
         $entityManager->flush();
 
-        return new JsonResponse(['message' => 'Catégorie supprimée et dissociée avec succès']);
+        return new JsonResponse(['message' => 'Catégorie supprimée avec succès']);
     }
 }

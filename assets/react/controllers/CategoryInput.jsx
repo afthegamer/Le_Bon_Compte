@@ -176,38 +176,47 @@ const CategoryInput = ({
     };
 
     // Fonction pour supprimer une catégorie
-    const handleDeleteCategory = (category) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette catégorie ?")) {
-            // Utilisez category.id pour construire l'URL
-            fetch(`/api/categories/${encodeURIComponent(category.id)}`, { method: "DELETE" })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error("Erreur lors de la suppression");
-                    }
-                    return response.json();
-                })
-                .then(() => {
-                    // Mise à jour des listes en retirant la catégorie supprimée
-                    setCategories(prev => prev.filter(cat => cat.id !== category.id));
-                    setFilteredCategories(prev => prev.filter(cat => cat.id !== category.id));
-                    alert("Catégorie supprimée avec succès.");
-                    // Si la catégorie supprimée est celle actuellement sélectionnée, on vide l'input
-                    if (category.name === value) {
-                        setValue("");
-                        const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
-                        if (hiddenInput) {
-                            hiddenInput.value = "";
-                        }
-                        setSubcategories([]);
-                        setFilteredSubcategories([]);
-                    }
-                })
-                .catch((error) => {
-                    console.error("Erreur lors de la suppression de la catégorie :", error);
-                    alert("Erreur lors de la suppression de la catégorie. Veuillez réessayer.");
-                });
+    const handleDeleteCategory = async (categoryName) => {
+        console.log(categoryName);
+        if (!categoryName) {
+            console.error("Erreur: Nom de la catégorie non défini");
+            return;
+        }
+
+        if (!window.confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categoryName}" ?`)) {
+            return;
+        }
+
+        try {
+            // Suppression de la catégorie directement par son nom
+            const deleteResponse = await fetch(`/api/categories/${encodeURIComponent(categoryName)}`, { method: "DELETE" });
+            console.log(deleteResponse);
+            if (!deleteResponse.ok) {
+                throw new Error("Erreur lors de la suppression de la catégorie.");
+            }
+
+            alert("Catégorie supprimée avec succès.");
+
+            // Mise à jour de la liste des catégories après suppression
+            setCategories(prev => prev.filter(cat => cat !== categoryName));
+            setFilteredCategories(prev => prev.filter(cat => cat !== categoryName));
+
+            // Réinitialisation de l'input si la catégorie supprimée était sélectionnée
+            if (categoryName === value) {
+                setValue("");
+                const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
+                if (hiddenInput) {
+                    hiddenInput.value = "";
+                }
+                setSubcategories([]);
+                setFilteredSubcategories([]);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la suppression de la catégorie :", error);
+            alert("Erreur lors de la suppression de la catégorie. Veuillez réessayer.");
         }
     };
+
     return (
         <div className="relative">
             {/* Input de catégorie */}
@@ -232,6 +241,7 @@ const CategoryInput = ({
                             <button
                                 type="button"
                                 onClick={(e) => {
+                                    console.log(category);
                                     e.stopPropagation();
                                     handleDeleteCategory(category);
                                 }}
