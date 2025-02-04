@@ -51,6 +51,20 @@ class SubCategoryController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], 404);
         }
     }
+    #[Route('/api/subcategories/{id}', name: 'delete_subcategory', methods: ['DELETE'])]
+    public function deleteSubcategory(int $id, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $subcategory = $entityManager->getRepository(SubcategoryEntity::class)->find($id);
+
+        if (!$subcategory) {
+            return new JsonResponse(['error' => 'Sous-catégorie non trouvée'], 404);
+        }
+
+        $entityManager->remove($subcategory);
+        $entityManager->flush();
+
+        return new JsonResponse(['message' => 'Sous-catégorie supprimée avec succès']);
+    }
 
     #[Route('/api/subcategories', name: 'create_subcategory', methods: ['POST'])]
     public function createSubcategory(Request $request, SubCategoryService $subCategoryService): JsonResponse
