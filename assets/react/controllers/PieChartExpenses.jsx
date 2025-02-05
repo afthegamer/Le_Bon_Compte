@@ -40,7 +40,8 @@ const calculateDateBounds = (filter, year, month, quarter, semester) => {
             endDate = startDate.endOf("year");
             break;
         case "semestriel":
-            startDate = semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
+            startDate =
+                semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
             endDate = startDate.add(6, "month").endOf("month");
             break;
         case "trimestriel":
@@ -200,10 +201,16 @@ FilterSelectors.propTypes = {
 export default function PieChartExpenses({ expenses }) {
     // Mémoïsation des années et mois disponibles
     const availableYears = React.useMemo(
-        () => [...new Set(expenses.map((exp) => dayjs(exp.date).year()))].sort((a, b) => b - a),
+        () =>
+            [...new Set(expenses.map((exp) => dayjs(exp.date).year()))].sort(
+                (a, b) => b - a
+            ),
         [expenses]
     );
-    const availableMonths = React.useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
+    const availableMonths = React.useMemo(
+        () => Array.from({ length: 12 }, (_, i) => i + 1),
+        []
+    );
 
     // États de filtrage
     const [timeFilter, setTimeFilter] = React.useState("mois");
@@ -211,6 +218,9 @@ export default function PieChartExpenses({ expenses }) {
     const [selectedMonth, setSelectedMonth] = React.useState(dayjs().month() + 1);
     const [selectedQuarter, setSelectedQuarter] = React.useState(1);
     const [selectedSemester, setSelectedSemester] = React.useState(1);
+
+    // État pour l'affichage de l'intégralité du composant
+    const [showComponent, setShowComponent] = React.useState(false);
 
     // Calcul des bornes et filtrage des dépenses
     const filteredExpenses = React.useMemo(() => {
@@ -227,7 +237,7 @@ export default function PieChartExpenses({ expenses }) {
         console.log("[DEBUG] endDate:", endDate.format());
 
         return expenses.filter((expense) => {
-            // On exclut les income et on ne garde que les dépenses (montants négatifs)
+            // On exclut les revenus et on ne garde que les dépenses (montants négatifs)
             if (expense.type === "income" || expense.amount >= 0) {
                 return false;
             }
@@ -236,7 +246,10 @@ export default function PieChartExpenses({ expenses }) {
                 console.warn("❌ Date invalide détectée pour la transaction :", expense);
                 return false;
             }
-            return expenseDate.isSameOrAfter(startDate) && expenseDate.isSameOrBefore(endDate);
+            return (
+                expenseDate.isSameOrAfter(startDate) &&
+                expenseDate.isSameOrBefore(endDate)
+            );
         });
     }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester]);
 
@@ -251,81 +264,99 @@ export default function PieChartExpenses({ expenses }) {
             acc[category] = (acc[category] || 0) + amount;
             return acc;
         }, {});
-        console.log("[DEBUG] Totaux par catégorie:", categoryTotals);
-        return Object.keys(categoryTotals).map((category, index) => ({
-            id: `cat-${index}`,
-            value: categoryTotals[category],
-            label: category,
-            color: getColor(index),
-        }));
+
+        // Transformation en tableau et tri décroissant par montant
+        return Object.keys(categoryTotals)
+            .map((category, index) => ({
+                id: `cat-${index}`,
+                value: categoryTotals[category],
+                label: category,
+                color: getColor(index),
+            }))
+            .sort((a, b) => b.value - a.value);
     }, [filteredExpenses]);
 
     return (
         <div className="flex flex-col items-center w-full space-y-6">
-            <p className="text-gray-700 font-semibold text-center">
-                Total des transactions affichées : {filteredExpenses.length}
-            </p>
+            {/* Bouton pour afficher/masquer l'intégralité du composant */}
+            <button
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onClick={() => setShowComponent((prev) => !prev)}
+            >
+                {showComponent ? "Masquer les statistiques" : "Afficher les statistiques"}
+            </button>
 
-            <FilterSelectors
-                timeFilter={timeFilter}
-                setTimeFilter={setTimeFilter}
-                selectedYear={selectedYear}
-                setSelectedYear={setSelectedYear}
-                selectedMonth={selectedMonth}
-                setSelectedMonth={setSelectedMonth}
-                selectedQuarter={selectedQuarter}
-                setSelectedQuarter={setSelectedQuarter}
-                selectedSemester={selectedSemester}
-                setSelectedSemester={setSelectedSemester}
-                availableYears={availableYears}
-                availableMonths={availableMonths}
-            />
+            {showComponent && (
+                <>
+                    <p className="text-gray-700 font-semibold text-center">
+                        Total des transactions affichées : {filteredExpenses.length}
+                    </p>
 
-            <div className="flex justify-center space-x-12 w-full">
-                <div className="w-1/3 rounded-lg p-6 h-auto ml-12 bg-white shadow-lg">
-                    {hasData ? (
-                        <PieChart
-                            series={[{ data: chartData, innerRadius: 50 }]}
-                            width={400}
-                            height={400}
-                            slotProps={{ legend: { hidden: true } }}
-                        />
-                    ) : (
-                        <p className="text-center text-gray-500 font-semibold">
-                            Aucune donnée à afficher
-                        </p>
-                    )}
-                </div>
+                    <FilterSelectors
+                        timeFilter={timeFilter}
+                        setTimeFilter={setTimeFilter}
+                        selectedYear={selectedYear}
+                        setSelectedYear={setSelectedYear}
+                        selectedMonth={selectedMonth}
+                        setSelectedMonth={setSelectedMonth}
+                        selectedQuarter={selectedQuarter}
+                        setSelectedQuarter={setSelectedQuarter}
+                        selectedSemester={selectedSemester}
+                        setSelectedSemester={setSelectedSemester}
+                        availableYears={availableYears}
+                        availableMonths={availableMonths}
+                    />
 
-                {hasData && (
-                    <div className="w-1/3 bg-white shadow-md rounded-lg p-6 h-auto">
-                        <h3 className="text-lg font-bold text-gray-700 text-center mb-4">
-                            Détails des Catégories
-                        </h3>
-                        <ul className="space-y-3">
-                            {chartData.map((item, index) => (
-                                <li
-                                    key={index}
-                                    className="flex justify-between items-center border-b pb-2"
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <div
-                                            className="w-4 h-4 rounded-full"
-                                            style={{ backgroundColor: item.color }}
-                                        ></div>
-                                        <span className="text-gray-800 font-medium">
-                      {item.label}
-                    </span>
-                                    </div>
-                                    <span className="text-gray-600 font-semibold">
-                    {item.value.toFixed(2)} €
-                  </span>
-                                </li>
-                            ))}
-                        </ul>
+                    <div className="flex justify-center space-x-12 w-full">
+                        <div className="w-1/3 rounded-lg p-6 ml-12 bg-white shadow-lg">
+                            {hasData ? (
+                                <PieChart
+                                    series={[{ data: chartData, innerRadius: 50 }]}
+                                    width={400}
+                                    height={400}
+                                    slotProps={{ legend: { hidden: true } }}
+                                />
+                            ) : (
+                                <p className="text-center text-gray-500 font-semibold">
+                                    Aucune donnée à afficher
+                                </p>
+                            )}
+                        </div>
+
+                        {hasData && (
+                            <div className="w-1/3 bg-white shadow-md rounded-lg p-6">
+                                <h3 className="text-lg font-bold text-gray-700 text-center mb-4">
+                                    Détails des Catégories
+                                </h3>
+                                {/* Conteneur scrollable pour la liste avec hauteur fixe */}
+                                <div className="h-[400px] overflow-y-auto">
+                                    <ul className="space-y-3">
+                                        {chartData.map((item, index) => (
+                                            <li
+                                                key={index}
+                                                className="flex justify-between items-center border-b pb-2"
+                                            >
+                                                <div className="flex items-center space-x-3">
+                                                    <div
+                                                        className="w-4 h-4 rounded-full"
+                                                        style={{ backgroundColor: item.color }}
+                                                    ></div>
+                                                    <span className="text-gray-800 font-medium">
+                            {item.label}
+                          </span>
+                                                </div>
+                                                <span className="text-gray-600 font-semibold">
+                          {item.value.toFixed(2)} €
+                        </span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
+                </>
+            )}
         </div>
     );
 }
