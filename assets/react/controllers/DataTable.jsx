@@ -3,7 +3,8 @@ import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 
 export default function DataTable({ Data, excludeCollum = [] }) {
-    console.log('colone exclue: ',excludeCollum);
+    console.log('Colonnes exclues : ', excludeCollum);
+
     // Vérifier si Data est un tableau non vide
     if (!Array.isArray(Data) || Data.length === 0) {
         return <div>Aucune donnée à afficher</div>;
@@ -51,6 +52,8 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                 }}
                 pageSizeOptions={[5, 10]}
                 sx={{ border: 0 }}
+                disableColumnMenu  // Désactive le menu de colonne (filtrage, masquage, etc.)
+                disableSelectionOnClick // Désactive la sélection de ligne au clic
             />
         </Paper>
     );
