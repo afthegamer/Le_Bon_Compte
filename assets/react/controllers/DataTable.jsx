@@ -1,8 +1,19 @@
 import * as React from 'react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Chip } from '@mui/material';
+
+// Expression régulière pour détecter un format de date "YYYY-MM-DD HH:MM:SS"
+const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+
+// Fonction pour formater la date en "DD/MM/YYYY"
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const [datePart] = dateString.split(' ');
+    const [year, month, day] = datePart.split('-');
+    return `${day}/${month}/${year}`;
+};
 
 export default function DataTable({ Data, excludeCollum = [] }) {
     // Vérifier si Data est un tableau non vide
@@ -20,6 +31,9 @@ export default function DataTable({ Data, excludeCollum = [] }) {
     const [filterColumn, setFilterColumn] = useState(allColumns[0] || '');
     const [filterValue, setFilterValue] = useState('');
     const [appliedFilters, setAppliedFilters] = useState([]);
+
+    // Vérifier si la colonne de filtrage sélectionnée est de type date
+    const isDateFilter = filterColumn && dateRegex.test(Data[0][filterColumn]);
 
     // Ajoute un filtre à la liste si les champs sont valides
     const handleAddFilter = () => {
@@ -52,6 +66,12 @@ export default function DataTable({ Data, excludeCollum = [] }) {
             return appliedFilters.every(filter => {
                 const cellValue = row[filter.column];
                 if (cellValue === undefined) return false;
+                // Si la colonne filtrée est de type date, comparer uniquement la partie "YYYY-MM-DD"
+                if (dateRegex.test(cellValue)) {
+                    const rowDate = cellValue.substring(0, 10); // "YYYY-MM-DD"
+                    return rowDate === filter.value;
+                }
+                // Sinon, recherche en "contains" (insensible à la casse)
                 return String(cellValue)
                     .toLowerCase()
                     .includes(filter.value.toLowerCase());
@@ -62,13 +82,26 @@ export default function DataTable({ Data, excludeCollum = [] }) {
     // Générer dynamiquement les colonnes de base en excluant les clés définies
     const baseColumns = Object.keys(Data[0])
         .filter(key => !exclusions.includes(key))
-        .map(key => ({
-            field: key,
-            headerName: key.charAt(0).toUpperCase() + key.slice(1),
-            sortable: true,
-            flex: 1,
-            width: 160,
-        }));
+        .map(key => {
+            // Détecter si la colonne contient une date
+            const isDate = dateRegex.test(Data[0][key]);
+            const columnDef = {
+                field: key,
+                headerName: key.charAt(0).toUpperCase() + key.slice(1),
+                sortable: true,
+                flex: 1,
+                width: 160,
+            };
+
+            // Si c'est une date, ajouter un renderCell pour formater l'affichage
+            if (isDate) {
+                columnDef.renderCell = (params) => (
+                    <span>{formatDate(params.value)}</span>
+                );
+            }
+
+            return columnDef;
+        });
 
     // Ajouter une colonne pour les actions
     const actionColumn = {
@@ -109,15 +142,30 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                         ))}
                     </Select>
                 </FormControl>
-                <TextField
-                    size="small"
-                    label="Filter Value"
-                    placeholder="Enter filter value"
-                    value={filterValue}
-                    onChange={(e) => setFilterValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
-                />
+                {isDateFilter ? (
+                    <TextField
+                        size="small"
+                        type="date"
+                        label="Filter Date"
+                        value={filterValue}
+                        onChange={(e) => setFilterValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
+                        InputLabelProps={{
+                            shrink: true,
+                        }}
+                    />
+                ) : (
+                    <TextField
+                        size="small"
+                        label="Filter Value"
+                        placeholder="Enter filter value"
+                        value={filterValue}
+                        onChange={(e) => setFilterValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
+                    />
+                )}
                 <Button
                     variant="contained"
                     onClick={handleAddFilter}
@@ -141,7 +189,7 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                 {appliedFilters.map((filter, index) => (
                     <Chip
                         key={index}
-                        label={`${filter.column} contains "${filter.value}"`}
+                        label={`${filter.column} ${isDateFilter ? 'is' : 'contains'} "${filter.value}"`}
                         onDelete={() => handleRemoveFilter(index)}
                         sx={{ marginRight: 1, marginBottom: 1 }}
                     />
