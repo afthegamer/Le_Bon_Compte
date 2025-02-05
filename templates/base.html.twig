@@ -12,29 +12,9 @@
 <body class=" min-h-screen">
 <!-- Intégration du composant SmartphoneBlocker -->
 <div {{ react_component('SmartphoneBlocker') }}></div>
-<header class="bg-white shadow p-4 fixed top-0 left-0 w-full z-50">
-    <div class="container mx-auto flex justify-between items-center">
-        <h1 class="text-lg font-semibold text-gray-800"><a href="{{path('app_home_index') }}"> LeBonCompte</a></h1>
 
-
-        {% if app.user %}
-            <div class="text-gray-700">
-                <span>Vous êtes connecté en tant que <span class="font-semibold">{{ app.user.email }}</span></span> |
-                {% if app.user and app.user.id is defined %}
-                    <a href="{{ path('app_user_edit', {'id': app.user.id}) }}" class="text-green-600 hover:underline">Modifier mon compte</a>
-                {% else %}
-                    <span class="text-gray-500">Impossible de modifier le compte</span>
-                {% endif %}
-                <a href="{{ path('app_logout') }}" class="text-blue-600 hover:underline">Déconnexion</a>
-            </div>
-        {% else %}
-            <div class="text-gray-700">
-                <a href="{{ path('app_login') }}" class="text-blue-600 hover:underline">Connexion</a> |
-                <a href="{{ path('app_register') }}" class="text-blue-600 hover:underline">Inscription</a>
-            </div>
-        {% endif %}
-    </div>
-</header>
+{# Inclusion du header #}
+{% include 'header.html.twig' %}
 
 <!-- Affichage des messages flash -->
 <div class="fixed top-28 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-xl">
@@ -63,6 +43,7 @@
 
 {% block javascripts %}
     {{ encore_entry_script_tags('app') }}
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 {% endblock %}
 </body>
 </html>

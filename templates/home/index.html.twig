@@ -11,31 +11,6 @@
             </div>
             <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Data Table</h1>
 
-            <!-- Boutons alignés -->
-            <div class="flex space-x-4 mb-6">
-                <!-- Bouton pour ajouter une dépense -->
-                <a href="{{ path('app_expense_entity_new') }}"
-                   class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-center">
-                    Add New Expense
-                </a>
-
-                <!-- Bouton pour ajouter un revenu -->
-                <a href="{{ path('app_income_entity_new') }}"
-                   class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center">
-                    Add New Income
-                </a>
-                <!-- Bouton pour user profil -->
-                <a href="{{ path('app_user_profile_entity_index') }}"
-                   class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center">
-                    show User Profile list
-                </a>
-                <!-- Bouton pour import csv -->
-                <a href="{{ path('import_csv') }}"
-                   class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center">
-                    import to csv file
-                </a>
-            </div>
-
             <!-- Conteneur pour le composant React -->
             <div class="overflow-hidden">
                 <div {{ react_component('DataTable', {'Data': combinedList,'excludeCollum':["type","id"],'filterableExcluded':["type"],'noDynamicList':["amount"]}) }}></div>
