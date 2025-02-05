@@ -354,9 +354,6 @@ export default function PieChartExpenses({ expenses }) {
             selectedWeek // Paramètre utilisé uniquement pour le filtre "semaine"
         );
 
-        console.log("[DEBUG] Filtrage pour", timeFilter);
-        console.log("[DEBUG] startDate:", startDate.format());
-        console.log("[DEBUG] endDate:", endDate.format());
 
         return expenses.filter((expense) => {
             // On exclut les revenus et on ne garde que les dépenses (montants négatifs)
@@ -372,7 +369,6 @@ export default function PieChartExpenses({ expenses }) {
         });
     }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester, selectedWeek]);
 
-    console.log("📊 Transactions affichées :", filteredExpenses.length);
     const hasData = filteredExpenses.length > 0;
 
     // Calcul des totaux par catégorie et préparation des données du graphique

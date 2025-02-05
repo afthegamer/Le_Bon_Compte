@@ -12,7 +12,7 @@
 
             <!-- Conteneur pour le composant React -->
             <div class="overflow-hidden">
-                <div {{ react_component('DataTable', {'Data': combinedList,'excludeCollum':["type","id"],'filterableExcluded':["type"],'noDynamicList':["amount"]}) }}></div>
+                <div {{ react_component('DataTable', {'Data': combinedList,'excludeCollum':["type","id","userProfileEntity"],'filterableExcluded':["type","userProfileEntity"],'noDynamicList':["amount"]}) }}></div>
             </div>
         </div>
     </div>

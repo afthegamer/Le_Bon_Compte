@@ -2,7 +2,19 @@ import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
-import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Chip, Autocomplete } from '@mui/material';
+import {
+    TextField,
+    Button,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Chip,
+    Autocomplete,
+    Checkbox,
+    FormControlLabel,
+    Box
+} from '@mui/material';
 
 // Expression régulière pour détecter un format de date "YYYY-MM-DD HH:MM:SS"
 const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
@@ -15,6 +27,15 @@ const formatDate = (dateString) => {
     return `${day}/${month}/${year}`;
 };
 
+// Fonction pour formater les montants numériques
+const formatAmount = (value) => {
+    const num = Number(value);
+    if (isNaN(num)) return value;
+    // Utilise le format français pour insérer des espaces comme séparateur de milliers
+    const formatted = Math.abs(num).toLocaleString('fr-FR');
+    return num < 0 ? `- ${formatted}` : formatted;
+};
+
 export default function DataTable({ Data, excludeCollum = [], filterableExcluded = [], noDynamicList = [] }) {
     // Vérifier si Data est un tableau non vide
     if (!Array.isArray(Data) || Data.length === 0) {
@@ -25,9 +46,7 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
     const defaultExclusions = ['showUrl', 'editUrl'];
     const exclusions = [...defaultExclusions, ...excludeCollum];
 
-    // Calcul des colonnes disponibles pour le filtrage :
-    // On part des clés du premier élément en retirant les colonnes exclues pour l'affichage,
-    // puis on ajoute celles spécifiées dans filterableExcluded
+    // Calcul des colonnes disponibles pour le filtrage
     const allFilterableColumns = Array.from(
         new Set([
             ...Object.keys(Data[0]).filter(key => !exclusions.includes(key)),
@@ -36,17 +55,30 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
     );
 
     // États pour le filtre en cours et les filtres appliqués
-    // Initialiser filterColumn avec la première colonne disponible dans le filtre
     const [filterColumn, setFilterColumn] = useState(allFilterableColumns[0] || '');
     const [filterValue, setFilterValue] = useState('');
+    const [filterDate, setFilterDate] = useState('');
+    const [filterStartDate, setFilterStartDate] = useState('');
+    const [filterEndDate, setFilterEndDate] = useState('');
+    // État pour activer/désactiver le filtrage par intervalle sur les dates
+    const [isRangeFilter, setIsRangeFilter] = useState(false);
+    // Pour les filtres sur les montants, on ajoute un opérateur (equal, min, max)
+    const [amountOperator, setAmountOperator] = useState('equal');
+    // Tableau contenant tous les filtres appliqués (permettant plusieurs filtres par même colonne)
     const [appliedFilters, setAppliedFilters] = useState([]);
 
-    // Détecte si la colonne de filtrage sélectionnée est de type date
+    // Détecte si la colonne sélectionnée est de type date
     const isDateFilter = filterColumn && dateRegex.test(Data[0][filterColumn]);
 
-    // Calculer dynamiquement la liste des options (catégories) pour la colonne sélectionnée
+    // Détecte si la colonne sélectionnée est numérique (hors date)
+    const isNumericFilter =
+        !isDateFilter &&
+        filterColumn &&
+        !isNaN(Data[0][filterColumn]) &&
+        isFinite(Data[0][filterColumn]);
+
+    // Liste dynamique pour les autres colonnes (excluant les colonnes de type date)
     const uniqueOptions = useMemo(() => {
-        // On ne propose pas de liste dynamique si la colonne est de type date ou si elle est listée dans noDynamicList
         if (!filterColumn || isDateFilter || noDynamicList.includes(filterColumn)) return [];
         const optionsSet = new Set();
         Data.forEach(row => {
@@ -57,56 +89,121 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
         return Array.from(optionsSet);
     }, [Data, filterColumn, isDateFilter, noDynamicList]);
 
-    // Ajoute un filtre à la liste si les champs sont valides
+    // Ajout du filtre selon le mode de filtrage
     const handleAddFilter = () => {
-        if (filterColumn && filterValue.trim() !== '') {
-            setAppliedFilters(prev => [...prev, { column: filterColumn, value: filterValue }]);
-            setFilterValue('');
+        if (!filterColumn) return;
+
+        if (isDateFilter) {
+            if (isRangeFilter) {
+                if (filterStartDate && filterEndDate) {
+                    setAppliedFilters(prev => [
+                        ...prev,
+                        { column: filterColumn, start: filterStartDate, end: filterEndDate, type: 'range' }
+                    ]);
+                    setFilterStartDate('');
+                    setFilterEndDate('');
+                }
+            } else {
+                if (filterDate) {
+                    setAppliedFilters(prev => [
+                        ...prev,
+                        { column: filterColumn, value: filterDate, type: 'unique' }
+                    ]);
+                    setFilterDate('');
+                }
+            }
+        } else if (isNumericFilter) {
+            if (filterValue.trim() !== '') {
+                setAppliedFilters(prev => [
+                    ...prev,
+                    { column: filterColumn, value: Number(filterValue), operator: amountOperator }
+                ]);
+                setFilterValue('');
+            }
+        } else {
+            if (filterValue.trim() !== '') {
+                setAppliedFilters(prev => [...prev, { column: filterColumn, value: filterValue }]);
+                setFilterValue('');
+            }
         }
     };
 
-    // Permet d'ajouter le filtre en appuyant sur la touche "Entrée"
+    // Ajout du filtre avec la touche "Entrée"
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && filterColumn && filterValue.trim() !== '') {
+        if (e.key === 'Enter') {
             handleAddFilter();
         }
     };
 
-    // Supprime un filtre à l'index donné
+    // Suppression d'un filtre
     const handleRemoveFilter = (indexToRemove) => {
         setAppliedFilters(prev => prev.filter((_, index) => index !== indexToRemove));
     };
 
-    // Supprime tous les filtres
+    // Suppression de tous les filtres
     const handleClearFilters = () => {
         setAppliedFilters([]);
     };
 
-    // Filtrer les données en appliquant tous les filtres
+    // Filtrage des données
+    // Pour chaque colonne filtrée, la ligne doit satisfaire :
+    // - Pour les filtres numériques : toutes les conditions (ET)
+    // - Pour les filtres de date et textuels : au moins une condition (OU)
     const filteredData = useMemo(() => {
+        if (appliedFilters.length === 0) return Data;
+        const filtersByColumn = appliedFilters.reduce((acc, filter) => {
+            if (!acc[filter.column]) {
+                acc[filter.column] = [];
+            }
+            acc[filter.column].push(filter);
+            return acc;
+        }, {});
+
         return Data.filter(row => {
-            return appliedFilters.every(filter => {
-                const cellValue = row[filter.column];
+            return Object.entries(filtersByColumn).every(([column, filters]) => {
+                const cellValue = row[column];
                 if (cellValue === undefined) return false;
-                // Si la colonne filtrée est de type date, comparer uniquement la partie "YYYY-MM-DD"
+
+                // Cas des colonnes de type date
                 if (dateRegex.test(cellValue)) {
-                    const rowDate = cellValue.substring(0, 10); // "YYYY-MM-DD"
-                    return rowDate === filter.value;
+                    const rowDate = cellValue.substring(0, 10);
+                    return filters.some(filter => {
+                        if (filter.type === 'range') {
+                            return rowDate >= filter.start && rowDate <= filter.end;
+                        }
+                        return rowDate === filter.value;
+                    });
                 }
-                // Sinon, recherche "contains" (insensible à la casse)
-                return String(cellValue)
-                    .toLowerCase()
-                    .includes(filter.value.toLowerCase());
+
+                // Cas des colonnes numériques
+                if (!isNaN(cellValue) && isFinite(cellValue)) {
+                    const cellNumber = Number(cellValue);
+                    // Pour les filtres numériques, toutes les conditions doivent être vérifiées
+                    return filters.every(filter => {
+                        if (filter.operator) {
+                            if (filter.operator === 'equal') {
+                                return cellNumber === filter.value;
+                            } else if (filter.operator === 'min') {
+                                return cellNumber >= filter.value;
+                            } else if (filter.operator === 'max') {
+                                return cellNumber <= filter.value;
+                            }
+                        }
+                        return String(cellNumber).includes(String(filter.value));
+                    });
+                }
+
+                // Pour les autres colonnes, recherche insensible à la casse (OU)
+                const lowerValue = String(cellValue).toLowerCase();
+                return filters.some(filter => lowerValue.includes(filter.value.toLowerCase()));
             });
         });
     }, [Data, appliedFilters]);
 
-    // Générer dynamiquement les colonnes de base pour l'affichage dans le tableau,
-    // en excluant celles listées dans `exclusions`
+    // Définition des colonnes pour le DataGrid
     const baseColumns = Object.keys(Data[0])
         .filter(key => !exclusions.includes(key))
         .map(key => {
-            // Détecter si la colonne contient une date
             const isDate = dateRegex.test(Data[0][key]);
             const columnDef = {
                 field: key,
@@ -116,16 +213,22 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                 width: 160,
             };
 
-            // Si c'est une date, ajouter un renderCell pour formater l'affichage
             if (isDate) {
                 columnDef.renderCell = (params) => (
                     <span>{formatDate(params.value)}</span>
                 );
+            } else if (!isNaN(Data[0][key]) && isFinite(Data[0][key])) {
+                // Traitement pour les montants numériques : coloration selon le signe
+                columnDef.renderCell = (params) => {
+                    const num = Number(params.value);
+                    const formatted = formatAmount(params.value);
+                    const color = num < 0 ? 'red' : (num > 0 ? 'green' : 'inherit');
+                    return <span style={{ color }}>{formatted}</span>;
+                };
             }
             return columnDef;
         });
 
-    // Ajouter une colonne pour les actions
     const actionColumn = {
         field: 'actions',
         headerName: 'Actions',
@@ -139,25 +242,35 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
         ),
     };
 
-    // Combiner les colonnes générées avec la colonne d'actions
     const columns = [...baseColumns, actionColumn];
 
     return (
         <div>
-            {/* Interface de filtrage personnalisée */}
-            <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
-                <FormControl
-                    size="small"
-                    sx={{ minWidth: 120, marginRight: 2, marginBottom: { xs: 1, sm: 0 } }}
-                >
-                    <InputLabel id="filter-column-label">Column</InputLabel>
+            {/* Interface de filtrage */}
+            <Box
+                sx={{
+                    mb: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                }}
+            >
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <InputLabel id="filter-column-label">Colonne</InputLabel>
                     <Select
                         labelId="filter-column-label"
                         value={filterColumn}
-                        label="Column"
+                        label="Colonne"
                         onChange={(e) => {
                             setFilterColumn(e.target.value);
-                            setFilterValue(''); // Réinitialiser la valeur lors du changement de colonne
+                            // Réinitialiser les valeurs de filtre lors du changement de colonne
+                            setFilterValue('');
+                            setFilterDate('');
+                            setFilterStartDate('');
+                            setFilterEndDate('');
+                            setIsRangeFilter(false);
+                            setAmountOperator('equal');
                         }}
                     >
                         {allFilterableColumns.map(col => (
@@ -167,80 +280,159 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                         ))}
                     </Select>
                 </FormControl>
+
                 {isDateFilter ? (
-                    <TextField
-                        size="small"
-                        type="date"
-                        label="Filter Date"
-                        value={filterValue}
-                        onChange={(e) => setFilterValue(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        {isRangeFilter ? (
+                            <>
+                                <TextField
+                                    size="small"
+                                    type="date"
+                                    label="Début"
+                                    value={filterStartDate}
+                                    onChange={(e) => setFilterStartDate(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    InputLabelProps={{ shrink: true }}
+                                    sx={{ width: 140 }}
+                                />
+                                <TextField
+                                    size="small"
+                                    type="date"
+                                    label="Fin"
+                                    value={filterEndDate}
+                                    onChange={(e) => setFilterEndDate(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    InputLabelProps={{ shrink: true }}
+                                    sx={{ width: 140 }}
+                                />
+                            </>
+                        ) : (
+                            <TextField
+                                size="small"
+                                type="date"
+                                label="Date"
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                InputLabelProps={{ shrink: true }}
+                                sx={{ width: 150 }}
+                            />
+                        )}
+                        {/* Case à cocher pour activer le filtrage par intervalle */}
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    size="small"
+                                    checked={isRangeFilter}
+                                    onChange={(e) => {
+                                        setIsRangeFilter(e.target.checked);
+                                        // Réinitialiser les dates lors du changement
+                                        setFilterDate('');
+                                        setFilterStartDate('');
+                                        setFilterEndDate('');
+                                    }}
+                                />
+                            }
+                            label="Utiliser un intervalle"
+                        />
+                    </Box>
+                ) : isNumericFilter ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TextField
+                            size="small"
+                            type="number"
+                            label="Valeur"
+                            value={filterValue}
+                            onChange={(e) => setFilterValue(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            sx={{ width: 120 }}
+                        />
+                        <FormControl size="small" sx={{ minWidth: 100 }}>
+                            <Select
+                                value={amountOperator}
+                                onChange={(e) => setAmountOperator(e.target.value)}
+                            >
+                                <MenuItem value="equal">Egal</MenuItem>
+                                <MenuItem value="min">Montant min (≥)</MenuItem>
+                                <MenuItem value="max">Montant max (≤)</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>
                 ) : noDynamicList.includes(filterColumn) ? (
                     <TextField
                         size="small"
-                        label="Filter Value"
-                        placeholder="Enter filter value"
+                        label="Valeur"
+                        placeholder="Saisir une valeur"
                         value={filterValue}
                         onChange={(e) => setFilterValue(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
+                        sx={{ width: 150 }}
                     />
                 ) : (
                     <Autocomplete
                         freeSolo
                         options={uniqueOptions}
                         value={filterValue}
-                        onInputChange={(event, newInputValue) => {
-                            setFilterValue(newInputValue);
-                        }}
+                        onInputChange={(event, newInputValue) => setFilterValue(newInputValue)}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
                                 size="small"
-                                label="Filter Value"
-                                placeholder="Type or select..."
+                                label="Valeur"
+                                placeholder="Tapez ou sélectionnez..."
                                 onKeyDown={handleKeyDown}
-                                sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
+                                sx={{ width: 150 }}
                             />
                         )}
                     />
                 )}
+
                 <Button
                     variant="contained"
                     onClick={handleAddFilter}
-                    disabled={!filterColumn || filterValue.trim() === ''}
-                    sx={{ marginRight: 2, height: '40px', marginBottom: { xs: 1, sm: 0 } }}
+                    disabled={
+                        !filterColumn ||
+                        (isDateFilter
+                            ? isRangeFilter
+                                ? !(filterStartDate && filterEndDate)
+                                : !filterDate
+                            : filterValue.trim() === '')
+                    }
+                    sx={{ height: '40px' }}
                 >
-                    Add Filter
+                    Ajouter
                 </Button>
                 <Button
                     variant="outlined"
                     color="error"
                     onClick={handleClearFilters}
-                    sx={{ height: '40px', marginBottom: { xs: 1, sm: 0 } }}
+                    sx={{ height: '40px' }}
                 >
-                    Clear All Filters
+                    Effacer tout les filtres
                 </Button>
-            </div>
+            </Box>
 
-            {/* Affichage des filtres appliqués avec possibilité de suppression */}
-            <div style={{ marginBottom: 20 }}>
+            {/* Affichage des filtres appliqués */}
+            <Box sx={{ mb: 2 }}>
                 {appliedFilters.map((filter, index) => (
                     <Chip
                         key={index}
-                        label={`${filter.column} ${isDateFilter ? 'is' : 'contains'} "${filter.value}"`}
+                        label={
+                            isDateFilter
+                                ? filter.type === 'range'
+                                    ? `${filter.column} : ${filter.start} - ${filter.end}`
+                                    : `${filter.column} : ${filter.value}`
+                                : filter.operator
+                                    ? `${filter.column} : ${filter.operator === 'equal' ? '=' : filter.operator === 'min' ? '≥' : '≤'} ${filter.value}`
+                                    : `${filter.column} : ${filter.value}`
+                        }
                         onDelete={() => handleRemoveFilter(index)}
-                        sx={{ marginRight: 1, marginBottom: 1 }}
+                        sx={{ mr: 1, mb: 1 }}
                     />
                 ))}
-            </div>
+            </Box>
 
-            {/* Tableau avec tri et pagination */}
+            {/* Tableau */}
             <Paper sx={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={filteredData}

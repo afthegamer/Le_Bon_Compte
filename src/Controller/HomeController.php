@@ -33,6 +33,7 @@ class HomeController extends AbstractController
         // Récupérer les revenus et dépenses liés à cet utilisateur
         $incomes = $incomeRepository->findAllByUser($user);
         $expenses = $expenseRepository->findAllByUser($user);
+//        dd($incomes, $expenses);
 
         // Combiner et normaliser les données
         $combinedList = [];
@@ -43,6 +44,7 @@ class HomeController extends AbstractController
                 'name' => $income->getName(),
                 'amount' => $income->getAmount(),
                 'date' => $income->getDate()->format('Y-m-d H:i:s'),
+                'userProfileEntity' => $income->getUserProfileEntity()->getFirstName() . ' ' . $income->getUserProfileEntity()->getLastName(),
                 'category' => $income->getCategoryEntity()?$income->getCategoryEntity()->getName():'Autre',
                 'showUrl' => $urlGenerator->generate('app_income_entity_show', ['id' => $income->getId()]),
                 'editUrl' => $urlGenerator->generate('app_income_entity_edit', ['id' => $income->getId()]),
@@ -55,6 +57,7 @@ class HomeController extends AbstractController
                 'name' => $expense->getName(),
                 'amount' => $expense->getAmount(),
                 'date' => $expense->getDate()->format('Y-m-d H:i:s'),
+                'userProfileEntity' => $expense->getUserProfileEntity()->getFirstName() . ' ' . $expense->getUserProfileEntity()->getLastName(),
                 'category' => $expense->getCategoryEntity()?$expense->getCategoryEntity()->getName():'Autre',
                 'showUrl' => $urlGenerator->generate('app_expense_entity_show', ['id' => $expense->getId()]),
                 'editUrl' => $urlGenerator->generate('app_expense_entity_edit', ['id' => $expense->getId()]),
