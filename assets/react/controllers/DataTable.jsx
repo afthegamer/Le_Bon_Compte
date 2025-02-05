@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Chip } from '@mui/material';
@@ -16,16 +16,23 @@ export default function DataTable({ Data, excludeCollum = [] }) {
     const allColumns = Object.keys(Data[0]).filter(key => !exclusions.includes(key));
 
     // États pour le filtre en cours et les filtres appliqués
-    const [filterColumn, setFilterColumn] = useState('');
+    // Initialiser filterColumn avec la première colonne disponible
+    const [filterColumn, setFilterColumn] = useState(allColumns[0] || '');
     const [filterValue, setFilterValue] = useState('');
     const [appliedFilters, setAppliedFilters] = useState([]);
 
-    // Ajoute un filtre à la liste
+    // Ajoute un filtre à la liste si les champs sont valides
     const handleAddFilter = () => {
-        if (filterColumn && filterValue) {
+        if (filterColumn && filterValue.trim() !== '') {
             setAppliedFilters(prev => [...prev, { column: filterColumn, value: filterValue }]);
-            setFilterColumn('');
             setFilterValue('');
+        }
+    };
+
+    // Permet d'ajouter le filtre en appuyant sur la touche "Entrée"
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && filterColumn && filterValue.trim() !== '') {
+            handleAddFilter();
         }
     };
 
@@ -83,10 +90,10 @@ export default function DataTable({ Data, excludeCollum = [] }) {
     return (
         <div>
             {/* Interface de filtrage personnalisée */}
-            <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center' }}>
+            <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
                 <FormControl
                     size="small"
-                    sx={{ minWidth: 120, marginRight: 2 }}
+                    sx={{ minWidth: 120, marginRight: 2, marginBottom: { xs: 1, sm: 0 } }}
                 >
                     <InputLabel id="filter-column-label">Column</InputLabel>
                     <Select
@@ -105,14 +112,17 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                 <TextField
                     size="small"
                     label="Filter Value"
+                    placeholder="Enter filter value"
                     value={filterValue}
                     onChange={(e) => setFilterValue(e.target.value)}
-                    sx={{ marginRight: 2, width: 150 }}
+                    onKeyDown={handleKeyDown}
+                    sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
                 />
                 <Button
                     variant="contained"
                     onClick={handleAddFilter}
-                    sx={{ marginRight: 2, height: '40px' }}
+                    disabled={!filterColumn || filterValue.trim() === ''}
+                    sx={{ marginRight: 2, height: '40px', marginBottom: { xs: 1, sm: 0 } }}
                 >
                     Add Filter
                 </Button>
@@ -120,7 +130,7 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                     variant="outlined"
                     color="error"
                     onClick={handleClearFilters}
-                    sx={{ height: '40px' }}
+                    sx={{ height: '40px', marginBottom: { xs: 1, sm: 0 } }}
                 >
                     Clear All Filters
                 </Button>
