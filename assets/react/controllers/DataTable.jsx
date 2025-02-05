@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
-import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Chip } from '@mui/material';
+import { TextField, Button, Select, MenuItem, FormControl, InputLabel, Chip, Autocomplete } from '@mui/material';
 
 // Expression régulière pour détecter un format de date "YYYY-MM-DD HH:MM:SS"
 const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
@@ -15,25 +15,47 @@ const formatDate = (dateString) => {
     return `${day}/${month}/${year}`;
 };
 
-export default function DataTable({ Data, excludeCollum = [] }) {
+export default function DataTable({ Data, excludeCollum = [], filterableExcluded = [], noDynamicList = [] }) {
     // Vérifier si Data est un tableau non vide
     if (!Array.isArray(Data) || Data.length === 0) {
         return <div>Aucune donnée à afficher</div>;
     }
 
-    // Liste des colonnes filtrables en excluant les colonnes par défaut et celles spécifiées
+    // Liste des colonnes à exclure pour l'affichage dans le tableau
     const defaultExclusions = ['showUrl', 'editUrl'];
     const exclusions = [...defaultExclusions, ...excludeCollum];
-    const allColumns = Object.keys(Data[0]).filter(key => !exclusions.includes(key));
+
+    // Calcul des colonnes disponibles pour le filtrage :
+    // On part des clés du premier élément en retirant les colonnes exclues pour l'affichage,
+    // puis on ajoute celles spécifiées dans filterableExcluded
+    const allFilterableColumns = Array.from(
+        new Set([
+            ...Object.keys(Data[0]).filter(key => !exclusions.includes(key)),
+            ...filterableExcluded
+        ])
+    );
 
     // États pour le filtre en cours et les filtres appliqués
-    // Initialiser filterColumn avec la première colonne disponible
-    const [filterColumn, setFilterColumn] = useState(allColumns[0] || '');
+    // Initialiser filterColumn avec la première colonne disponible dans le filtre
+    const [filterColumn, setFilterColumn] = useState(allFilterableColumns[0] || '');
     const [filterValue, setFilterValue] = useState('');
     const [appliedFilters, setAppliedFilters] = useState([]);
 
-    // Vérifier si la colonne de filtrage sélectionnée est de type date
+    // Détecte si la colonne de filtrage sélectionnée est de type date
     const isDateFilter = filterColumn && dateRegex.test(Data[0][filterColumn]);
+
+    // Calculer dynamiquement la liste des options (catégories) pour la colonne sélectionnée
+    const uniqueOptions = useMemo(() => {
+        // On ne propose pas de liste dynamique si la colonne est de type date ou si elle est listée dans noDynamicList
+        if (!filterColumn || isDateFilter || noDynamicList.includes(filterColumn)) return [];
+        const optionsSet = new Set();
+        Data.forEach(row => {
+            if (row[filterColumn] !== undefined && row[filterColumn] !== null) {
+                optionsSet.add(String(row[filterColumn]));
+            }
+        });
+        return Array.from(optionsSet);
+    }, [Data, filterColumn, isDateFilter, noDynamicList]);
 
     // Ajoute un filtre à la liste si les champs sont valides
     const handleAddFilter = () => {
@@ -71,7 +93,7 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                     const rowDate = cellValue.substring(0, 10); // "YYYY-MM-DD"
                     return rowDate === filter.value;
                 }
-                // Sinon, recherche en "contains" (insensible à la casse)
+                // Sinon, recherche "contains" (insensible à la casse)
                 return String(cellValue)
                     .toLowerCase()
                     .includes(filter.value.toLowerCase());
@@ -79,7 +101,8 @@ export default function DataTable({ Data, excludeCollum = [] }) {
         });
     }, [Data, appliedFilters]);
 
-    // Générer dynamiquement les colonnes de base en excluant les clés définies
+    // Générer dynamiquement les colonnes de base pour l'affichage dans le tableau,
+    // en excluant celles listées dans `exclusions`
     const baseColumns = Object.keys(Data[0])
         .filter(key => !exclusions.includes(key))
         .map(key => {
@@ -99,7 +122,6 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                     <span>{formatDate(params.value)}</span>
                 );
             }
-
             return columnDef;
         });
 
@@ -133,9 +155,12 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                         labelId="filter-column-label"
                         value={filterColumn}
                         label="Column"
-                        onChange={(e) => setFilterColumn(e.target.value)}
+                        onChange={(e) => {
+                            setFilterColumn(e.target.value);
+                            setFilterValue(''); // Réinitialiser la valeur lors du changement de colonne
+                        }}
                     >
-                        {allColumns.map(col => (
+                        {allFilterableColumns.map(col => (
                             <MenuItem key={col} value={col}>
                                 {col.charAt(0).toUpperCase() + col.slice(1)}
                             </MenuItem>
@@ -155,7 +180,7 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                             shrink: true,
                         }}
                     />
-                ) : (
+                ) : noDynamicList.includes(filterColumn) ? (
                     <TextField
                         size="small"
                         label="Filter Value"
@@ -164,6 +189,25 @@ export default function DataTable({ Data, excludeCollum = [] }) {
                         onChange={(e) => setFilterValue(e.target.value)}
                         onKeyDown={handleKeyDown}
                         sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
+                    />
+                ) : (
+                    <Autocomplete
+                        freeSolo
+                        options={uniqueOptions}
+                        value={filterValue}
+                        onInputChange={(event, newInputValue) => {
+                            setFilterValue(newInputValue);
+                        }}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                size="small"
+                                label="Filter Value"
+                                placeholder="Type or select..."
+                                onKeyDown={handleKeyDown}
+                                sx={{ marginRight: 2, width: 150, marginBottom: { xs: 1, sm: 0 } }}
+                            />
+                        )}
                     />
                 )}
                 <Button
