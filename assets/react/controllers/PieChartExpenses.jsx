@@ -1,5 +1,6 @@
 import * as React from "react";
 import { PieChart } from "@mui/x-charts";
+import { Dialog } from "@headlessui/react";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
@@ -40,8 +41,7 @@ const calculateDateBounds = (filter, year, month, quarter, semester) => {
             endDate = startDate.endOf("year");
             break;
         case "semestriel":
-            startDate =
-                semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
+            startDate = semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
             endDate = startDate.add(6, "month").endOf("month");
             break;
         case "trimestriel":
@@ -202,15 +202,10 @@ export default function PieChartExpenses({ expenses }) {
     // Mémoïsation des années et mois disponibles
     const availableYears = React.useMemo(
         () =>
-            [...new Set(expenses.map((exp) => dayjs(exp.date).year()))].sort(
-                (a, b) => b - a
-            ),
+            [...new Set(expenses.map((exp) => dayjs(exp.date).year()))].sort((a, b) => b - a),
         [expenses]
     );
-    const availableMonths = React.useMemo(
-        () => Array.from({ length: 12 }, (_, i) => i + 1),
-        []
-    );
+    const availableMonths = React.useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
 
     // États de filtrage
     const [timeFilter, setTimeFilter] = React.useState("mois");
@@ -219,8 +214,8 @@ export default function PieChartExpenses({ expenses }) {
     const [selectedQuarter, setSelectedQuarter] = React.useState(1);
     const [selectedSemester, setSelectedSemester] = React.useState(1);
 
-    // État pour l'affichage de l'intégralité du composant
-    const [showComponent, setShowComponent] = React.useState(false);
+    // Déclaration de l'état pour la modal
+    const [showModal, setShowModal] = React.useState(false);
 
     // Calcul des bornes et filtrage des dépenses
     const filteredExpenses = React.useMemo(() => {
@@ -232,10 +227,6 @@ export default function PieChartExpenses({ expenses }) {
             selectedSemester
         );
 
-        console.log("[DEBUG] Filtrage pour", timeFilter);
-        console.log("[DEBUG] startDate:", startDate.format());
-        console.log("[DEBUG] endDate:", endDate.format());
-
         return expenses.filter((expense) => {
             // On exclut les revenus et on ne garde que les dépenses (montants négatifs)
             if (expense.type === "income" || expense.amount >= 0) {
@@ -246,14 +237,10 @@ export default function PieChartExpenses({ expenses }) {
                 console.warn("❌ Date invalide détectée pour la transaction :", expense);
                 return false;
             }
-            return (
-                expenseDate.isSameOrAfter(startDate) &&
-                expenseDate.isSameOrBefore(endDate)
-            );
+            return expenseDate.isSameOrAfter(startDate) && expenseDate.isSameOrBefore(endDate);
         });
     }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester]);
 
-    console.log("📊 Transactions affichées :", filteredExpenses.length);
     const hasData = filteredExpenses.length > 0;
 
     // Calcul des totaux par catégorie et préparation des données du graphique
@@ -265,7 +252,6 @@ export default function PieChartExpenses({ expenses }) {
             return acc;
         }, {});
 
-        // Transformation en tableau et tri décroissant par montant
         return Object.keys(categoryTotals)
             .map((category, index) => ({
                 id: `cat-${index}`,
@@ -277,19 +263,19 @@ export default function PieChartExpenses({ expenses }) {
     }, [filteredExpenses]);
 
     return (
-        <div className="flex flex-col items-center w-full space-y-6">
-            {/* Bouton pour afficher/masquer l'intégralité du composant */}
+        <>
+            {/* Bouton pour ouvrir la modal */}
             <button
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                onClick={() => setShowComponent((prev) => !prev)}
+                onClick={() => setShowModal(true)}
             >
-                {showComponent ? "Masquer les statistiques" : "Afficher les statistiques"}
+                Show Statistics
             </button>
-
-            {showComponent && (
-                <>
+            {/* Modal pour afficher le composant complet */}
+            <Modal show={showModal} onClose={() => setShowModal(false)}>
+                <div className="flex flex-col items-center w-full space-y-6">
                     <p className="text-gray-700 font-semibold text-center">
-                        Total des transactions affichées : {filteredExpenses.length}
+                        Total transactions displayed: {filteredExpenses.length}
                     </p>
 
                     <FilterSelectors
@@ -307,29 +293,31 @@ export default function PieChartExpenses({ expenses }) {
                         availableMonths={availableMonths}
                     />
 
-                    <div className="flex justify-center space-x-12 w-full">
-                        <div className="w-1/3 rounded-lg p-6 ml-12 bg-white shadow-lg">
+                    {/* Disposition responsive: en colonne sur mobile et côte à côte sur écran moyen+ */}
+                    <div className="flex flex-col md:flex-row justify-center w-full md:space-x-12 space-y-6 md:space-y-0">
+                        {/* Conteneur du graphique */}
+                        <div className="w-full md:w-1/2 flex justify-center items-center bg-white shadow-lg rounded-lg p-4">
                             {hasData ? (
                                 <PieChart
-                                    series={[{ data: chartData, innerRadius: 50 }]}
+                                    series={[{ data: chartData, innerRadius: 40 }]}
                                     width={400}
                                     height={400}
                                     slotProps={{ legend: { hidden: true } }}
                                 />
                             ) : (
                                 <p className="text-center text-gray-500 font-semibold">
-                                    Aucune donnée à afficher
+                                    No data to display
                                 </p>
                             )}
                         </div>
 
+                        {/* Conteneur des détails de catégories */}
                         {hasData && (
-                            <div className="w-1/3 bg-white shadow-md rounded-lg p-6">
+                            <div className="w-full md:w-1/2 bg-white shadow-md rounded-lg p-4">
                                 <h3 className="text-lg font-bold text-gray-700 text-center mb-4">
-                                    Détails des Catégories
+                                    Category Details
                                 </h3>
-                                {/* Conteneur scrollable pour la liste avec hauteur fixe */}
-                                <div className="h-[400px] overflow-y-auto">
+                                <div className="h-[300px] overflow-y-auto">
                                     <ul className="space-y-3">
                                         {chartData.map((item, index) => (
                                             <li
@@ -342,12 +330,12 @@ export default function PieChartExpenses({ expenses }) {
                                                         style={{ backgroundColor: item.color }}
                                                     ></div>
                                                     <span className="text-gray-800 font-medium">
-                            {item.label}
-                          </span>
+                      {item.label}
+                    </span>
                                                 </div>
                                                 <span className="text-gray-600 font-semibold">
-                          {item.value.toFixed(2)} €
-                        </span>
+                    {item.value.toFixed(2)} €
+                  </span>
                                             </li>
                                         ))}
                                     </ul>
@@ -355,9 +343,9 @@ export default function PieChartExpenses({ expenses }) {
                             </div>
                         )}
                     </div>
-                </>
-            )}
-        </div>
+                </div>
+            </Modal>
+        </>
     );
 }
 
@@ -370,6 +358,38 @@ PieChartExpenses.propTypes = {
             category: PropTypes.string,
         })
     ).isRequired,
+};
+
+function Modal({ show, onClose, children }) {
+    if (!show) return null;
+    return (
+        <Dialog open={show} onClose={onClose} className="fixed inset-0 z-10 overflow-y-auto">
+            <div className="min-h-screen px-4 text-center">
+                <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
+
+                {/* Pour centrer la modal */}
+                <span className="inline-block h-screen align-middle" aria-hidden="true">
+                    &#8203;
+                </span>
+
+                <div className="inline-block w-full max-w-3xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
+                    <button
+                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        onClick={onClose}
+                    >
+                        &times;
+                    </button>
+                    {children}
+                </div>
+            </div>
+        </Dialog>
+    );
+}
+
+Modal.propTypes = {
+    show: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    children: PropTypes.node,
 };
 
 export { getColor };
