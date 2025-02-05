@@ -1,11 +1,12 @@
 import * as React from "react";
 import { PieChart } from "@mui/x-charts";
-import { Dialog } from "@headlessui/react";
 import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import utc from "dayjs/plugin/utc";
 import PropTypes from "prop-types";
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment, useState } from "react";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -41,7 +42,8 @@ const calculateDateBounds = (filter, year, month, quarter, semester) => {
             endDate = startDate.endOf("year");
             break;
         case "semestriel":
-            startDate = semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
+            startDate =
+                semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
             endDate = startDate.add(6, "month").endOf("month");
             break;
         case "trimestriel":
@@ -84,7 +86,7 @@ function FilterSelectors({
                          }) {
     return (
         <div className="flex flex-wrap justify-center space-x-4 w-full">
-            {/* Sélection du filtre de période */}
+            {/* Filtrer par période */}
             <div className="w-1/4">
                 <label className="block text-gray-700 font-medium mb-2 text-center">
                     Filtrer par période :
@@ -120,7 +122,7 @@ function FilterSelectors({
                 </select>
             </div>
 
-            {/* Sélection du mois (affiché si filtre "mois") */}
+            {/* Sélection du mois (si filtre "mois") */}
             {timeFilter === "mois" && (
                 <div className="w-1/4">
                     <label className="block text-gray-700 font-medium mb-2 text-center">
@@ -140,7 +142,7 @@ function FilterSelectors({
                 </div>
             )}
 
-            {/* Sélection du trimestre (affiché si filtre "trimestriel") */}
+            {/* Sélection du trimestre (si filtre "trimestriel") */}
             {timeFilter === "trimestriel" && (
                 <div className="w-1/4">
                     <label className="block text-gray-700 font-medium mb-2 text-center">
@@ -160,7 +162,7 @@ function FilterSelectors({
                 </div>
             )}
 
-            {/* Sélection du semestre (affiché si filtre "semestriel") */}
+            {/* Sélection du semestre (si filtre "semestriel") */}
             {timeFilter === "semestriel" && (
                 <div className="w-1/4">
                     <label className="block text-gray-700 font-medium mb-2 text-center">
@@ -198,6 +200,83 @@ FilterSelectors.propTypes = {
     availableMonths: PropTypes.arrayOf(PropTypes.number).isRequired,
 };
 
+/* Composant Modal basé sur votre exemple */
+function Modal(props) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    function closeModal() {
+        setIsOpen(false);
+    }
+
+    function openModal() {
+        setIsOpen(true);
+    }
+
+    return (
+        <>
+            <div className="flex justify-center items-center">
+                <button
+                    type="button"
+                    onClick={openModal}
+                    className="mb-4 px-6 py-2 bg-blue-600 text-white font-semibold rounded-md shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 transition-colors duration-200"
+                >
+                    {props.button}
+                </button>
+            </div>
+
+
+            <Transition appear show={isOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-10" onClose={closeModal}>
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-300"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100"
+                        leave="ease-in duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                    >
+                        <div className="fixed inset-0 bg-black bg-opacity-25" />
+                    </Transition.Child>
+
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4 text-center">
+                            <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0 scale-95"
+                                enterTo="opacity-100 scale-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100 scale-100"
+                                leaveTo="opacity-0 scale-95"
+                            >
+                                <Dialog.Panel
+                                    className="w-full max-w-5xl p-8 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <button
+                                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                        onClick={closeModal}
+                                    >
+                                        &times;
+                                    </button>
+                                    {props.children}
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
+        </>
+    );
+}
+
+Modal.propTypes = {
+    button: PropTypes.string.isRequired,
+    children: PropTypes.node.isRequired,
+};
+
+/* Composant PieChartExpenses */
 export default function PieChartExpenses({ expenses }) {
     // Mémoïsation des années et mois disponibles
     const availableYears = React.useMemo(
@@ -214,9 +293,6 @@ export default function PieChartExpenses({ expenses }) {
     const [selectedQuarter, setSelectedQuarter] = React.useState(1);
     const [selectedSemester, setSelectedSemester] = React.useState(1);
 
-    // Déclaration de l'état pour la modal
-    const [showModal, setShowModal] = React.useState(false);
-
     // Calcul des bornes et filtrage des dépenses
     const filteredExpenses = React.useMemo(() => {
         const { startDate, endDate } = calculateDateBounds(
@@ -226,6 +302,10 @@ export default function PieChartExpenses({ expenses }) {
             selectedQuarter,
             selectedSemester
         );
+
+        console.log("[DEBUG] Filtrage pour", timeFilter);
+        console.log("[DEBUG] startDate:", startDate.format());
+        console.log("[DEBUG] endDate:", endDate.format());
 
         return expenses.filter((expense) => {
             // On exclut les revenus et on ne garde que les dépenses (montants négatifs)
@@ -241,6 +321,7 @@ export default function PieChartExpenses({ expenses }) {
         });
     }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester]);
 
+    console.log("📊 Transactions affichées :", filteredExpenses.length);
     const hasData = filteredExpenses.length > 0;
 
     // Calcul des totaux par catégorie et préparation des données du graphique
@@ -263,89 +344,79 @@ export default function PieChartExpenses({ expenses }) {
     }, [filteredExpenses]);
 
     return (
-        <>
-            {/* Bouton pour ouvrir la modal */}
-            <button
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                onClick={() => setShowModal(true)}
-            >
-                Show Statistics
-            </button>
-            {/* Modal pour afficher le composant complet */}
-            <Modal show={showModal} onClose={() => setShowModal(false)}>
-                <div className="flex flex-col items-center w-full space-y-6">
-                    <p className="text-gray-700 font-semibold text-center">
-                        Total transactions displayed: {filteredExpenses.length}
-                    </p>
+        <Modal button="Show Statistics">
+            <div className="flex flex-col items-center w-full space-y-6">
+                <p className="text-gray-700 font-semibold text-center">
+                    Total transactions displayed: {filteredExpenses.length}
+                </p>
 
-                    <FilterSelectors
-                        timeFilter={timeFilter}
-                        setTimeFilter={setTimeFilter}
-                        selectedYear={selectedYear}
-                        setSelectedYear={setSelectedYear}
-                        selectedMonth={selectedMonth}
-                        setSelectedMonth={setSelectedMonth}
-                        selectedQuarter={selectedQuarter}
-                        setSelectedQuarter={setSelectedQuarter}
-                        selectedSemester={selectedSemester}
-                        setSelectedSemester={setSelectedSemester}
-                        availableYears={availableYears}
-                        availableMonths={availableMonths}
-                    />
+                <FilterSelectors
+                    timeFilter={timeFilter}
+                    setTimeFilter={setTimeFilter}
+                    selectedYear={selectedYear}
+                    setSelectedYear={setSelectedYear}
+                    selectedMonth={selectedMonth}
+                    setSelectedMonth={setSelectedMonth}
+                    selectedQuarter={selectedQuarter}
+                    setSelectedQuarter={setSelectedQuarter}
+                    selectedSemester={selectedSemester}
+                    setSelectedSemester={setSelectedSemester}
+                    availableYears={availableYears}
+                    availableMonths={availableMonths}
+                />
 
-                    {/* Disposition responsive: en colonne sur mobile et côte à côte sur écran moyen+ */}
-                    <div className="flex flex-col md:flex-row justify-center w-full md:space-x-12 space-y-6 md:space-y-0">
-                        {/* Conteneur du graphique */}
-                        <div className="w-full md:w-1/2 flex justify-center items-center bg-white shadow-lg rounded-lg p-4">
-                            {hasData ? (
-                                <PieChart
-                                    series={[{ data: chartData, innerRadius: 40 }]}
-                                    width={400}
-                                    height={400}
-                                    slotProps={{ legend: { hidden: true } }}
-                                />
-                            ) : (
-                                <p className="text-center text-gray-500 font-semibold">
-                                    No data to display
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Conteneur des détails de catégories */}
-                        {hasData && (
-                            <div className="w-full md:w-1/2 bg-white shadow-md rounded-lg p-4">
-                                <h3 className="text-lg font-bold text-gray-700 text-center mb-4">
-                                    Category Details
-                                </h3>
-                                <div className="h-[300px] overflow-y-auto">
-                                    <ul className="space-y-3">
-                                        {chartData.map((item, index) => (
-                                            <li
-                                                key={index}
-                                                className="flex justify-between items-center border-b pb-2"
-                                            >
-                                                <div className="flex items-center space-x-3">
-                                                    <div
-                                                        className="w-4 h-4 rounded-full"
-                                                        style={{ backgroundColor: item.color }}
-                                                    ></div>
-                                                    <span className="text-gray-800 font-medium">
-                      {item.label}
-                    </span>
-                                                </div>
-                                                <span className="text-gray-600 font-semibold">
-                    {item.value.toFixed(2)} €
-                  </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
+                {/* Conteneur responsive pour le graphique et les détails */}
+                <div className="flex flex-col md:flex-row w-full md:space-x-6 space-y-6 md:space-y-0">
+                    {/* Conteneur du graphique */}
+                    <div className="flex-1 bg-white shadow-lg rounded-lg p-4 flex justify-center items-center">
+                        {hasData ? (
+                            <PieChart
+                                series={[{ data: chartData, innerRadius: 50 }]}
+                                width={400}
+                                height={400}
+                                slotProps={{ legend: { hidden: true } }}
+                            />
+                        ) : (
+                            <p className="text-center text-gray-500 font-semibold">
+                                No data to display
+                            </p>
                         )}
                     </div>
+
+                    {/* Conteneur des détails de catégories */}
+                    {hasData && (
+                        <div className="flex-1 bg-white shadow-md rounded-lg p-4">
+                            <h3 className="text-lg font-bold text-gray-700 text-center mb-4">
+                                Category Details
+                            </h3>
+                            <div className="h-[350px] overflow-y-auto">
+                                <ul className="space-y-3">
+                                    {chartData.map((item, index) => (
+                                        <li
+                                            key={index}
+                                            className="flex justify-between items-center border-b pb-2"
+                                        >
+                                            <div className="flex items-center space-x-3">
+                                                <div
+                                                    className="w-4 h-4 rounded-full"
+                                                    style={{ backgroundColor: item.color }}
+                                                ></div>
+                                                <span className="text-gray-800 font-medium">
+                      {item.label}
+                    </span>
+                                            </div>
+                                            <span className="text-gray-600 font-semibold">
+                    {item.value.toFixed(2)} €
+                  </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </Modal>
-        </>
+            </div>
+        </Modal>
     );
 }
 
@@ -358,38 +429,6 @@ PieChartExpenses.propTypes = {
             category: PropTypes.string,
         })
     ).isRequired,
-};
-
-function Modal({ show, onClose, children }) {
-    if (!show) return null;
-    return (
-        <Dialog open={show} onClose={onClose} className="fixed inset-0 z-10 overflow-y-auto">
-            <div className="min-h-screen px-4 text-center">
-                <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-
-                {/* Pour centrer la modal */}
-                <span className="inline-block h-screen align-middle" aria-hidden="true">
-                    &#8203;
-                </span>
-
-                <div className="inline-block w-full max-w-3xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-lg">
-                    <button
-                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                        onClick={onClose}
-                    >
-                        &times;
-                    </button>
-                    {children}
-                </div>
-            </div>
-        </Dialog>
-    );
-}
-
-Modal.propTypes = {
-    show: PropTypes.bool.isRequired,
-    onClose: PropTypes.func.isRequired,
-    children: PropTypes.node,
 };
 
 export { getColor };
