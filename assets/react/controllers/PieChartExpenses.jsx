@@ -4,13 +4,16 @@ import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import utc from "dayjs/plugin/utc";
+import dayOfYear from "dayjs/plugin/dayOfYear"; // Plugin pour dayOfYear
 import PropTypes from "prop-types";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 
+// Extension des plugins
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(utc);
+dayjs.extend(dayOfYear);
 
 /**
  * Renvoie une couleur en fonction de l'index.
@@ -33,8 +36,9 @@ function getColor(index) {
 
 /**
  * Calcule les bornes de filtrage en fonction du filtre et des sélections.
+ * Pour le filtre "semaine", l'année est découpée en 52 semaines fixes (chaque semaine = 7 jours).
  */
-const calculateDateBounds = (filter, year, month, quarter, semester) => {
+const calculateDateBounds = (filter, year, month, quarter, semester, week) => {
     let startDate, endDate;
     switch (filter) {
         case "annuel":
@@ -55,9 +59,11 @@ const calculateDateBounds = (filter, year, month, quarter, semester) => {
             endDate = startDate.endOf("month");
             break;
         case "semaine":
-            const now = dayjs();
-            startDate = now.subtract(1, "week");
-            endDate = now;
+            // Découpage de l'année en 52 semaines fixes
+            const startOfYear = dayjs(`${year}-01-01`).startOf("year");
+            startDate = startOfYear.add(week - 1, "week");
+            // Chaque semaine est considérée sur 7 jours
+            endDate = startDate.add(1, "week").subtract(1, "day");
             break;
         default:
             startDate = dayjs();
@@ -81,8 +87,11 @@ function FilterSelectors({
                              setSelectedQuarter,
                              selectedSemester,
                              setSelectedSemester,
+                             selectedWeek,
+                             setSelectedWeek,
                              availableYears,
                              availableMonths,
+                             availableWeeks,
                          }) {
     return (
         <div className="flex flex-wrap justify-center space-x-4 w-full">
@@ -181,6 +190,36 @@ function FilterSelectors({
                     </select>
                 </div>
             )}
+
+            {/* Sélection de la semaine (si filtre "semaine") */}
+            {timeFilter === "semaine" && (
+                <div className="w-1/4">
+                    <label className="block text-gray-700 font-medium mb-2 text-center">
+                        Sélectionner une semaine :
+                    </label>
+                    <select
+                        className="w-full p-2 border border-gray-300 rounded-md shadow-sm"
+                        value={selectedWeek}
+                        onChange={(e) => setSelectedWeek(Number(e.target.value))}
+                    >
+                        {availableWeeks.map((w) => {
+                            const startOfYear = dayjs(`${selectedYear}-01-01`).startOf("year");
+                            const weekStart = startOfYear.add(w - 1, "week");
+                            let weekEnd = weekStart.add(1, "week").subtract(1, "day");
+                            const endOfYear = dayjs(`${selectedYear}-12-31`).endOf("day");
+                            // Pour la dernière semaine, si la date de fin est inférieure au 31/12, on la fixe au 31/12.
+                            if (w === availableWeeks.length && weekEnd.isBefore(endOfYear)) {
+                                weekEnd = endOfYear;
+                            }
+                            return (
+                                <option key={w} value={w}>
+                                    Semaine {w} ({weekStart.format("DD/MM/YYYY")} au {weekEnd.format("DD/MM/YYYY")})
+                                </option>
+                            );
+                        })}
+                    </select>
+                </div>
+            )}
         </div>
     );
 }
@@ -196,8 +235,11 @@ FilterSelectors.propTypes = {
     setSelectedQuarter: PropTypes.func.isRequired,
     selectedSemester: PropTypes.number.isRequired,
     setSelectedSemester: PropTypes.func.isRequired,
+    selectedWeek: PropTypes.number,
+    setSelectedWeek: PropTypes.func,
     availableYears: PropTypes.arrayOf(PropTypes.number).isRequired,
     availableMonths: PropTypes.arrayOf(PropTypes.number).isRequired,
+    availableWeeks: PropTypes.arrayOf(PropTypes.number),
 };
 
 /* Composant Modal basé sur votre exemple */
@@ -223,7 +265,6 @@ function Modal(props) {
                     {props.button}
                 </button>
             </div>
-
 
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-10" onClose={closeModal}>
@@ -286,12 +327,21 @@ export default function PieChartExpenses({ expenses }) {
     );
     const availableMonths = React.useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
 
+    // Pour le filtre "semaine", nous définissons toujours 52 semaines fixes
+    const availableWeeks = React.useMemo(() => {
+        return Array.from({ length: 52 }, (_, i) => i + 1);
+    }, []);
+
+    // Calcul du numéro de semaine courant sans utiliser dayjs().week()
+    const currentWeek = Math.ceil(dayjs().dayOfYear() / 7);
+
     // États de filtrage
     const [timeFilter, setTimeFilter] = React.useState("mois");
     const [selectedYear, setSelectedYear] = React.useState(dayjs().year());
     const [selectedMonth, setSelectedMonth] = React.useState(dayjs().month() + 1);
     const [selectedQuarter, setSelectedQuarter] = React.useState(1);
     const [selectedSemester, setSelectedSemester] = React.useState(1);
+    const [selectedWeek, setSelectedWeek] = React.useState(currentWeek <= 52 ? currentWeek : 1);
 
     // Calcul des bornes et filtrage des dépenses
     const filteredExpenses = React.useMemo(() => {
@@ -300,7 +350,8 @@ export default function PieChartExpenses({ expenses }) {
             selectedYear,
             selectedMonth,
             selectedQuarter,
-            selectedSemester
+            selectedSemester,
+            selectedWeek // Paramètre utilisé uniquement pour le filtre "semaine"
         );
 
         console.log("[DEBUG] Filtrage pour", timeFilter);
@@ -319,7 +370,7 @@ export default function PieChartExpenses({ expenses }) {
             }
             return expenseDate.isSameOrAfter(startDate) && expenseDate.isSameOrBefore(endDate);
         });
-    }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester]);
+    }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester, selectedWeek]);
 
     console.log("📊 Transactions affichées :", filteredExpenses.length);
     const hasData = filteredExpenses.length > 0;
@@ -347,7 +398,7 @@ export default function PieChartExpenses({ expenses }) {
         <Modal button="Show Statistics">
             <div className="flex flex-col items-center w-full space-y-6">
                 <p className="text-gray-700 font-semibold text-center">
-                    Total transactions displayed: {filteredExpenses.length}
+                    Total transactions affichées : {filteredExpenses.length}
                 </p>
 
                 <FilterSelectors
@@ -361,8 +412,11 @@ export default function PieChartExpenses({ expenses }) {
                     setSelectedQuarter={setSelectedQuarter}
                     selectedSemester={selectedSemester}
                     setSelectedSemester={setSelectedSemester}
+                    selectedWeek={selectedWeek}
+                    setSelectedWeek={setSelectedWeek}
                     availableYears={availableYears}
                     availableMonths={availableMonths}
+                    availableWeeks={availableWeeks}
                 />
 
                 {/* Conteneur responsive pour le graphique et les détails */}
@@ -378,7 +432,7 @@ export default function PieChartExpenses({ expenses }) {
                             />
                         ) : (
                             <p className="text-center text-gray-500 font-semibold">
-                                No data to display
+                                Pas de données à afficher
                             </p>
                         )}
                     </div>
@@ -387,7 +441,7 @@ export default function PieChartExpenses({ expenses }) {
                     {hasData && (
                         <div className="flex-1 bg-white shadow-md rounded-lg p-4">
                             <h3 className="text-lg font-bold text-gray-700 text-center mb-4">
-                                Category Details
+                                Détails par catégorie
                             </h3>
                             <div className="h-[350px] overflow-y-auto">
                                 <ul className="space-y-3">
@@ -402,12 +456,12 @@ export default function PieChartExpenses({ expenses }) {
                                                     style={{ backgroundColor: item.color }}
                                                 ></div>
                                                 <span className="text-gray-800 font-medium">
-                      {item.label}
-                    </span>
+                                                    {item.label}
+                                                </span>
                                             </div>
                                             <span className="text-gray-600 font-semibold">
-                    {item.value.toFixed(2)} €
-                  </span>
+                                                {item.value.toFixed(2)} €
+                                            </span>
                                         </li>
                                     ))}
                                 </ul>
