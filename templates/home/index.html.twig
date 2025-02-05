@@ -38,7 +38,7 @@
 
             <!-- Conteneur pour le composant React -->
             <div class="overflow-hidden">
-                <div {{ react_component('DataTable', {'Data': combinedList}) }}></div>
+                <div {{ react_component('DataTable', {'Data': combinedList,'excludeCollum':["type","id"]}) }}></div>
             </div>
         </div>
     </div>
