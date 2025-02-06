@@ -6,13 +6,17 @@
     <div class="flex items-center justify-center min-h-screen">
         <div class="w-full max-w-6xl px-4 py-6 bg-white shadow-md rounded-lg">
             <div class="mt-8">
-                <div {{ react_component('PieChartExpenses', {'expenses': combinedList}) }}></div>
-            </div>
             <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Suivis des dépense</h1>
 
             <!-- Conteneur pour le composant React -->
             <div class="overflow-hidden">
-                <div {{ react_component('DataTable', {'Data': combinedList,'excludeCollum':["type","id","userProfileEntity"],'filterableExcluded':["type","userProfileEntity"],'noDynamicList':["amount"]}) }}></div>
+                <div {{ react_component('DataTable', {
+                    'Data': combinedList,'
+                    excludeCollum':["name","type","id","userProfileEntity"],
+                    'filterableExcluded':["name","type","userProfileEntity"],
+                    'noDynamicList':["amount"],
+                    "filterImpacte":["userProfileEntity"]}
+                ) }}></div>
             </div>
         </div>
     </div>
