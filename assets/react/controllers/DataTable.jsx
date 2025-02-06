@@ -1,48 +1,100 @@
-import * as React from 'react';
-import { useState, useMemo } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
-import Paper from '@mui/material/Paper';
+// DataTable.jsx
+import React, {useMemo, useState} from 'react';
+import {DataGrid} from '@mui/x-data-grid';
 import {
-    TextField,
-    Button,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Chip,
     Autocomplete,
+    Box,
+    Button,
     Checkbox,
+    Chip,
+    FormControl,
     FormControlLabel,
-    Box
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
+    TextField
 } from '@mui/material';
+import PieChartExpenses from './PieChartExpenses';
 
 // Expression régulière pour détecter un format de date "YYYY-MM-DD HH:MM:SS"
 const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 
-// Fonction pour formater la date en "DD/MM/YYYY"
-const formatDate = (dateString) => {
+// Fonction pour formater une date (ex. "YYYY-MM-DD HH:MM:SS" → "DD/MM/YYYY")
+export const formatDate = (dateString) => {
     if (!dateString) return '';
     const [datePart] = dateString.split(' ');
     const [year, month, day] = datePart.split('-');
     return `${day}/${month}/${year}`;
 };
 
-// Fonction pour formater les montants numériques
-const formatAmount = (value) => {
+// Fonction pour formater les montants numériques (format français)
+export const formatAmount = (value) => {
     const num = Number(value);
     if (isNaN(num)) return value;
-    // Utilise le format français pour insérer des espaces comme séparateur de milliers
     const formatted = Math.abs(num).toLocaleString('fr-FR');
     return num < 0 ? `- ${formatted}` : formatted;
 };
 
-export default function DataTable({ Data, excludeCollum = [], filterableExcluded = [], noDynamicList = [] }) {
-    // Vérifier si Data est un tableau non vide
+// Exemple de fonction utilitaire calculant des bornes de dates sur un ensemble de données
+export const calculateDateBounds = (data, column) => {
+    if (!data || data.length === 0) return { min: null, max: null };
+    const dates = data
+        .map(row => row[column])
+        .filter(val => dateRegex.test(val))
+        .map(val => val.substring(0, 10));
+    if (dates.length === 0) return { min: null, max: null };
+    const sorted = dates.sort();
+    return { min: sorted[0], max: sorted[sorted.length - 1] };
+};
+
+// Fonction utilitaire pour appliquer une série de filtres sur une valeur de cellule
+const checkFiltersForCell = (cellValue, filters) => {
+    if (cellValue === undefined) return false;
+    // Vous pouvez conserver ou commenter ce log selon vos besoins
+
+    // Cas date
+    if (typeof cellValue === 'string' && dateRegex.test(cellValue)) {
+        const rowDate = cellValue.substring(0, 10);
+        return filters.some(filter => {
+            if (filter.type === 'range') {
+                return rowDate >= filter.start && rowDate <= filter.end;
+            }
+            return rowDate === filter.value;
+        });
+    }
+
+    // Cas numérique
+    if (!isNaN(cellValue) && isFinite(cellValue)) {
+        const cellNumber = Number(cellValue);
+        return filters.every(filter => {
+            if (filter.operator) {
+                if (filter.operator === 'equal') return cellNumber === filter.value;
+                if (filter.operator === 'min') return cellNumber >= filter.value;
+                if (filter.operator === 'max') return cellNumber <= filter.value;
+            }
+            return String(cellNumber).includes(String(filter.value));
+        });
+    }
+
+    // Cas texte (recherche insensible à la casse)
+    const lowerValue = String(cellValue).toLowerCase();
+    return filters.some(filter => lowerValue.includes(filter.value.toLowerCase()));
+};
+
+export default function DataTable({
+                                      Data,
+                                      excludeCollum = [],
+                                      filterableExcluded = [],
+                                      noDynamicList = [],
+                                      filterImpacte = [] // Tableau des colonnes impactées pour le calcul de finalExpenses
+                                  }) {
     if (!Array.isArray(Data) || Data.length === 0) {
         return <div>Aucune donnée à afficher</div>;
     }
 
-    // Liste des colonnes à exclure pour l'affichage dans le tableau
+
+    // Colonnes à exclure pour l’affichage dans le tableau
     const defaultExclusions = ['showUrl', 'editUrl'];
     const exclusions = [...defaultExclusions, ...excludeCollum];
 
@@ -54,30 +106,25 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
         ])
     );
 
-    // États pour le filtre en cours et les filtres appliqués
+    // États pour gérer le filtrage
     const [filterColumn, setFilterColumn] = useState(allFilterableColumns[0] || '');
     const [filterValue, setFilterValue] = useState('');
     const [filterDate, setFilterDate] = useState('');
     const [filterStartDate, setFilterStartDate] = useState('');
     const [filterEndDate, setFilterEndDate] = useState('');
-    // État pour activer/désactiver le filtrage par intervalle sur les dates
     const [isRangeFilter, setIsRangeFilter] = useState(false);
-    // Pour les filtres sur les montants, on ajoute un opérateur (equal, min, max)
     const [amountOperator, setAmountOperator] = useState('equal');
-    // Tableau contenant tous les filtres appliqués (permettant plusieurs filtres par même colonne)
     const [appliedFilters, setAppliedFilters] = useState([]);
 
-    // Détecte si la colonne sélectionnée est de type date
+    // Détermination du type de filtre en fonction de la colonne sélectionnée
     const isDateFilter = filterColumn && dateRegex.test(Data[0][filterColumn]);
-
-    // Détecte si la colonne sélectionnée est numérique (hors date)
     const isNumericFilter =
         !isDateFilter &&
         filterColumn &&
         !isNaN(Data[0][filterColumn]) &&
         isFinite(Data[0][filterColumn]);
 
-    // Liste dynamique pour les autres colonnes (excluant les colonnes de type date)
+    // Liste dynamique pour certaines colonnes
     const uniqueOptions = useMemo(() => {
         if (!filterColumn || isDateFilter || noDynamicList.includes(filterColumn)) return [];
         const optionsSet = new Set();
@@ -89,116 +136,90 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
         return Array.from(optionsSet);
     }, [Data, filterColumn, isDateFilter, noDynamicList]);
 
-    // Ajout du filtre selon le mode de filtrage
+    // Ajout d'un filtre dans la liste
     const handleAddFilter = () => {
         if (!filterColumn) return;
-
         if (isDateFilter) {
-            if (isRangeFilter) {
-                if (filterStartDate && filterEndDate) {
-                    setAppliedFilters(prev => [
-                        ...prev,
-                        { column: filterColumn, start: filterStartDate, end: filterEndDate, type: 'range' }
-                    ]);
-                    setFilterStartDate('');
-                    setFilterEndDate('');
-                }
-            } else {
-                if (filterDate) {
-                    setAppliedFilters(prev => [
-                        ...prev,
-                        { column: filterColumn, value: filterDate, type: 'unique' }
-                    ]);
-                    setFilterDate('');
-                }
+            if (isRangeFilter && filterStartDate && filterEndDate) {
+                setAppliedFilters(prev => {
+                    const nouveauFiltre = { column: filterColumn, start: filterStartDate, end: filterEndDate, type: 'range' };
+                    return [...prev, nouveauFiltre];
+                });
+                setFilterStartDate('');
+                setFilterEndDate('');
+            } else if (filterDate) {
+                setAppliedFilters(prev => {
+                    const nouveauFiltre = { column: filterColumn, value: filterDate, type: 'unique' };
+                    return [...prev, nouveauFiltre];
+                });
+                setFilterDate('');
             }
-        } else if (isNumericFilter) {
-            if (filterValue.trim() !== '') {
-                setAppliedFilters(prev => [
-                    ...prev,
-                    { column: filterColumn, value: Number(filterValue), operator: amountOperator }
-                ]);
-                setFilterValue('');
-            }
-        } else {
-            if (filterValue.trim() !== '') {
-                setAppliedFilters(prev => [...prev, { column: filterColumn, value: filterValue }]);
-                setFilterValue('');
-            }
+        } else if (isNumericFilter && filterValue.trim() !== '') {
+            setAppliedFilters(prev => {
+                const nouveauFiltre = { column: filterColumn, value: Number(filterValue), operator: amountOperator };
+                return [...prev, nouveauFiltre];
+            });
+            setFilterValue('');
+        } else if (filterValue.trim() !== '') {
+            setAppliedFilters(prev => {
+                const nouveauFiltre = { column: filterColumn, value: filterValue };
+                return [...prev, nouveauFiltre];
+            });
+            setFilterValue('');
         }
     };
 
-    // Ajout du filtre avec la touche "Entrée"
     const handleKeyDown = (e) => {
         if (e.key === 'Enter') {
             handleAddFilter();
         }
     };
 
-    // Suppression d'un filtre
     const handleRemoveFilter = (indexToRemove) => {
-        setAppliedFilters(prev => prev.filter((_, index) => index !== indexToRemove));
+        setAppliedFilters(prev => {
+            return prev.filter((_, index) => index !== indexToRemove);
+        });
     };
 
-    // Suppression de tous les filtres
     const handleClearFilters = () => {
         setAppliedFilters([]);
     };
 
-    // Filtrage des données
-    // Pour chaque colonne filtrée, la ligne doit satisfaire :
-    // - Pour les filtres numériques : toutes les conditions (ET)
-    // - Pour les filtres de date et textuels : au moins une condition (OU)
+    // Filtrage global des données (affichage du tableau)
     const filteredData = useMemo(() => {
         if (appliedFilters.length === 0) return Data;
         const filtersByColumn = appliedFilters.reduce((acc, filter) => {
-            if (!acc[filter.column]) {
-                acc[filter.column] = [];
-            }
+            if (!acc[filter.column]) acc[filter.column] = [];
             acc[filter.column].push(filter);
             return acc;
         }, {});
-
-        return Data.filter(row => {
-            return Object.entries(filtersByColumn).every(([column, filters]) => {
-                const cellValue = row[column];
-                if (cellValue === undefined) return false;
-
-                // Cas des colonnes de type date
-                if (dateRegex.test(cellValue)) {
-                    const rowDate = cellValue.substring(0, 10);
-                    return filters.some(filter => {
-                        if (filter.type === 'range') {
-                            return rowDate >= filter.start && rowDate <= filter.end;
-                        }
-                        return rowDate === filter.value;
-                    });
-                }
-
-                // Cas des colonnes numériques
-                if (!isNaN(cellValue) && isFinite(cellValue)) {
-                    const cellNumber = Number(cellValue);
-                    // Pour les filtres numériques, toutes les conditions doivent être vérifiées
-                    return filters.every(filter => {
-                        if (filter.operator) {
-                            if (filter.operator === 'equal') {
-                                return cellNumber === filter.value;
-                            } else if (filter.operator === 'min') {
-                                return cellNumber >= filter.value;
-                            } else if (filter.operator === 'max') {
-                                return cellNumber <= filter.value;
-                            }
-                        }
-                        return String(cellNumber).includes(String(filter.value));
-                    });
-                }
-
-                // Pour les autres colonnes, recherche insensible à la casse (OU)
-                const lowerValue = String(cellValue).toLowerCase();
-                return filters.some(filter => lowerValue.includes(filter.value.toLowerCase()));
-            });
-        });
+        return Data.filter(row =>
+            Object.entries(filtersByColumn).every(([column, filters]) =>
+                checkFiltersForCell(row[column], filters)
+            )
+        );
     }, [Data, appliedFilters]);
+
+    // Calcul de finalExpenses pour PieChartExpenses :
+    // On se base sur la donnée d'origine (Data) en appliquant uniquement les filtres
+    // dont la colonne figure dans filterImpacte.
+    const finalExpenses = useMemo(() => {
+        // Extraction des filtres dont la colonne figure dans filterImpacte
+        const impactFilters = appliedFilters.filter(f => filterImpacte.includes(f.column));
+        if (impactFilters.length === 0) {
+            return Data;
+        }
+        const filtersByColumn = impactFilters.reduce((acc, filter) => {
+            if (!acc[filter.column]) acc[filter.column] = [];
+            acc[filter.column].push(filter);
+            return acc;
+        }, {});
+        return Data.filter(row =>
+            Object.entries(filtersByColumn).every(([column, filters]) =>
+                checkFiltersForCell(row[column], filters)
+            )
+        );
+    }, [Data, appliedFilters, filterImpacte]);
 
     // Définition des colonnes pour le DataGrid
     const baseColumns = Object.keys(Data[0])
@@ -212,13 +233,9 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                 flex: 1,
                 width: 160,
             };
-
             if (isDate) {
-                columnDef.renderCell = (params) => (
-                    <span>{formatDate(params.value)}</span>
-                );
+                columnDef.renderCell = (params) => <span>{formatDate(params.value)}</span>;
             } else if (!isNaN(Data[0][key]) && isFinite(Data[0][key])) {
-                // Traitement pour les montants numériques : coloration selon le signe
                 columnDef.renderCell = (params) => {
                     const num = Number(params.value);
                     const formatted = formatAmount(params.value);
@@ -246,6 +263,11 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
 
     return (
         <div>
+
+            {/* Transmission des finalExpenses au composant PieChartExpenses */}
+            <Box sx={{ mt: 4 , mb: 2 }}>
+                <PieChartExpenses expenses={finalExpenses} />
+            </Box>
             {/* Interface de filtrage */}
             <Box
                 sx={{
@@ -265,7 +287,6 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                         label="Colonne"
                         onChange={(e) => {
                             setFilterColumn(e.target.value);
-                            // Réinitialiser les valeurs de filtre lors du changement de colonne
                             setFilterValue('');
                             setFilterDate('');
                             setFilterStartDate('');
@@ -316,7 +337,6 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                                 sx={{ width: 150 }}
                             />
                         )}
-                        {/* Case à cocher pour activer le filtrage par intervalle */}
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -324,7 +344,6 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                                     checked={isRangeFilter}
                                     onChange={(e) => {
                                         setIsRangeFilter(e.target.checked);
-                                        // Réinitialiser les dates lors du changement
                                         setFilterDate('');
                                         setFilterStartDate('');
                                         setFilterEndDate('');
@@ -407,7 +426,7 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                     onClick={handleClearFilters}
                     sx={{ height: '40px' }}
                 >
-                    Effacer tout les filtres
+                    Effacer tous les filtres
                 </Button>
             </Box>
 
@@ -431,7 +450,7 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                 ))}
             </Box>
 
-            {/* Tableau */}
+            {/* Affichage du DataGrid */}
             <Paper sx={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={filteredData}
