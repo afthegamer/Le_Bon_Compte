@@ -259,6 +259,7 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                 <FormControl size="small" sx={{ minWidth: 150 }}>
                     <InputLabel id="filter-column-label">Colonne</InputLabel>
                     <Select
+                        variant="outlined"
                         labelId="filter-column-label"
                         value={filterColumn}
                         label="Colonne"
@@ -292,7 +293,6 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                                     value={filterStartDate}
                                     onChange={(e) => setFilterStartDate(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    InputLabelProps={{ shrink: true }}
                                     sx={{ width: 140 }}
                                 />
                                 <TextField
@@ -302,7 +302,6 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                                     value={filterEndDate}
                                     onChange={(e) => setFilterEndDate(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    InputLabelProps={{ shrink: true }}
                                     sx={{ width: 140 }}
                                 />
                             </>
@@ -314,7 +313,6 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                InputLabelProps={{ shrink: true }}
                                 sx={{ width: 150 }}
                             />
                         )}
@@ -349,6 +347,7 @@ export default function DataTable({ Data, excludeCollum = [], filterableExcluded
                         />
                         <FormControl size="small" sx={{ minWidth: 100 }}>
                             <Select
+                                variant="outlined"
                                 value={amountOperator}
                                 onChange={(e) => setAmountOperator(e.target.value)}
                             >
