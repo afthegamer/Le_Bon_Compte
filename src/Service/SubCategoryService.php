@@ -11,12 +11,10 @@ class SubCategoryService
 {
     private EntityManagerInterface $entityManager;
 
+    // Structure pour les sous-catégories prédéfinies :
+    // La clé correspond au nom de la catégorie et la valeur est un tableau de sous-catégories prédéfinies.
     private array $predefinedSubcategories = [
-        'Nourriture',
-        'Transports publics',
-        'Carburant',
-        'Loisirs sportifs',
-        'Investissements'
+        'Alimentation' => ['banana', 'petit commerce']
     ];
 
     public function __construct(EntityManagerInterface $entityManager)
@@ -24,20 +22,66 @@ class SubCategoryService
         $this->entityManager = $entityManager;
     }
 
+    /**
+     * Fusionne les sous-catégories prédéfinies et celles de l'utilisateur pour une catégorie donnée.
+     * Retourne un tableau associatif avec les clés "predefined" et "user".
+     *
+     * La structure de chaque sous-catégorie est un tableau avec les clés "id" et "name".
+     *
+     * @param CategoryEntity $category
+     * @return array
+     */
     public function getMergedSubCategories(CategoryEntity $category): array
     {
+        $categoryName = $category->getName();
+
+        // Récupérer les sous-catégories créées par l'utilisateur pour la catégorie donnée,
+        // en les transformant en objets avec "id" et "name".
         $userSubCategories = $this->entityManager
             ->getRepository(SubcategoryEntity::class)
             ->findBy(['categoryEntity' => $category]);
 
-        $userSubCategoryNames = array_map(fn($sub) => $sub->getName(), $userSubCategories);
+        $userSubCategoryObjects = array_map(function(SubcategoryEntity $sub) {
+            return [
+                'id'   => $sub->getId(),
+                'name' => $sub->getName()
+            ];
+        }, $userSubCategories);
 
-        return array_unique(array_merge($this->predefinedSubcategories, $userSubCategoryNames), SORT_STRING);
+        // Récupérer les sous-catégories prédéfinies pour cette catégorie, si elles existent.
+        $predefinedNames = isset($this->predefinedSubcategories[$categoryName])
+            ? $this->predefinedSubcategories[$categoryName]
+            : [];
+
+        $predefinedSubCategoryObjects = array_map(function($name) {
+            return [
+                'id'   => null,
+                'name' => $name
+            ];
+        }, $predefinedNames);
+
+        // Filtrer les sous-catégories utilisateur pour exclure celles déjà présentes dans la liste prédéfinie (comparaison insensible à la casse)
+        $filteredUserSubCategoryObjects = array_filter($userSubCategoryObjects, function($subObj) use ($predefinedNames) {
+            foreach ($predefinedNames as $pre) {
+                if (strtolower($subObj['name']) === strtolower($pre)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        return [
+            'predefined' => $predefinedSubCategoryObjects,
+            'user'       => array_values($filteredUserSubCategoryObjects),
+        ];
     }
 
-
     /**
-     * Récupère les sous-catégories associées à une catégorie donnée.
+     * Récupère les sous-catégories associées à une catégorie donnée via son identifiant.
+     *
+     * @param int $categoryId
+     * @return array
+     * @throws \InvalidArgumentException
      */
     public function getMergedSubCategoriesByCategoryId(int $categoryId): array
     {
@@ -49,11 +93,12 @@ class SubCategoryService
             throw new \InvalidArgumentException('La catégorie spécifiée est introuvable.');
         }
 
+        // Ici, on retourne uniquement les entités SubcategoryEntity.
+        // Vous pouvez adapter cette méthode selon vos besoins.
         return $this->entityManager
             ->getRepository(SubcategoryEntity::class)
             ->findBy(['categoryEntity' => $category]);
     }
-
 
     public function findOrCreateSubCategory(string $name, CategoryEntity $category): SubcategoryEntity
     {
@@ -123,5 +168,4 @@ class SubCategoryService
 
         return $subcategory;
     }
-
 }

@@ -28,7 +28,6 @@ const CategoryInput = ({
             }));
             const userList = (predefinedCategories.user || [])
                 .filter((userCat) => {
-                    // Filtrer la catégorie utilisateur si elle existe déjà dans la liste prédéfinie (insensible à la casse)
                     return !(
                         (predefinedCategories.predefined || []).some(
                             (preCat) => preCat.toLowerCase() === userCat.toLowerCase()
@@ -41,7 +40,6 @@ const CategoryInput = ({
                 }));
             return [...predefinedList, ...userList];
         } else if (Array.isArray(predefinedCategories)) {
-            // Si c'est un tableau simple, on considère toutes les catégories comme prédéfinies.
             return predefinedCategories.map((cat) => ({ name: cat, isPredefined: true }));
         }
         return [];
@@ -53,34 +51,38 @@ const CategoryInput = ({
     const [value, setValue] = useState(currentCategory || "");
     const [isFocused, setIsFocused] = useState(false);
 
+    // État pour mémoriser la catégorie sélectionnée localement
+    const [selectedCategory, setSelectedCategory] = useState(currentCategory || "");
+
     const [subcategories, setSubcategories] = useState([]);
     const [filteredSubcategories, setFilteredSubcategories] = useState([]);
+    // Initialisation avec currentSubcategory (si fournie)
     const [selectedSubcategory, setSelectedSubcategory] = useState(currentSubcategory || "");
 
     const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
-    const [isCheckboxChecked, setIsCheckboxChecked] = useState(false);
-    const [isSubcategoryInputVisible, setIsSubcategoryInputVisible] = useState(false);
+    const [isCheckboxChecked, setIsCheckboxChecked] = useState(
+        currentSubcategory && currentSubcategory.trim() !== ""
+    );
+    const [isSubcategoryInputVisible, setIsSubcategoryInputVisible] = useState(
+        currentSubcategory && currentSubcategory.trim() !== ""
+    );
 
-    // Nouvel état pour détecter le focus sur l'input de sous-catégorie
     const [isSubcatFocused, setIsSubcatFocused] = useState(false);
 
-    // États pour la modal de confirmation
+    // États pour les modals
     const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
     const [confirmationModalData, setConfirmationModalData] = useState({
         title: "",
         message: "",
         onConfirm: null,
     });
-
-    // États pour la modal de notification (succès ou erreur)
     const [notificationModalOpen, setNotificationModalOpen] = useState(false);
     const [notificationModalData, setNotificationModalData] = useState({
         title: "",
         message: "",
     });
 
-    // ------------------ Fonctions d'ouverture/fermeture des modals ------------------
-
+    // Fonctions d'ouverture/fermeture des modals
     const openConfirmationModal = (title, message, onConfirm) => {
         setConfirmationModalData({ title, message, onConfirm });
         setConfirmationModalOpen(true);
@@ -95,29 +97,49 @@ const CategoryInput = ({
         setNotificationModalOpen(false);
     };
 
-    // -----------------------------------------------------------------------------
-
-    // Au montage, si une catégorie est renseignée, on affiche la case à cocher et on charge ses sous-catégories.
+    // Effet déclenché lorsque la catégorie sélectionnée change
     useEffect(() => {
-        if (currentCategory && currentCategory.trim() !== "") {
+        if (selectedCategory && selectedCategory.trim() !== "") {
             setIsCheckboxVisible(true);
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategory)}`)
+            // Si la nouvelle catégorie est différente de la catégorie initiale, vider les sous-catégories ;
+            // sinon, conserver currentSubcategory
+            if (selectedCategory !== currentCategory) {
+                setSubcategories([]);
+                setFilteredSubcategories([]);
+                setSelectedSubcategory("");
+            } else if (currentSubcategory && currentSubcategory.trim() !== "") {
+                setSelectedSubcategory(currentSubcategory);
+            }
+            setIsCheckboxChecked(false);
+            setIsSubcategoryInputVisible(false);
+
+            fetch(`/api/subcategories/by-name/${encodeURIComponent(selectedCategory)}`)
                 .then((response) => response.json())
                 .then((data) => {
-                    setSubcategories(data);
-                    setFilteredSubcategories(data);
-                    if (currentSubcategory && currentSubcategory.trim() !== "") {
+                    const mergedSubcategories = [
+                        ...(data.predefined || []),
+                        ...(data.user || []),
+                    ];
+                    console.log("Sous-catégories chargées :", mergedSubcategories);
+                    setSubcategories(mergedSubcategories);
+                    setFilteredSubcategories(mergedSubcategories);
+                    // Si des sous-catégories sont chargées, activer l'affichage
+                    if (mergedSubcategories.length > 0) {
                         setIsCheckboxChecked(true);
                         setIsSubcategoryInputVisible(true);
+                    }
+                    // Si on est en mode édition (la catégorie n'a pas changé) et currentSubcategory existe, on le réaffiche
+                    if (selectedCategory === currentCategory && currentSubcategory && currentSubcategory.trim() !== "") {
+                        setSelectedSubcategory(currentSubcategory);
                     }
                 })
                 .catch((error) =>
                     console.error("Erreur lors du chargement des sous-catégories", error)
                 );
         }
-    }, [currentCategory, currentSubcategory]);
+    }, [selectedCategory]); // On se base uniquement sur selectedCategory
 
-    // Mise à jour réactive du filtrage des catégories (insensible à la casse)
+    // Filtrage des catégories
     useEffect(() => {
         const filtered = categories.filter((cat) =>
             cat.name.toLowerCase().includes(value.toLowerCase())
@@ -132,12 +154,10 @@ const CategoryInput = ({
     const handleChange = (event) => {
         const inputValue = event.target.value;
         setValue(inputValue);
-
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = inputValue;
         }
-
         if (
             !categories.some(
                 (cat) => cat.name.toLowerCase() === inputValue.toLowerCase()
@@ -149,37 +169,25 @@ const CategoryInput = ({
                 hiddenSubcatInput.value = "";
             }
         }
-
         setIsCheckboxVisible(inputValue.trim() !== "");
     };
 
     const handleSuggestionClick = (category) => {
+        console.log("Catégorie sélectionnée :", category);
         setValue(category.name);
         setFilteredCategories([]);
         setIsFocused(false);
-
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = category.name;
         }
-
+        // Vider immédiatement les sous-catégories pour rafraîchir l'UI
+        setSubcategories([]);
+        setFilteredSubcategories([]);
         setSelectedSubcategory("");
-        const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
-        if (hiddenSubcatInput) {
-            hiddenSubcatInput.value = "";
-        }
-
         setIsCheckboxVisible(true);
-
-        fetch(`/api/subcategories/by-name/${encodeURIComponent(category.name)}`)
-            .then((response) => response.json())
-            .then((data) => {
-                setSubcategories(data);
-                setFilteredSubcategories(data);
-            })
-            .catch((error) =>
-                console.error("Erreur lors du chargement des sous-catégories", error)
-            );
+        // Mettre à jour la catégorie sélectionnée localement
+        setSelectedCategory(category.name);
     };
 
     const handleCheckboxChange = (event) => {
@@ -191,7 +199,6 @@ const CategoryInput = ({
     const handleSubcategoryChange = (event) => {
         const inputValue = event.target.value;
         setSelectedSubcategory(inputValue);
-
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcatInput) {
             hiddenSubcatInput.value = inputValue;
@@ -201,20 +208,25 @@ const CategoryInput = ({
     const handleSubcategorySuggestionClick = (subcategory) => {
         setSelectedSubcategory(subcategory.name);
         setFilteredSubcategories([]);
-
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcatInput) {
             hiddenSubcatInput.value = subcategory.name;
         }
     };
 
-    // -------------------- Gestion de la suppression via modal --------------------
-
+    // Gestion de la suppression via modal
     const handleDeleteSubcategory = (subcategoryId) => {
         openConfirmationModal(
             "Confirmation de suppression",
             "Êtes-vous sûr de vouloir supprimer cette sous-catégorie ?",
             () => {
+                // Mise à jour optimiste : retirer immédiatement l'élément
+                setSubcategories((prev) =>
+                    prev.filter((sub) => sub.id !== subcategoryId)
+                );
+                setFilteredSubcategories((prev) =>
+                    prev.filter((sub) => sub.id !== subcategoryId)
+                );
                 fetch(`/api/subcategories/${subcategoryId}`, {
                     method: "DELETE",
                 })
@@ -222,12 +234,6 @@ const CategoryInput = ({
                         if (!response.ok) {
                             throw new Error("Erreur lors de la suppression");
                         }
-                        setSubcategories((prev) =>
-                            prev.filter((sub) => sub.id !== subcategoryId)
-                        );
-                        setFilteredSubcategories((prev) =>
-                            prev.filter((sub) => sub.id !== subcategoryId)
-                        );
                     })
                     .catch((error) => {
                         console.error("Erreur lors de la suppression de la sous-catégorie :", error);
@@ -245,7 +251,6 @@ const CategoryInput = ({
             console.error("Erreur : Nom de la catégorie non défini");
             return;
         }
-
         openConfirmationModal(
             "Confirmation de suppression",
             `Êtes-vous sûr de vouloir supprimer la catégorie "${categoryName}" ?`,
@@ -259,14 +264,12 @@ const CategoryInput = ({
                         throw new Error("Erreur lors de la suppression de la catégorie.");
                     }
                     openNotificationModal("Succès", "Catégorie supprimée avec succès.");
-
                     setCategories((prev) =>
                         prev.filter((cat) => cat.name !== categoryName)
                     );
                     setFilteredCategories((prev) =>
                         prev.filter((cat) => cat.name !== categoryName)
                     );
-
                     if (categoryName === value) {
                         setValue("");
                         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
@@ -286,8 +289,6 @@ const CategoryInput = ({
             }
         );
     };
-
-    // -----------------------------------------------------------------------------
 
     return (
         <div className="relative">
@@ -310,7 +311,6 @@ const CategoryInput = ({
                             onClick={() => handleSuggestionClick(category)}
                         >
                             <span>{category.name}</span>
-                            {/* Afficher le bouton "Supprimer" uniquement pour les catégories utilisateur */}
                             {!category.isPredefined && (
                                 <button
                                     type="button"
@@ -360,21 +360,23 @@ const CategoryInput = ({
                         <ul className="absolute z-10 bg-white border mt-1 w-full max-h-40 overflow-y-auto shadow-lg">
                             {filteredSubcategories.map((subcategory) => (
                                 <li
-                                    key={subcategory.id}
+                                    key={subcategory.id ? subcategory.id : subcategory.name}
                                     className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                                     onClick={() => handleSubcategorySuggestionClick(subcategory)}
                                 >
                                     <span>{subcategory.name}</span>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteSubcategory(subcategory.id);
-                                        }}
-                                        className="text-red-500 hover:text-red-700"
-                                    >
-                                        Supprimer
-                                    </button>
+                                    {subcategory.id !== null && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteSubcategory(subcategory.id);
+                                            }}
+                                            className="text-red-500 hover:text-red-700"
+                                        >
+                                            Supprimer
+                                        </button>
+                                    )}
                                 </li>
                             ))}
                         </ul>

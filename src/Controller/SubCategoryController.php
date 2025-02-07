@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\CategoryEntity;
 use App\Entity\SubcategoryEntity;
-use App\Entity\UserEntity;
 use App\Service\SubCategoryService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,10 +16,9 @@ class SubCategoryController extends AbstractController
     #[Route('/api/subcategories/{categoryId}', name: 'get_subcategories', methods: ['GET'])]
     public function getSubcategories(int $categoryId, SubCategoryService $subCategoryService): JsonResponse
     {
-        // Utiliser le service pour récupérer les sous-catégories liées à la catégorie
+        // Utiliser la méthode getMergedSubCategoriesByCategoryId pour récupérer les sous-catégories
         $subcategories = $subCategoryService->getMergedSubCategoriesByCategoryId($categoryId);
 
-        // Construire la réponse JSON
         $response = array_map(fn(SubcategoryEntity $sub) => [
             'id' => $sub->getId(),
             'name' => $sub->getName(),
@@ -29,28 +27,33 @@ class SubCategoryController extends AbstractController
         return new JsonResponse($response);
     }
 
-
     #[Route('/api/subcategories/by-name/{categoryName}', name: 'get_subcategories_by_name', methods: ['GET'])]
-    public function getSubcategoriesByName(string $categoryName, SubCategoryService $subCategoryService): JsonResponse
-    {
+    public function getSubcategoriesByName(
+        string $categoryName,
+        SubCategoryService $subCategoryService,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
         $user = $this->getUser();
-
         if (!$user) {
             return new JsonResponse(['error' => 'Utilisateur non connecté'], 401);
         }
 
-        try {
-            // Obtenir les sous-catégories via le service
-            $subcategories = $subCategoryService->getSubCategoriesByCategoryNameAndUser($categoryName, $user);
+        // Récupérer la catégorie par son nom via l'EntityManager injecté
+        $category = $entityManager->getRepository(CategoryEntity::class)
+            ->findOneBy(['name' => $categoryName]);
 
-            return new JsonResponse(array_map(fn($sub) => [
-                'id' => $sub->getId(),
-                'name' => $sub->getName(),
-            ], $subcategories));
-        } catch (\InvalidArgumentException $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 404);
+        if (!$category) {
+            return new JsonResponse(['error' => 'Catégorie introuvable'], 404);
         }
+
+        // Utiliser la méthode getMergedSubCategories pour obtenir l'objet fusionné
+        $mergedSubcategories = $subCategoryService->getMergedSubCategories($category);
+
+        // La réponse renvoyée aura la structure :
+        // { "predefined": [ {id:null, name: "banana"}, {id:null, name:"petit commerce"} ], "user": [ ... ] }
+        return new JsonResponse($mergedSubcategories);
     }
+
     #[Route('/api/subcategories/{id}', name: 'delete_subcategory', methods: ['DELETE'])]
     public function deleteSubcategory(int $id, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -62,8 +65,6 @@ class SubCategoryController extends AbstractController
 
         // Dissocier la sous-catégorie des entités Expense
         foreach ($subcategory->getExpenseEntity() as $expense) {
-            // La méthode removeExpenseEntity() de la sous-catégorie gère la dissociation
-            // ou vous pouvez appeler directement le setter du côté Expense
             $expense->setSubcategoryEntity(null);
         }
 
@@ -72,7 +73,6 @@ class SubCategoryController extends AbstractController
             $income->setSubcategoryEntity(null);
         }
 
-        // Maintenant, on peut supprimer la sous-catégorie
         $entityManager->remove($subcategory);
         $entityManager->flush();
 
@@ -83,7 +83,6 @@ class SubCategoryController extends AbstractController
     public function createSubcategory(Request $request, SubCategoryService $subCategoryService): JsonResponse
     {
         $user = $this->getUser();
-
         if (!$user) {
             return new JsonResponse(['error' => 'Utilisateur non connecté'], 401);
         }
@@ -97,9 +96,7 @@ class SubCategoryController extends AbstractController
         }
 
         try {
-            // Créer la sous-catégorie via le service
             $subcategory = $subCategoryService->createSubCategory($categoryName, $subcategoryName, $user);
-
             return new JsonResponse([
                 'id' => $subcategory->getId(),
                 'name' => $subcategory->getName(),
@@ -108,7 +105,4 @@ class SubCategoryController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], 400);
         }
     }
-
-
-
 }
