@@ -11,16 +11,12 @@
             <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                 <tbody>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Id</th>
-                    <td class="px-4 py-2 text-gray-800">{{ expense_entity.id }}</td>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Name</th>
+                    <td class="px-4 py-2 text-gray-800">{{ expense_entity.name }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
                     <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Amount</th>
                     <td class="px-4 py-2 text-gray-800">{{ expense_entity.amount }}</td>
-                </tr>
-                <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Name</th>
-                    <td class="px-4 py-2 text-gray-800">{{ expense_entity.name }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
                     <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Type</th>
@@ -33,7 +29,7 @@
                 <tr class="border-t border-gray-200">
                     <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Date</th>
                     <td class="px-4 py-2 text-gray-800">
-                        {{ expense_entity.date ? expense_entity.date|date('Y-m-d H:i:s') : 'N/A' }}
+                        {{ expense_entity.date ? expense_entity.date|date('Y-m-d') : 'N/A' }}
                     </td>
                 </tr>
                 {% if expense_entity.categoryEntity %}

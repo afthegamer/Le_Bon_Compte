@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from "react";
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button
+} from "@mui/material";
 
 const CategoryInput = ({
                            predefinedCategories, // Tableau de chaînes représentant les catégories
@@ -7,7 +15,7 @@ const CategoryInput = ({
                            currentCategory,
                            currentSubcategory
                        }) => {
-    // On passe à une gestion d'état mutable pour pouvoir mettre à jour la liste après suppression
+    // États pour la gestion des catégories et sous-catégories
     const [categories, setCategories] = useState(predefinedCategories);
     const [filteredCategories, setFilteredCategories] = useState(predefinedCategories);
     const [value, setValue] = useState(currentCategory || "");
@@ -23,6 +31,45 @@ const CategoryInput = ({
 
     // Nouvel état pour détecter le focus sur l'input de sous-catégorie
     const [isSubcatFocused, setIsSubcatFocused] = useState(false);
+
+    // États pour la modal de confirmation
+    const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
+    const [confirmationModalData, setConfirmationModalData] = useState({
+        title: "",
+        message: "",
+        onConfirm: null
+    });
+
+    // États pour la modal de notification (succès ou erreur)
+    const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+    const [notificationModalData, setNotificationModalData] = useState({
+        title: "",
+        message: ""
+    });
+
+    // ------------------ Fonctions d'ouverture/fermeture des modals ------------------
+
+    /**
+     * Ouvre la modal de confirmation avec un titre, un message et une fonction de callback à exécuter en cas de confirmation.
+     */
+    const openConfirmationModal = (title, message, onConfirm) => {
+        setConfirmationModalData({ title, message, onConfirm });
+        setConfirmationModalOpen(true);
+    };
+
+    /**
+     * Ouvre la modal de notification avec un titre et un message.
+     */
+    const openNotificationModal = (title, message) => {
+        setNotificationModalData({ title, message });
+        setNotificationModalOpen(true);
+    };
+
+    const closeNotificationModal = () => {
+        setNotificationModalOpen(false);
+    };
+
+    // -----------------------------------------------------------------------------
 
     // Au montage, si une catégorie est renseignée, on affiche la case à cocher et on charge ses sous-catégories.
     useEffect(() => {
@@ -45,6 +92,7 @@ const CategoryInput = ({
         }
     }, [currentCategory, currentSubcategory]);
 
+    // Gestion du focus sur l'input de catégorie
     const handleFocus = () => setIsFocused(true);
     const handleBlur = () => setTimeout(() => setIsFocused(false), 200);
 
@@ -52,13 +100,13 @@ const CategoryInput = ({
         const inputValue = event.target.value;
         setValue(inputValue);
 
-        // Mettre à jour l'input caché pour la catégorie
+        // Mise à jour de l'input caché pour la catégorie
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = inputValue;
         }
 
-        // Si l'utilisateur crée une nouvelle catégorie, on reset aussi la sous-catégorie
+        // Si l'utilisateur crée une nouvelle catégorie, on réinitialise la sous-catégorie
         if (!predefinedCategories.includes(inputValue)) {
             setSelectedSubcategory("");
             const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
@@ -71,7 +119,6 @@ const CategoryInput = ({
         setIsCheckboxVisible(inputValue.trim() !== "");
     };
 
-
     // Lorsqu'une suggestion de catégorie est cliquée, on met à jour l'input et on charge les sous-catégories associées.
     const handleSuggestionClick = (category) => {
         setValue(category);
@@ -83,7 +130,7 @@ const CategoryInput = ({
             hiddenInput.value = category;
         }
 
-        // Vider l'input de sous-catégorie lors du changement de catégorie
+        // Réinitialisation de la sous-catégorie lors du changement de catégorie
         setSelectedSubcategory("");
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcatInput) {
@@ -119,7 +166,6 @@ const CategoryInput = ({
         }
     };
 
-
     const handleSubcategorySuggestionClick = (subcategory) => {
         setSelectedSubcategory(subcategory.name);
         setFilteredSubcategories([]);
@@ -130,68 +176,95 @@ const CategoryInput = ({
         }
     };
 
-    // Fonction pour supprimer une sous-catégorie
+    // -------------------- Gestion de la suppression via modal --------------------
+
+    /**
+     * Supprime une sous-catégorie après confirmation.
+     * @param {number|string} subcategoryId - L'identifiant de la sous-catégorie à supprimer.
+     */
     const handleDeleteSubcategory = (subcategoryId) => {
-        if (window.confirm("Êtes-vous sûr de vouloir supprimer cette sous-catégorie ?")) {
-            fetch(`/api/subcategories/${subcategoryId}`, {
-                method: "DELETE"
-            })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error("Erreur lors de la suppression");
-                    }
-                    // Mise à jour des listes en retirant la sous-catégorie supprimée
-                    setSubcategories(prev => prev.filter(sub => sub.id !== subcategoryId));
-                    setFilteredSubcategories(prev => prev.filter(sub => sub.id !== subcategoryId));
+        openConfirmationModal(
+            "Confirmation de suppression",
+            "Êtes-vous sûr de vouloir supprimer cette sous-catégorie ?",
+            () => {
+                fetch(`/api/subcategories/${subcategoryId}`, {
+                    method: "DELETE"
                 })
-                .catch((error) => {
-                    console.error("Erreur lors de la suppression de la sous-catégorie :", error);
-                    alert("Erreur lors de la suppression de la sous-catégorie. Veuillez réessayer.");
-                });
-        }
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error("Erreur lors de la suppression");
+                        }
+                        // Mise à jour des listes en retirant la sous-catégorie supprimée
+                        setSubcategories((prev) =>
+                            prev.filter((sub) => sub.id !== subcategoryId)
+                        );
+                        setFilteredSubcategories((prev) =>
+                            prev.filter((sub) => sub.id !== subcategoryId)
+                        );
+                    })
+                    .catch((error) => {
+                        console.error("Erreur lors de la suppression de la sous-catégorie :", error);
+                        openNotificationModal(
+                            "Erreur",
+                            "Erreur lors de la suppression de la sous-catégorie. Veuillez réessayer."
+                        );
+                    });
+            }
+        );
     };
 
-    // Fonction pour supprimer une catégorie
-    const handleDeleteCategory = async (categoryName) => {
-        console.log(categoryName);
+    /**
+     * Supprime une catégorie après confirmation.
+     * @param {string} categoryName - Le nom de la catégorie à supprimer.
+     */
+    const handleDeleteCategory = (categoryName) => {
         if (!categoryName) {
-            console.error("Erreur: Nom de la catégorie non défini");
+            console.error("Erreur : Nom de la catégorie non défini");
             return;
         }
 
-        if (!window.confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categoryName}" ?`)) {
-            return;
-        }
+        openConfirmationModal(
+            "Confirmation de suppression",
+            `Êtes-vous sûr de vouloir supprimer la catégorie "${categoryName}" ?`,
+            async () => {
+                try {
+                    const deleteResponse = await fetch(
+                        `/api/categories/${encodeURIComponent(categoryName)}`,
+                        { method: "DELETE" }
+                    );
+                    if (!deleteResponse.ok) {
+                        throw new Error("Erreur lors de la suppression de la catégorie.");
+                    }
+                    openNotificationModal("Succès", "Catégorie supprimée avec succès.");
 
-        try {
-            // Suppression de la catégorie directement par son nom
-            const deleteResponse = await fetch(`/api/categories/${encodeURIComponent(categoryName)}`, { method: "DELETE" });
-            console.log(deleteResponse);
-            if (!deleteResponse.ok) {
-                throw new Error("Erreur lors de la suppression de la catégorie.");
-            }
+                    // Mise à jour de la liste des catégories après suppression
+                    setCategories((prev) => prev.filter((cat) => cat !== categoryName));
+                    setFilteredCategories((prev) =>
+                        prev.filter((cat) => cat !== categoryName)
+                    );
 
-            alert("Catégorie supprimée avec succès.");
-
-            // Mise à jour de la liste des catégories après suppression
-            setCategories(prev => prev.filter(cat => cat !== categoryName));
-            setFilteredCategories(prev => prev.filter(cat => cat !== categoryName));
-
-            // Réinitialisation de l'input si la catégorie supprimée était sélectionnée
-            if (categoryName === value) {
-                setValue("");
-                const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
-                if (hiddenInput) {
-                    hiddenInput.value = "";
+                    // Réinitialisation de l'input si la catégorie supprimée était sélectionnée
+                    if (categoryName === value) {
+                        setValue("");
+                        const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
+                        if (hiddenInput) {
+                            hiddenInput.value = "";
+                        }
+                        setSubcategories([]);
+                        setFilteredSubcategories([]);
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la suppression de la catégorie :", error);
+                    openNotificationModal(
+                        "Erreur",
+                        "Erreur lors de la suppression de la catégorie. Veuillez réessayer."
+                    );
                 }
-                setSubcategories([]);
-                setFilteredSubcategories([]);
             }
-        } catch (error) {
-            console.error("Erreur lors de la suppression de la catégorie :", error);
-            alert("Erreur lors de la suppression de la catégorie. Veuillez réessayer.");
-        }
+        );
     };
+
+    // -----------------------------------------------------------------------------
 
     return (
         <div className="relative">
@@ -217,7 +290,6 @@ const CategoryInput = ({
                             <button
                                 type="button"
                                 onClick={(e) => {
-                                    console.log(category);
                                     e.stopPropagation();
                                     handleDeleteCategory(category);
                                 }}
@@ -240,9 +312,7 @@ const CategoryInput = ({
                             onChange={handleCheckboxChange}
                             checked={isCheckboxChecked}
                         />
-                        <span className="ml-2 text-gray-700">
-                            Ajouter une sous-catégorie
-                        </span>
+                        <span className="ml-2 text-gray-700">Ajouter une sous-catégorie</span>
                     </label>
                 </div>
             )}
@@ -285,6 +355,53 @@ const CategoryInput = ({
                     )}
                 </div>
             )}
+
+            {/* Modal de confirmation */}
+            <Dialog
+                open={confirmationModalOpen}
+                onClose={() => setConfirmationModalOpen(false)}
+            >
+                <DialogTitle>{confirmationModalData.title}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {confirmationModalData.message}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmationModalOpen(false)} color="primary">
+                        Annuler
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            setConfirmationModalOpen(false);
+                            if (confirmationModalData.onConfirm) {
+                                confirmationModalData.onConfirm();
+                            }
+                        }}
+                        color="error"
+                    >
+                        Confirmer
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Modal de notification */}
+            <Dialog
+                open={notificationModalOpen}
+                onClose={closeNotificationModal}
+            >
+                <DialogTitle>{notificationModalData.title}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {notificationModalData.message}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeNotificationModal} color="primary">
+                        Fermer
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };
