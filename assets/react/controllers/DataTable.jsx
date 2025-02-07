@@ -21,15 +21,13 @@ import {
 } from '@mui/material';
 import PieChartExpenses from './PieChartExpenses';
 
-// Hook personnalisé pour débouncer une valeur
+// Hook personnalisé pour débouncer une valeur (à réutiliser si nécessaire)
 function useDebounce(value, delay) {
     const [debouncedValue, setDebouncedValue] = useState(value);
-
     useEffect(() => {
         const handler = setTimeout(() => setDebouncedValue(value), delay);
         return () => clearTimeout(handler);
     }, [value, delay]);
-
     return debouncedValue;
 }
 
@@ -115,8 +113,8 @@ export default function DataTable({
     const [amountOperator, setAmountOperator] = useState('equal');
     const [appliedFilters, setAppliedFilters] = useState([]);
 
-    // Débouncer la saisie pour limiter les recalculs
-    const debouncedFilterValue = useDebounce(filterValue, 300);
+    // (Le hook useDebounce est défini ci-dessus et peut être réutilisé si nécessaire)
+    const debouncedFilterValue = useDebounce(filterValue, 300); // actuellement non utilisé
 
     const isDateFilter = filterColumn && dateRegex.test(Data[0][filterColumn]);
     const isNumericFilter =
@@ -136,7 +134,7 @@ export default function DataTable({
         return Array.from(optionsSet);
     }, [tableData, filterColumn, isDateFilter, noDynamicList]);
 
-    // Gestion des filtres
+    // Gestion des filtres appliqués
     const handleAddFilter = useCallback(() => {
         if (!filterColumn) return;
         if (isDateFilter) {
@@ -183,7 +181,7 @@ export default function DataTable({
         setAppliedFilters([]);
     }, []);
 
-    // Calcul des données filtrées
+    // Calcul des données filtrées pour le DataGrid
     const filteredData = useMemo(() => {
         if (appliedFilters.length === 0) return tableData;
         const filtersByColumn = appliedFilters.reduce((acc, filter) => {
@@ -198,7 +196,7 @@ export default function DataTable({
         );
     }, [tableData, appliedFilters]);
 
-    // Calcul pour le graphique des dépenses filtrées
+    // Calcul pour le graphique des dépenses filtrées (envoi correct à PieChartExpenses)
     const finalExpenses = useMemo(() => {
         const impactFilters = appliedFilters.filter(f => filterImpacte.includes(f.column));
         if (impactFilters.length === 0) return tableData;
@@ -243,42 +241,32 @@ export default function DataTable({
     }, [tableData, exclusions]);
 
     // --- Gestion de la modal de confirmation pour la suppression ---
-
-    // État de la modal et paramètres de suppression
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteParams, setDeleteParams] = useState({ id: null, deleteUrl: '', csrfToken: '' });
 
-    // Ouvre la modal en enregistrant les paramètres de l'élément à supprimer
     const openDeleteModal = useCallback((id, deleteUrl, csrfToken) => {
         setDeleteParams({ id, deleteUrl, csrfToken });
         setDeleteModalOpen(true);
     }, []);
 
-    // Ferme la modal
     const closeDeleteModal = useCallback(() => {
         setDeleteModalOpen(false);
     }, []);
 
-    // Exécute la suppression avec mise à jour optimiste
     const confirmDelete = useCallback(async () => {
         // Fermer immédiatement la modal
         setDeleteModalOpen(false);
-
-        // Sauvegarder l'état précédent pour pouvoir le restaurer en cas d'erreur
         const previousData = tableData;
-        // Mise à jour optimiste : retirer immédiatement l'élément du state
+        // Mise à jour optimiste : retirer l'élément du state
         setTableData(prevData => prevData.filter(item => item.id !== deleteParams.id));
-
         const formData = new FormData();
         formData.append('_token', deleteParams.csrfToken);
-
         try {
             const response = await fetch(deleteParams.deleteUrl, {
                 method: 'POST',
                 body: formData,
             });
             if (!response.ok) {
-                // Rétablir l'état précédent en cas d'erreur
                 setTableData(previousData);
                 alert("Erreur lors de la suppression.");
             }
@@ -289,7 +277,6 @@ export default function DataTable({
         }
     }, [deleteParams, tableData]);
 
-    // Colonne d'actions incluant la suppression via modal
     const actionColumn = useMemo(() => ({
         field: 'actions',
         headerName: 'Actions',
@@ -343,10 +330,11 @@ export default function DataTable({
 
     return (
         <div>
-            {/* Graphique des dépenses filtrées */}
+            {/* Envoi des dépenses filtrées à PieChartExpenses */}
             <Box sx={{ mt: 4, mb: 2 }}>
                 <PieChartExpenses expenses={finalExpenses} />
             </Box>
+
             {/* Interface de filtrage */}
             <Box
                 sx={{
