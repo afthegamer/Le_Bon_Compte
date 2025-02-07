@@ -110,11 +110,11 @@ const CategoryInput = ({
 
     // Mise à jour réactive du filtrage des catégories (insensible à la casse)
     useEffect(() => {
-        const filtered = combinedCategories.filter((cat) =>
+        const filtered = categories.filter((cat) =>
             cat.name.toLowerCase().includes(value.toLowerCase())
         );
         setFilteredCategories(filtered);
-    }, [value, combinedCategories]);
+    }, [value, categories]);
 
     // Gestion du focus sur l'input de catégorie
     const handleFocus = () => setIsFocused(true);
