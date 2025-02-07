@@ -1,5 +1,4 @@
-// DataTable.jsx
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import {
     Autocomplete,
@@ -16,6 +15,18 @@ import {
     TextField,
 } from '@mui/material';
 import PieChartExpenses from './PieChartExpenses';
+
+// Hook personnalisé pour débouncer une valeur
+function useDebounce(value, delay) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
 
 const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 
@@ -35,17 +46,16 @@ export const formatAmount = (value) => {
 
 const checkFiltersForCell = (cellValue, filters) => {
     if (cellValue === undefined) return false;
-    // Filtrage pour les dates
+    // Cas date
     if (typeof cellValue === 'string' && dateRegex.test(cellValue)) {
         const rowDate = cellValue.substring(0, 10);
-        return filters.some(filter => {
-            if (filter.type === 'range') {
-                return rowDate >= filter.start && rowDate <= filter.end;
-            }
-            return rowDate === filter.value;
-        });
+        return filters.some(filter =>
+            filter.type === 'range'
+                ? rowDate >= filter.start && rowDate <= filter.end
+                : rowDate === filter.value
+        );
     }
-    // Filtrage pour les valeurs numériques
+    // Cas numérique
     if (!isNaN(cellValue) && isFinite(cellValue)) {
         const cellNumber = Number(cellValue);
         return filters.every(filter => {
@@ -57,7 +67,7 @@ const checkFiltersForCell = (cellValue, filters) => {
             return String(cellNumber).includes(String(filter.value));
         });
     }
-    // Filtrage pour le texte
+    // Cas texte
     const lowerValue = String(cellValue).toLowerCase();
     return filters.some(filter => lowerValue.includes(filter.value.toLowerCase()));
 };
@@ -75,22 +85,20 @@ export default function DataTable({
 
     // Stockage des données dans un state local
     const [tableData, setTableData] = useState(Data);
-
-    // Actualisation du state si la prop Data change (par exemple au rechargement de la page)
     useEffect(() => {
         setTableData(Data);
     }, [Data]);
 
     const defaultExclusions = ['showUrl', 'editUrl'];
-    const exclusions = [...defaultExclusions, ...excludeCollum];
+    const exclusions = useMemo(() => [...defaultExclusions, ...excludeCollum], [excludeCollum]);
 
-    // Calcul des colonnes disponibles pour le filtrage
-    const allFilterableColumns = Array.from(
-        new Set([
+    // Calcul des colonnes filtrables
+    const allFilterableColumns = useMemo(() => {
+        return Array.from(new Set([
             ...Object.keys(Data[0]).filter(key => !exclusions.includes(key)),
             ...filterableExcluded,
-        ])
-    );
+        ]));
+    }, [Data, exclusions, filterableExcluded]);
 
     // États pour le filtrage
     const [filterColumn, setFilterColumn] = useState(allFilterableColumns[0] || '');
@@ -102,6 +110,9 @@ export default function DataTable({
     const [amountOperator, setAmountOperator] = useState('equal');
     const [appliedFilters, setAppliedFilters] = useState([]);
 
+    // Débouncer la saisie pour limiter les recalculs
+    const debouncedFilterValue = useDebounce(filterValue, 300);
+
     const isDateFilter = filterColumn && dateRegex.test(Data[0][filterColumn]);
     const isNumericFilter =
         !isDateFilter &&
@@ -110,8 +121,7 @@ export default function DataTable({
         isFinite(Data[0][filterColumn]);
 
     const uniqueOptions = useMemo(() => {
-        if (!filterColumn || isDateFilter || noDynamicList.includes(filterColumn))
-            return [];
+        if (!filterColumn || isDateFilter || noDynamicList.includes(filterColumn)) return [];
         const optionsSet = new Set();
         tableData.forEach(row => {
             if (row[filterColumn] !== undefined && row[filterColumn] !== null) {
@@ -121,7 +131,8 @@ export default function DataTable({
         return Array.from(optionsSet);
     }, [tableData, filterColumn, isDateFilter, noDynamicList]);
 
-    const handleAddFilter = () => {
+    // Gestion des filtres
+    const handleAddFilter = useCallback(() => {
         if (!filterColumn) return;
         if (isDateFilter) {
             if (isRangeFilter && filterStartDate && filterEndDate) {
@@ -151,22 +162,23 @@ export default function DataTable({
             ]);
             setFilterValue('');
         }
-    };
+    }, [filterColumn, isDateFilter, isRangeFilter, filterStartDate, filterEndDate, filterDate, filterValue, isNumericFilter, amountOperator]);
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = useCallback((e) => {
         if (e.key === 'Enter') {
             handleAddFilter();
         }
-    };
+    }, [handleAddFilter]);
 
-    const handleRemoveFilter = (indexToRemove) => {
+    const handleRemoveFilter = useCallback((indexToRemove) => {
         setAppliedFilters(prev => prev.filter((_, index) => index !== indexToRemove));
-    };
+    }, []);
 
-    const handleClearFilters = () => {
+    const handleClearFilters = useCallback(() => {
         setAppliedFilters([]);
-    };
+    }, []);
 
+    // Calcul des données filtrées
     const filteredData = useMemo(() => {
         if (appliedFilters.length === 0) return tableData;
         const filtersByColumn = appliedFilters.reduce((acc, filter) => {
@@ -181,11 +193,10 @@ export default function DataTable({
         );
     }, [tableData, appliedFilters]);
 
+    // Calcul pour le graphique des dépenses filtrées
     const finalExpenses = useMemo(() => {
         const impactFilters = appliedFilters.filter(f => filterImpacte.includes(f.column));
-        if (impactFilters.length === 0) {
-            return tableData;
-        }
+        if (impactFilters.length === 0) return tableData;
         const filtersByColumn = impactFilters.reduce((acc, filter) => {
             if (!acc[filter.column]) acc[filter.column] = [];
             acc[filter.column].push(filter);
@@ -198,9 +209,10 @@ export default function DataTable({
         );
     }, [tableData, appliedFilters, filterImpacte]);
 
-    // Définition des colonnes pour le DataGrid
-    const baseColumns = tableData[0]
-        ? Object.keys(tableData[0])
+    // Définition des colonnes du DataGrid
+    const baseColumns = useMemo(() => {
+        if (!tableData[0]) return [];
+        return Object.keys(tableData[0])
             .filter(key => !exclusions.includes(key))
             .map(key => {
                 const isDate = dateRegex.test(tableData[0][key]);
@@ -222,34 +234,39 @@ export default function DataTable({
                     };
                 }
                 return columnDef;
-            })
-        : [];
+            });
+    }, [tableData, exclusions]);
 
-    // Fonction de suppression sans rechargement de la page
-    const handleDelete = async (id, deleteUrl, csrfToken) => {
+    // Suppression optimiste
+    const handleDelete = useCallback(async (id, deleteUrl, csrfToken) => {
         if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
+            // Sauvegarder l'état précédent
+            const previousData = tableData;
+            // Mise à jour optimiste : retirer immédiatement l'élément
+            setTableData(prevData => prevData.filter(item => item.id !== id));
+
             const formData = new FormData();
             formData.append('_token', csrfToken);
+
             try {
                 const response = await fetch(deleteUrl, {
                     method: 'POST',
                     body: formData,
                 });
-                if (response.ok) {
-                    // Mise à jour du state en filtrant l'élément supprimé
-                    setTableData(prevData => prevData.filter(item => item.id !== id));
-                } else {
+                if (!response.ok) {
+                    // Rétablir l'état précédent en cas d'erreur
+                    setTableData(previousData);
                     alert("Erreur lors de la suppression.");
                 }
             } catch (error) {
+                setTableData(previousData);
                 console.error("Erreur lors de la suppression :", error);
                 alert("Erreur de connexion.");
             }
         }
-    };
+    }, [tableData]);
 
-    // Colonne d'actions incluant la suppression
-    const actionColumn = {
+    const actionColumn = useMemo(() => ({
         field: 'actions',
         headerName: 'Actions',
         sortable: false,
@@ -261,37 +278,31 @@ export default function DataTable({
                     title="Voir"
                     className="p-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
                 >
-                    {/* Icône Voir */}
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                     </svg>
                 </a>
-
                 <a
                     href={params.row.editUrl}
                     title="Éditer"
                     className="p-2 rounded-lg hover:bg-gray-200 transition cursor-pointer"
                 >
-                    {/* Icône Éditer */}
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 20h9" />
                         <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                     </svg>
                 </a>
-
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        // Assurez-vous que chaque ligne possède un id unique (ex : "income-12" ou "expense-5")
                         handleDelete(params.row.id, params.row.deleteUrl, params.row.csrfToken);
                     }}
                     title="Supprimer"
                     className="p-2 rounded-lg hover:bg-red-200 transition cursor-pointer"
                 >
-                    {/* Icône Supprimer */}
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="3 6 5 6 21 6" />
@@ -302,17 +313,16 @@ export default function DataTable({
                 </button>
             </div>
         ),
-    };
+    }), [handleDelete]);
 
-    const columns = [...baseColumns, actionColumn];
+    const columns = useMemo(() => [...baseColumns, actionColumn], [baseColumns, actionColumn]);
 
     return (
         <div>
-            {/* Transmission des dépenses filtrées pour le graphique */}
+            {/* Graphique des dépenses filtrées */}
             <Box sx={{ mt: 4, mb: 2 }}>
                 <PieChartExpenses expenses={finalExpenses} />
             </Box>
-
             {/* Interface de filtrage */}
             <Box
                 sx={{
@@ -475,7 +485,6 @@ export default function DataTable({
                 </Button>
             </Box>
 
-            {/* Affichage des filtres appliqués */}
             <Box sx={{ mb: 2 }}>
                 {appliedFilters.map((filter, index) => (
                     <Chip
@@ -495,7 +504,6 @@ export default function DataTable({
                 ))}
             </Box>
 
-            {/* Affichage du DataGrid */}
             <Paper sx={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={filteredData}
