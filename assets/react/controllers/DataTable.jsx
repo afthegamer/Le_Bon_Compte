@@ -6,6 +6,11 @@ import {
     Button,
     Checkbox,
     Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     FormControl,
     FormControlLabel,
     InputLabel,
@@ -237,35 +242,54 @@ export default function DataTable({
             });
     }, [tableData, exclusions]);
 
-    // Suppression optimiste
-    const handleDelete = useCallback(async (id, deleteUrl, csrfToken) => {
-        if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
-            // Sauvegarder l'état précédent
-            const previousData = tableData;
-            // Mise à jour optimiste : retirer immédiatement l'élément
-            setTableData(prevData => prevData.filter(item => item.id !== id));
+    // --- Gestion de la modal de confirmation pour la suppression ---
 
-            const formData = new FormData();
-            formData.append('_token', csrfToken);
+    // État de la modal et paramètres de suppression
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteParams, setDeleteParams] = useState({ id: null, deleteUrl: '', csrfToken: '' });
 
-            try {
-                const response = await fetch(deleteUrl, {
-                    method: 'POST',
-                    body: formData,
-                });
-                if (!response.ok) {
-                    // Rétablir l'état précédent en cas d'erreur
-                    setTableData(previousData);
-                    alert("Erreur lors de la suppression.");
-                }
-            } catch (error) {
+    // Ouvre la modal en enregistrant les paramètres de l'élément à supprimer
+    const openDeleteModal = useCallback((id, deleteUrl, csrfToken) => {
+        setDeleteParams({ id, deleteUrl, csrfToken });
+        setDeleteModalOpen(true);
+    }, []);
+
+    // Ferme la modal
+    const closeDeleteModal = useCallback(() => {
+        setDeleteModalOpen(false);
+    }, []);
+
+    // Exécute la suppression avec mise à jour optimiste
+    const confirmDelete = useCallback(async () => {
+        // Fermer immédiatement la modal
+        setDeleteModalOpen(false);
+
+        // Sauvegarder l'état précédent pour pouvoir le restaurer en cas d'erreur
+        const previousData = tableData;
+        // Mise à jour optimiste : retirer immédiatement l'élément du state
+        setTableData(prevData => prevData.filter(item => item.id !== deleteParams.id));
+
+        const formData = new FormData();
+        formData.append('_token', deleteParams.csrfToken);
+
+        try {
+            const response = await fetch(deleteParams.deleteUrl, {
+                method: 'POST',
+                body: formData,
+            });
+            if (!response.ok) {
+                // Rétablir l'état précédent en cas d'erreur
                 setTableData(previousData);
-                console.error("Erreur lors de la suppression :", error);
-                alert("Erreur de connexion.");
+                alert("Erreur lors de la suppression.");
             }
+        } catch (error) {
+            setTableData(previousData);
+            console.error("Erreur lors de la suppression :", error);
+            alert("Erreur de connexion.");
         }
-    }, [tableData]);
+    }, [deleteParams, tableData]);
 
+    // Colonne d'actions incluant la suppression via modal
     const actionColumn = useMemo(() => ({
         field: 'actions',
         headerName: 'Actions',
@@ -298,7 +322,7 @@ export default function DataTable({
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(params.row.id, params.row.deleteUrl, params.row.csrfToken);
+                        openDeleteModal(params.row.id, params.row.deleteUrl, params.row.csrfToken);
                     }}
                     title="Supprimer"
                     className="p-2 rounded-lg hover:bg-red-200 transition cursor-pointer"
@@ -313,7 +337,7 @@ export default function DataTable({
                 </button>
             </div>
         ),
-    }), [handleDelete]);
+    }), [openDeleteModal]);
 
     const columns = useMemo(() => [...baseColumns, actionColumn], [baseColumns, actionColumn]);
 
@@ -517,6 +541,24 @@ export default function DataTable({
                     sx={{ border: 0 }}
                 />
             </Paper>
+
+            {/* Modal de confirmation pour la suppression */}
+            <Dialog open={deleteModalOpen} onClose={closeDeleteModal}>
+                <DialogTitle>Confirmation de suppression</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Voulez-vous vraiment supprimer cet élément ?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeDeleteModal} color="primary">
+                        Annuler
+                    </Button>
+                    <Button onClick={confirmDelete} color="error">
+                        Supprimer
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
