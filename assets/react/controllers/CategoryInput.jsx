@@ -1,23 +1,46 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Dialog,
     DialogTitle,
     DialogContent,
     DialogContentText,
     DialogActions,
-    Button
+    Button,
 } from "@mui/material";
 
 const CategoryInput = ({
-                           predefinedCategories, // Tableau de chaînes représentant les catégories
+                           predefinedCategories, // Objet { predefined: [...], user: [...] }
                            inputName,
                            subcatInputName,
                            currentCategory,
-                           currentSubcategory
+                           currentSubcategory,
                        }) => {
+    // Fusion des catégories prédéfinies et des catégories utilisateur en un tableau d'objets
+    const combinedCategories = useMemo(() => {
+        if (
+            predefinedCategories &&
+            typeof predefinedCategories === "object" &&
+            !Array.isArray(predefinedCategories)
+        ) {
+            const predefinedList = (predefinedCategories.predefined || []).map((cat) => ({
+                name: cat,
+                isPredefined: true,
+            }));
+            const userList = (predefinedCategories.user || []).map((cat) => ({
+                name: cat,
+                isPredefined: false,
+            }));
+            return [...predefinedList, ...userList];
+        } else if (Array.isArray(predefinedCategories)) {
+            // Dans le cas d'un tableau simple, on considère toutes les catégories comme prédéfinies
+            return predefinedCategories.map((cat) => ({ name: cat, isPredefined: true }));
+        }
+        return [];
+    }, [predefinedCategories]);
+
     // États pour la gestion des catégories et sous-catégories
-    const [categories, setCategories] = useState(predefinedCategories);
-    const [filteredCategories, setFilteredCategories] = useState(predefinedCategories);
+    const [categories, setCategories] = useState(combinedCategories);
+    const [filteredCategories, setFilteredCategories] = useState(combinedCategories);
     const [value, setValue] = useState(currentCategory || "");
     const [isFocused, setIsFocused] = useState(false);
 
@@ -37,29 +60,23 @@ const CategoryInput = ({
     const [confirmationModalData, setConfirmationModalData] = useState({
         title: "",
         message: "",
-        onConfirm: null
+        onConfirm: null,
     });
 
     // États pour la modal de notification (succès ou erreur)
     const [notificationModalOpen, setNotificationModalOpen] = useState(false);
     const [notificationModalData, setNotificationModalData] = useState({
         title: "",
-        message: ""
+        message: "",
     });
 
     // ------------------ Fonctions d'ouverture/fermeture des modals ------------------
 
-    /**
-     * Ouvre la modal de confirmation avec un titre, un message et une fonction de callback à exécuter en cas de confirmation.
-     */
     const openConfirmationModal = (title, message, onConfirm) => {
         setConfirmationModalData({ title, message, onConfirm });
         setConfirmationModalOpen(true);
     };
 
-    /**
-     * Ouvre la modal de notification avec un titre et un message.
-     */
     const openNotificationModal = (title, message) => {
         setNotificationModalData({ title, message });
         setNotificationModalOpen(true);
@@ -80,7 +97,6 @@ const CategoryInput = ({
                 .then((data) => {
                     setSubcategories(data);
                     setFilteredSubcategories(data);
-                    // Si une sous-catégorie est déjà définie, on coche la case et on affiche l'input
                     if (currentSubcategory && currentSubcategory.trim() !== "") {
                         setIsCheckboxChecked(true);
                         setIsSubcategoryInputVisible(true);
@@ -92,6 +108,14 @@ const CategoryInput = ({
         }
     }, [currentCategory, currentSubcategory]);
 
+    // Mise à jour réactive du filtrage des catégories (insensible à la casse)
+    useEffect(() => {
+        const filtered = combinedCategories.filter((cat) =>
+            cat.name.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredCategories(filtered);
+    }, [value, combinedCategories]);
+
     // Gestion du focus sur l'input de catégorie
     const handleFocus = () => setIsFocused(true);
     const handleBlur = () => setTimeout(() => setIsFocused(false), 200);
@@ -100,14 +124,17 @@ const CategoryInput = ({
         const inputValue = event.target.value;
         setValue(inputValue);
 
-        // Mise à jour de l'input caché pour la catégorie
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
             hiddenInput.value = inputValue;
         }
 
-        // Si l'utilisateur crée une nouvelle catégorie, on réinitialise la sous-catégorie
-        if (!predefinedCategories.includes(inputValue)) {
+        // Réinitialisation de la sous-catégorie si l'input ne correspond à aucune catégorie existante (insensible à la casse)
+        if (
+            !combinedCategories.some(
+                (cat) => cat.name.toLowerCase() === inputValue.toLowerCase()
+            )
+        ) {
             setSelectedSubcategory("");
             const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
             if (hiddenSubcatInput) {
@@ -115,22 +142,19 @@ const CategoryInput = ({
             }
         }
 
-        // Afficher la case à cocher si une catégorie est saisie
         setIsCheckboxVisible(inputValue.trim() !== "");
     };
 
-    // Lorsqu'une suggestion de catégorie est cliquée, on met à jour l'input et on charge les sous-catégories associées.
     const handleSuggestionClick = (category) => {
-        setValue(category);
+        setValue(category.name);
         setFilteredCategories([]);
         setIsFocused(false);
 
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
         if (hiddenInput) {
-            hiddenInput.value = category;
+            hiddenInput.value = category.name;
         }
 
-        // Réinitialisation de la sous-catégorie lors du changement de catégorie
         setSelectedSubcategory("");
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcatInput) {
@@ -139,7 +163,7 @@ const CategoryInput = ({
 
         setIsCheckboxVisible(true);
 
-        fetch(`/api/subcategories/by-name/${encodeURIComponent(category)}`)
+        fetch(`/api/subcategories/by-name/${encodeURIComponent(category.name)}`)
             .then((response) => response.json())
             .then((data) => {
                 setSubcategories(data);
@@ -178,23 +202,18 @@ const CategoryInput = ({
 
     // -------------------- Gestion de la suppression via modal --------------------
 
-    /**
-     * Supprime une sous-catégorie après confirmation.
-     * @param {number|string} subcategoryId - L'identifiant de la sous-catégorie à supprimer.
-     */
     const handleDeleteSubcategory = (subcategoryId) => {
         openConfirmationModal(
             "Confirmation de suppression",
             "Êtes-vous sûr de vouloir supprimer cette sous-catégorie ?",
             () => {
                 fetch(`/api/subcategories/${subcategoryId}`, {
-                    method: "DELETE"
+                    method: "DELETE",
                 })
                     .then((response) => {
                         if (!response.ok) {
                             throw new Error("Erreur lors de la suppression");
                         }
-                        // Mise à jour des listes en retirant la sous-catégorie supprimée
                         setSubcategories((prev) =>
                             prev.filter((sub) => sub.id !== subcategoryId)
                         );
@@ -213,10 +232,6 @@ const CategoryInput = ({
         );
     };
 
-    /**
-     * Supprime une catégorie après confirmation.
-     * @param {string} categoryName - Le nom de la catégorie à supprimer.
-     */
     const handleDeleteCategory = (categoryName) => {
         if (!categoryName) {
             console.error("Erreur : Nom de la catégorie non défini");
@@ -237,13 +252,12 @@ const CategoryInput = ({
                     }
                     openNotificationModal("Succès", "Catégorie supprimée avec succès.");
 
-                    // Mise à jour de la liste des catégories après suppression
-                    setCategories((prev) => prev.filter((cat) => cat !== categoryName));
+                    // Mise à jour des catégories en filtrant par nom
+                    setCategories((prev) => prev.filter((cat) => cat.name !== categoryName));
                     setFilteredCategories((prev) =>
-                        prev.filter((cat) => cat !== categoryName)
+                        prev.filter((cat) => cat.name !== categoryName)
                     );
 
-                    // Réinitialisation de l'input si la catégorie supprimée était sélectionnée
                     if (categoryName === value) {
                         setValue("");
                         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
@@ -286,17 +300,20 @@ const CategoryInput = ({
                             className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                             onClick={() => handleSuggestionClick(category)}
                         >
-                            <span>{category}</span>
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteCategory(category);
-                                }}
-                                className="text-red-500 hover:text-red-700"
-                            >
-                                Supprimer
-                            </button>
+                            <span>{category.name}</span>
+                            {/* Afficher le bouton "Supprimer" uniquement pour les catégories utilisateur */}
+                            {!category.isPredefined && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteCategory(category.name);
+                                    }}
+                                    className="text-red-500 hover:text-red-700"
+                                >
+                                    Supprimer
+                                </button>
+                            )}
                         </li>
                     ))}
                 </ul>
@@ -363,9 +380,7 @@ const CategoryInput = ({
             >
                 <DialogTitle>{confirmationModalData.title}</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        {confirmationModalData.message}
-                    </DialogContentText>
+                    <DialogContentText>{confirmationModalData.message}</DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setConfirmationModalOpen(false)} color="primary">
@@ -386,15 +401,10 @@ const CategoryInput = ({
             </Dialog>
 
             {/* Modal de notification */}
-            <Dialog
-                open={notificationModalOpen}
-                onClose={closeNotificationModal}
-            >
+            <Dialog open={notificationModalOpen} onClose={closeNotificationModal}>
                 <DialogTitle>{notificationModalData.title}</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        {notificationModalData.message}
-                    </DialogContentText>
+                    <DialogContentText>{notificationModalData.message}</DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={closeNotificationModal} color="primary">

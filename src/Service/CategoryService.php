@@ -10,7 +10,18 @@ class CategoryService
 {
     private EntityManagerInterface $entityManager;
 
-    private array $predefinedCategories = [];
+    private array $predefinedCategories = [
+        "Alimentation",
+        "Logement",
+        "Transports",
+        "Loisirs",
+        "Santé",
+        "Impôts",
+        "Assurances",
+        "Épargne",
+        "Salaire",
+        "Autre",
+    ];
 
     public function __construct(EntityManagerInterface $entityManager)
     {
@@ -18,7 +29,9 @@ class CategoryService
     }
 
     /**
-     * Fusionne les catégories prédéfinies et celles de l'utilisateur.
+     * Renvoie un tableau associatif contenant deux clés :
+     * - 'predefined' : les catégories prédéfinies
+     * - 'user'       : les catégories créées par l'utilisateur
      */
     public function getMergedCategories(UserEntity $user): array
     {
@@ -26,13 +39,18 @@ class CategoryService
             ->getRepository(CategoryEntity::class)
             ->findByUser($user);
 
-        $userCategoryNames = array_map(fn($category) => $category->getName(), $userCategories);
+        $userCategoryNames = array_map(function (CategoryEntity $category) {
+            return $category->getName();
+        }, $userCategories);
 
-        return array_unique(array_merge($this->predefinedCategories, $userCategoryNames), SORT_STRING);
+        return [
+            'predefined' => $this->predefinedCategories,
+            'user'       => $userCategoryNames,
+        ];
     }
 
     /**
-     * Vérifie si une catégorie existe ou la crée.
+     * Vérifie si une catégorie existe pour l'utilisateur ou la crée.
      */
     public function findOrCreateCategory(string $name, UserEntity $user): CategoryEntity
     {
