@@ -10,7 +10,7 @@
             <!-- Conteneur pour le composant React -->
             <div class="overflow-hidden">
                 <div {{ react_component('DataTable', {'Data': combinedList,
-                    'excludeCollum':["type","id","userProfileEntity"],
+                    'excludeCollum':["type","id","userProfileEntity","csrfToken","deleteUrl"],
                     'filterableExcluded':["type","userProfileEntity"],
                     'noDynamicList':["amount"],
                     "filterImpacte": ["userProfileEntity"],

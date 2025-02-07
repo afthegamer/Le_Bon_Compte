@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class HomeController extends AbstractController
@@ -21,7 +22,8 @@ class HomeController extends AbstractController
     public function index(
         IncomeEntityRepository $incomeRepository,
         ExpenseEntityRepository $expenseRepository,
-        UrlGeneratorInterface $urlGenerator
+        UrlGeneratorInterface $urlGenerator,
+        CsrfTokenManagerInterface $csrfTokenManager
     ): Response
     {
         // Récupérer l'utilisateur connecté
@@ -33,7 +35,6 @@ class HomeController extends AbstractController
         // Récupérer les revenus et dépenses liés à cet utilisateur
         $incomes = $incomeRepository->findAllByUser($user);
         $expenses = $expenseRepository->findAllByUser($user);
-//        dd($incomes, $expenses);
 
         // Combiner et normaliser les données
         $combinedList = [];
@@ -48,6 +49,8 @@ class HomeController extends AbstractController
                 'category' => $income->getCategoryEntity()?$income->getCategoryEntity()->getName():'Autre',
                 'showUrl' => $urlGenerator->generate('app_income_entity_show', ['id' => $income->getId()]),
                 'editUrl' => $urlGenerator->generate('app_income_entity_edit', ['id' => $income->getId()]),
+                'deleteUrl' => $urlGenerator->generate('app_income_entity_delete', ['id' => $income->getId()]),
+                'csrfToken' => $csrfTokenManager->getToken('delete' . $income->getId())->getValue(),
             ];
         }
         foreach ($expenses as $expense) {
@@ -61,6 +64,8 @@ class HomeController extends AbstractController
                 'category' => $expense->getCategoryEntity()?$expense->getCategoryEntity()->getName():'Autre',
                 'showUrl' => $urlGenerator->generate('app_expense_entity_show', ['id' => $expense->getId()]),
                 'editUrl' => $urlGenerator->generate('app_expense_entity_edit', ['id' => $expense->getId()]),
+                'deleteUrl' => $urlGenerator->generate('app_expense_entity_delete', ['id' => $expense->getId()]),
+                'csrfToken' => $csrfTokenManager->getToken('delete' . $expense->getId())->getValue(),
             ];
         }
 
