@@ -9,13 +9,13 @@ import {
 } from "@mui/material";
 
 const CategoryInput = ({
-                           predefinedCategories, // Objet { predefined: [...], user: [...] }
+                           predefinedCategories, // Objet { predefined: [...], user: [...] } ou tableau simple
                            inputName,
                            subcatInputName,
                            currentCategory,
                            currentSubcategory,
                        }) => {
-    // Fusion des catégories prédéfinies et des catégories utilisateur en un tableau d'objets
+    // Fusion des catégories prédéfinies et utilisateur en un tableau d'objets { name, isPredefined }
     const combinedCategories = useMemo(() => {
         if (
             predefinedCategories &&
@@ -26,13 +26,22 @@ const CategoryInput = ({
                 name: cat,
                 isPredefined: true,
             }));
-            const userList = (predefinedCategories.user || []).map((cat) => ({
-                name: cat,
-                isPredefined: false,
-            }));
+            const userList = (predefinedCategories.user || [])
+                .filter((userCat) => {
+                    // Filtrer la catégorie utilisateur si elle existe déjà dans la liste prédéfinie (insensible à la casse)
+                    return !(
+                        (predefinedCategories.predefined || []).some(
+                            (preCat) => preCat.toLowerCase() === userCat.toLowerCase()
+                        )
+                    );
+                })
+                .map((cat) => ({
+                    name: cat,
+                    isPredefined: false,
+                }));
             return [...predefinedList, ...userList];
         } else if (Array.isArray(predefinedCategories)) {
-            // Dans le cas d'un tableau simple, on considère toutes les catégories comme prédéfinies
+            // Si c'est un tableau simple, on considère toutes les catégories comme prédéfinies.
             return predefinedCategories.map((cat) => ({ name: cat, isPredefined: true }));
         }
         return [];
@@ -129,9 +138,8 @@ const CategoryInput = ({
             hiddenInput.value = inputValue;
         }
 
-        // Réinitialisation de la sous-catégorie si l'input ne correspond à aucune catégorie existante (insensible à la casse)
         if (
-            !combinedCategories.some(
+            !categories.some(
                 (cat) => cat.name.toLowerCase() === inputValue.toLowerCase()
             )
         ) {
@@ -252,8 +260,9 @@ const CategoryInput = ({
                     }
                     openNotificationModal("Succès", "Catégorie supprimée avec succès.");
 
-                    // Mise à jour des catégories en filtrant par nom
-                    setCategories((prev) => prev.filter((cat) => cat.name !== categoryName));
+                    setCategories((prev) =>
+                        prev.filter((cat) => cat.name !== categoryName)
+                    );
                     setFilteredCategories((prev) =>
                         prev.filter((cat) => cat.name !== categoryName)
                     );
@@ -380,7 +389,9 @@ const CategoryInput = ({
             >
                 <DialogTitle>{confirmationModalData.title}</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>{confirmationModalData.message}</DialogContentText>
+                    <DialogContentText>
+                        {confirmationModalData.message}
+                    </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setConfirmationModalOpen(false)} color="primary">
@@ -404,7 +415,9 @@ const CategoryInput = ({
             <Dialog open={notificationModalOpen} onClose={closeNotificationModal}>
                 <DialogTitle>{notificationModalData.title}</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>{notificationModalData.message}</DialogContentText>
+                    <DialogContentText>
+                        {notificationModalData.message}
+                    </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={closeNotificationModal} color="primary">
