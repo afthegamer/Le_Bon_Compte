@@ -6,6 +6,7 @@ use App\Entity\UserEntity;
 use App\Form\RegistrationFormType;
 use App\Repository\UserEntityRepository;
 use App\Security\EmailVerifier;
+use App\Service\UserProfileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -44,6 +45,9 @@ class RegistrationController extends AbstractController
 
             $entityManager->persist($user);
             $entityManager->flush();
+//            dd($user->getId());
+            $userProfileService = new UserProfileService($entityManager);
+            $userProfileService->createFirstProfile($user, $form->get('firstName')->getData(), $form->get('lastName')->getData(),$user->getId());
 
             // generate a signed url and email it to the user
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,

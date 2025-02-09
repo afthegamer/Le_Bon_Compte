@@ -10,40 +10,82 @@
             <table class="min-w-full border-collapse border border-gray-300">
                 <thead class="bg-gray-200">
                 <tr>
-                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">Id</th>
                     <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">First Name</th>
                     <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">Last Name</th>
                     <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
+                {# On initialise une variable pour vérifier si au moins une entité modifiable a été affichée #}
+                {% set hasModifiable = false %}
+
                 {% for user_profile_entity in user_profile_entities %}
-                    <tr class="hover:bg-gray-100">
-                        <td class="px-4 py-2 border border-gray-300 text-sm text-gray-700">{{ user_profile_entity.id }}</td>
-                        <td class="px-4 py-2 border border-gray-300 text-sm text-gray-700">{{ user_profile_entity.firstName }}</td>
-                        <td class="px-4 py-2 border border-gray-300 text-sm text-gray-700">{{ user_profile_entity.lastName }}</td>
-                        <td class="px-4 py-2 border border-gray-300 text-sm text-gray-700">
-                            <a href="{{ path('app_user_profile_entity_show', {'id': user_profile_entity.id}) }}" class="text-blue-600 hover:text-blue-500">Show</a>
-                            <a href="{{ path('app_user_profile_entity_edit', {'id': user_profile_entity.id}) }}" class="ml-4 text-blue-600 hover:text-blue-500">Edit</a>
+                    {% if user_profile_entity.modifiable %}
+                        {% set hasModifiable = true %}
+                        <tr class="hover:bg-gray-100">
+                            <td class="px-4 py-2 border border-gray-300 text-sm text-gray-700">{{ user_profile_entity.firstName }}</td>
+                            <td class="px-4 py-2 border border-gray-300 text-sm text-gray-700">{{ user_profile_entity.lastName }}</td>
+                            <td class="py-2 border border-gray-300 text-sm text-gray-700">
+                                <div class="flex justify-center items-center m-0 p-0">
+                                    <!-- Votre contenu -->
+                                <a href="{{ path('app_user_profile_entity_show', {'id': user_profile_entity.id}) }}"
+                                       title="Voir"
+                                       class="p-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                    </a>
+                                    <a href="{{ path('app_user_profile_entity_edit', {'id': user_profile_entity.id}) }}"
+                                       title="Éditer"
+                                       class="p-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M12 20h9" />
+                                            <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                        </svg>
+                                    </a>
+                                    <form action="{{ path('app_user_profile_entity_delete', {'id': user_profile_entity.id}) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet élément ?');">
+                                        {# Génération du token CSRF avec une intention (par exemple "delete" suivi de l'id) #}
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user_profile_entity.id) }}">
+
+                                        <button type="submit" title="Supprimer" class="p-2 rounded-lg hover:bg-red-200 transition cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="3 6 5 6 21 6" />
+                                                <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                <line x1="10" y1="11" x2="10" y2="17" />
+                                                <line x1="14" y1="11" x2="14" y2="17" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+
+                {# Si aucune entité modifiable n'a été trouvée, on affiche un message #}
+                {% if not hasModifiable %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-2 border border-gray-300 text-center text-sm text-gray-500">
+                            Aucun enregistrement modifiable trouvé
                         </td>
                     </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="4" class="px-4 py-2 border border-gray-300 text-center text-sm text-gray-500">No records found</td>
-                    </tr>
-                {% endfor %}
+                {% endif %}
                 </tbody>
             </table>
 
-            <div class="mt-6">
-                <a href="{{ path('app_user_profile_entity_new') }}" class="inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+            <div class="mt-6 flex space-x-4">
+                <a href="{{ path('app_user_profile_entity_new') }}"
+                   class="inline-block bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
                     Create New
                 </a>
 
-                <!-- Bouton pour user profil -->
                 <a href="{{ path('app_home_index') }}"
-                   class="bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center">
-                    return to home
+                   class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-center">
+                    Return to home
                 </a>
             </div>
         </div>

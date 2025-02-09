@@ -6,9 +6,7 @@
     <div class="min-h-screen flex items-center justify-center py-8 bg-gray-100">
         <div class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6">
             <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Edit User Profile</h1>
-
             {{ form_start(form, { 'attr': { 'class': 'space-y-6' } }) }}
-
             <!-- Champ First Name -->
             <div>
                 {{ form_label(form.firstName, 'First Name', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
@@ -22,13 +20,6 @@
                 {{ form_widget(form.lastName, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 shadow-sm', 'placeholder': 'Enter your last name' } }) }}
                 {{ form_errors(form.lastName) }}
             </div>
-
-{#            <!-- Champ User Entity -->#}
-{#            <div>#}
-{#                {{ form_label(form.userEntity, 'User Entity', { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}#}
-{#                {{ form_widget(form.userEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 shadow-sm' } }) }}#}
-{#                {{ form_errors(form.userEntity) }}#}
-{#            </div>#}
 
             <!-- Bouton de mise à jour -->
             <div>

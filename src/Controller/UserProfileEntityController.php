@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\UserEntity;
 use App\Entity\UserProfileEntity;
 use App\Form\UserProfileEntityType;
 use App\Repository\UserProfileEntityRepository;
@@ -18,6 +19,7 @@ final class UserProfileEntityController extends AbstractController
     #[Route(name: 'app_user_profile_entity_index', methods: ['GET'])]
     public function index(UserProfileEntityRepository $userProfileEntityRepository): Response
     {
+        /** @var UserEntity $user */
         $user=$this->getUser();
         $userProfile=$userProfileEntityRepository->findAllByUser($user);
         return $this->render('user_profile_entity/index.html.twig', [
@@ -34,6 +36,7 @@ final class UserProfileEntityController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $userProfileEntity->setUserEntity($this->getUser());
+            $userProfileEntity->setModifiable(true);
             $entityManager->persist($userProfileEntity);
             $entityManager->flush();
 
@@ -73,31 +76,36 @@ final class UserProfileEntityController extends AbstractController
                          EntityManagerInterface $entityManager,
                          RequestStack $requestStack): Response
     {
-        if ($userProfileEntity->getUserEntity() !== $this->getUser()) {
-            $request = $requestStack->getCurrentRequest();
-            $referer = $request->headers->get('referer');
+        if ($userProfileEntity->isModifiable() === true) {
+            if ($userProfileEntity->getUserEntity() !== $this->getUser()) {
+                $request = $requestStack->getCurrentRequest();
+                $referer = $request->headers->get('referer');
 
-            if ($referer) {
-                // Redirige vers la page précédente si disponible
-                return $this->redirect($referer);
+                if ($referer) {
+                    // Redirige vers la page précédente si disponible
+                    return $this->redirect($referer);
+                }
+
+                // Sinon, redirige vers une route par défaut
+                return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+            }
+            $form = $this->createForm(UserProfileEntityType::class, $userProfileEntity);
+            $form->handleRequest($request);
+
+            if ($form->isSubmitted() && $form->isValid()) {
+
+                $entityManager->flush();
+
+                return $this->redirectToRoute('app_user_profile_entity_index', [], Response::HTTP_SEE_OTHER);
             }
 
-            // Sinon, redirige vers une route par défaut
-            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+            return $this->render('user_profile_entity/edit.html.twig', [
+                'user_profile_entity' => $userProfileEntity,
+                'form' => $form,
+            ]);
+        }else{
+            return $this->redirectToRoute('app_home_index');
         }
-        $form = $this->createForm(UserProfileEntityType::class, $userProfileEntity);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_user_profile_entity_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->render('user_profile_entity/edit.html.twig', [
-            'user_profile_entity' => $userProfileEntity,
-            'form' => $form,
-        ]);
     }
 
     #[Route('/{id}', name: 'app_user_profile_entity_delete', methods: ['POST'])]

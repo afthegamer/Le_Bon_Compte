@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\UserEntity;
 use App\Form\UserEntityType;
 use App\Repository\UserEntityRepository;
+use App\Service\UserProfileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,10 +69,14 @@ final class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
             if ($form->get('plainPassword')->getData()) {
                 $plainPassword = $form->get('plainPassword')->getData();
                 $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
             }
+            $userProfileService = new UserProfileService($entityManager);
+//            dd($user->getId());
+            $userProfileService->updateProfile($form->get('firstName')->getData(), $form->get('lastName')->getData(), $user->getId());
 
             $entityManager->persist($user);
             $entityManager->flush();

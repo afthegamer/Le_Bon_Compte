@@ -36,6 +36,12 @@ class UserProfileEntity
     #[ORM\OneToMany(mappedBy: 'userProfileEntity', targetEntity: IncomeEntity::class)]
     private Collection $income;
 
+    #[ORM\Column(nullable: true)]
+    private ?bool $modifiable = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $defaultProfileId = null;
+
     public function __construct()
     {
         $this->expense = new ArrayCollection();
@@ -139,6 +145,30 @@ class UserProfileEntity
                 $income->setUserProfileEntity(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isModifiable(): ?bool
+    {
+        return $this->modifiable;
+    }
+
+    public function setModifiable(?bool $modifiable): static
+    {
+        $this->modifiable = $modifiable;
+
+        return $this;
+    }
+
+    public function getDefaultProfileId(): ?int
+    {
+        return $this->defaultProfileId;
+    }
+
+    public function setDefaultProfileId(?int $defaultProfileId): static
+    {
+        $this->defaultProfileId = $defaultProfileId;
 
         return $this;
     }
