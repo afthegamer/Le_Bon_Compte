@@ -319,6 +319,7 @@ Modal.propTypes = {
 
 /* Composant PieChartExpenses */
 export default function PieChartExpenses({ expenses }) {
+    console.log(expenses);
     // Mémoïsation des années et mois disponibles
     const availableYears = React.useMemo(
         () =>
@@ -389,6 +390,16 @@ export default function PieChartExpenses({ expenses }) {
             }))
             .sort((a, b) => b.value - a.value);
     }, [filteredExpenses]);
+
+    // Synchronise selectedYear avec la liste des années disponibles.
+    React.useEffect(() => {
+        // Si availableYears contient des données et que selectedYear n'est pas présent,
+        // on met à jour selectedYear avec la première valeur (la plus récente si trié décroissant).
+        if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
+            setSelectedYear(availableYears[0]);
+        }
+    }, [availableYears, selectedYear]);
+
 
     return (
         <Modal button="Show Statistics">
