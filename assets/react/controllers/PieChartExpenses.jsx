@@ -4,19 +4,19 @@ import dayjs from "dayjs";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import utc from "dayjs/plugin/utc";
-import dayOfYear from "dayjs/plugin/dayOfYear"; // Plugin pour dayOfYear
+import dayOfYear from "dayjs/plugin/dayOfYear"; // Plugin for dayofyear
 import PropTypes from "prop-types";
 import { Dialog, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
 
-// Extension des plugins
+// Extension of plugins
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(utc);
 dayjs.extend(dayOfYear);
 
 /**
- * Renvoie une couleur en fonction de l'index.
+ * Retourne une couleur en fonction de l'index.
  */
 function getColor(index) {
     const colors = [
@@ -36,7 +36,6 @@ function getColor(index) {
 
 /**
  * Calcule les bornes de filtrage en fonction du filtre et des sélections.
- * Pour le filtre "semaine", l'année est découpée en 52 semaines fixes (chaque semaine = 7 jours).
  */
 const calculateDateBounds = (filter, year, month, quarter, semester, week) => {
     let startDate, endDate;
@@ -46,8 +45,7 @@ const calculateDateBounds = (filter, year, month, quarter, semester, week) => {
             endDate = startDate.endOf("year");
             break;
         case "semestriel":
-            startDate =
-                semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
+            startDate = semester === 1 ? dayjs(`${year}-01-01`) : dayjs(`${year}-07-01`);
             endDate = startDate.add(6, "month").endOf("month");
             break;
         case "trimestriel":
@@ -59,10 +57,8 @@ const calculateDateBounds = (filter, year, month, quarter, semester, week) => {
             endDate = startDate.endOf("month");
             break;
         case "semaine":
-            // Découpage de l'année en 52 semaines fixes
             const startOfYear = dayjs(`${year}-01-01`).startOf("year");
             startDate = startOfYear.add(week - 1, "week");
-            // Chaque semaine est considérée sur 7 jours
             endDate = startDate.add(1, "week").subtract(1, "day");
             break;
         default:
@@ -207,7 +203,6 @@ function FilterSelectors({
                             const weekStart = startOfYear.add(w - 1, "week");
                             let weekEnd = weekStart.add(1, "week").subtract(1, "day");
                             const endOfYear = dayjs(`${selectedYear}-12-31`).endOf("day");
-                            // Pour la dernière semaine, si la date de fin est inférieure au 31/12, on la fixe au 31/12.
                             if (w === availableWeeks.length && weekEnd.isBefore(endOfYear)) {
                                 weekEnd = endOfYear;
                             }
@@ -242,17 +237,11 @@ FilterSelectors.propTypes = {
     availableWeeks: PropTypes.arrayOf(PropTypes.number),
 };
 
-/* Composant Modal basé sur votre exemple */
+/* Composant Modal */
 function Modal(props) {
     const [isOpen, setIsOpen] = useState(false);
-
-    function closeModal() {
-        setIsOpen(false);
-    }
-
-    function openModal() {
-        setIsOpen(true);
-    }
+    const closeModal = () => setIsOpen(false);
+    const openModal = () => setIsOpen(true);
 
     return (
         <>
@@ -265,7 +254,6 @@ function Modal(props) {
                     {props.button}
                 </button>
             </div>
-
             <Transition appear show={isOpen} as={Fragment}>
                 <Dialog as="div" className="relative z-10" onClose={closeModal}>
                     <Transition.Child
@@ -279,7 +267,6 @@ function Modal(props) {
                     >
                         <div className="fixed inset-0 bg-black bg-opacity-25" />
                     </Transition.Child>
-
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4 text-center">
                             <Transition.Child
@@ -319,24 +306,15 @@ Modal.propTypes = {
 
 /* Composant PieChartExpenses */
 export default function PieChartExpenses({ expenses }) {
-    console.log(expenses);
-    // Mémoïsation des années et mois disponibles
     const availableYears = React.useMemo(
         () =>
             [...new Set(expenses.map((exp) => dayjs(exp.date).year()))].sort((a, b) => b - a),
         [expenses]
     );
     const availableMonths = React.useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
-
-    // Pour le filtre "semaine", nous définissons toujours 52 semaines fixes
-    const availableWeeks = React.useMemo(() => {
-        return Array.from({ length: 52 }, (_, i) => i + 1);
-    }, []);
-
-    // Calcul du numéro de semaine courant sans utiliser dayjs().week()
+    const availableWeeks = React.useMemo(() => Array.from({ length: 52 }, (_, i) => i + 1), []);
     const currentWeek = Math.ceil(dayjs().dayOfYear() / 7);
 
-    // États de filtrage
     const [timeFilter, setTimeFilter] = React.useState("mois");
     const [selectedYear, setSelectedYear] = React.useState(dayjs().year());
     const [selectedMonth, setSelectedMonth] = React.useState(dayjs().month() + 1);
@@ -344,7 +322,6 @@ export default function PieChartExpenses({ expenses }) {
     const [selectedSemester, setSelectedSemester] = React.useState(1);
     const [selectedWeek, setSelectedWeek] = React.useState(currentWeek <= 52 ? currentWeek : 1);
 
-    // Calcul des bornes et filtrage des dépenses
     const filteredExpenses = React.useMemo(() => {
         const { startDate, endDate } = calculateDateBounds(
             timeFilter,
@@ -352,27 +329,22 @@ export default function PieChartExpenses({ expenses }) {
             selectedMonth,
             selectedQuarter,
             selectedSemester,
-            selectedWeek // Paramètre utilisé uniquement pour le filtre "semaine"
+            selectedWeek
         );
-
-
-        return expenses.filter((expense) => {
-            // On exclut les revenus et on ne garde que les dépenses (montants négatifs)
-            if (expense.type === "income" || expense.amount >= 0) {
-                return false;
-            }
+        const filtered = expenses.filter((expense) => {
+            if (expense.type === "income" || expense.amount >= 0) return false;
             const expenseDate = dayjs.utc(expense.date);
             if (!expenseDate.isValid()) {
-                console.warn("❌ Date invalide détectée pour la transaction :", expense);
+                console.warn("❌ Date invalide pour cette dépense:", expense);
                 return false;
             }
             return expenseDate.isSameOrAfter(startDate) && expenseDate.isSameOrBefore(endDate);
         });
+        return filtered;
     }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester, selectedWeek]);
 
     const hasData = filteredExpenses.length > 0;
 
-    // Calcul des totaux par catégorie et préparation des données du graphique
     const chartData = React.useMemo(() => {
         const categoryTotals = filteredExpenses.reduce((acc, expense) => {
             const category = expense.category || "Autre";
@@ -380,26 +352,50 @@ export default function PieChartExpenses({ expenses }) {
             acc[category] = (acc[category] || 0) + amount;
             return acc;
         }, {});
-
-        return Object.keys(categoryTotals)
-            .map((category, index) => ({
-                id: `cat-${index}`,
-                value: categoryTotals[category],
-                label: category,
-                color: getColor(index),
-            }))
+        const totalAmount = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
+        const data = Object.keys(categoryTotals)
+            .map((category, index) => {
+                const percentage = totalAmount > 0 ? (categoryTotals[category] / totalAmount) * 100 : 0;
+                return {
+                    id: `cat-${index}`,
+                    value: categoryTotals[category],
+                    name: category,
+                    label: category,
+                    color: getColor(index),
+                    percentage,
+                };
+            })
             .sort((a, b) => b.value - a.value);
+        return data;
     }, [filteredExpenses]);
 
-    // Synchronise selectedYear avec la liste des années disponibles.
     React.useEffect(() => {
-        // Si availableYears contient des données et que selectedYear n'est pas présent,
-        // on met à jour selectedYear avec la première valeur (la plus récente si trié décroissant).
         if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
             setSelectedYear(availableYears[0]);
         }
     }, [availableYears, selectedYear]);
 
+    // We prepare the configuration of the series for the Piechart using Chartdata in the Closure
+    const seriesConfig = {
+        data: chartData,
+        innerRadius: 50,
+        dataKey: "value",
+        labelKey: "label",
+        /*arcLabel: (datum) => {
+            // Datum directly contains Chartdata data here in this part we will display the name of the category and the percentage
+            const name = datum.label || "Autre";
+            const perc = typeof datum.percentage === "number" ? datum.percentage : 0;
+            return `${name} (${perc.toFixed(1)}%)`;
+        },*/
+        valueFormatter: (value, datum) => {
+            // Here, Datum contains only the data index; we use this index to find the full object in Chartdata and display the data we want to show on mouse hover
+            const index = datum.dataIndex;
+            const d = chartData[index] || {};
+            const numericValue = Number(d.value);
+            const perc = typeof d.percentage === "number" ? d.percentage : 0;
+            return `: ${!isNaN(numericValue) ? numericValue.toFixed(2) : value} € (${perc.toFixed(1)}%)`;
+        },
+    };
 
     return (
         <Modal button="Show Statistics">
@@ -407,7 +403,6 @@ export default function PieChartExpenses({ expenses }) {
                 <p className="text-gray-700 font-semibold text-center">
                     Total transactions affichées : {filteredExpenses.length}
                 </p>
-
                 <FilterSelectors
                     timeFilter={timeFilter}
                     setTimeFilter={setTimeFilter}
@@ -425,14 +420,12 @@ export default function PieChartExpenses({ expenses }) {
                     availableMonths={availableMonths}
                     availableWeeks={availableWeeks}
                 />
-
-                {/* Conteneur responsive pour le graphique et les détails */}
                 <div className="flex flex-col md:flex-row w-full md:space-x-6 space-y-6 md:space-y-0">
-                    {/* Conteneur du graphique */}
+                    {/* Graphique PieChart avec tooltip personnalisé */}
                     <div className="flex-1 bg-white shadow-lg rounded-lg p-4 flex justify-center items-center">
                         {hasData ? (
                             <PieChart
-                                series={[{ data: chartData, innerRadius: 50 }]}
+                                series={[seriesConfig]}
                                 width={400}
                                 height={400}
                                 slotProps={{ legend: { hidden: true } }}
@@ -443,8 +436,7 @@ export default function PieChartExpenses({ expenses }) {
                             </p>
                         )}
                     </div>
-
-                    {/* Conteneur des détails de catégories */}
+                    {/* Détails par catégorie */}
                     {hasData && (
                         <div className="flex-1 bg-white shadow-md rounded-lg p-4">
                             <h3 className="text-lg font-bold text-gray-700 text-center mb-4">
@@ -453,22 +445,12 @@ export default function PieChartExpenses({ expenses }) {
                             <div className="h-[350px] overflow-y-auto">
                                 <ul className="space-y-3">
                                     {chartData.map((item, index) => (
-                                        <li
-                                            key={index}
-                                            className="flex justify-between items-center border-b pb-2"
-                                        >
+                                        <li key={index} className="flex justify-between items-center border-b pb-2">
                                             <div className="flex items-center space-x-3">
-                                                <div
-                                                    className="w-4 h-4 rounded-full"
-                                                    style={{ backgroundColor: item.color }}
-                                                ></div>
-                                                <span className="text-gray-800 font-medium">
-                                                    {item.label}
-                                                </span>
+                                                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                                <span className="text-gray-800 font-medium">{item.label}</span>
                                             </div>
-                                            <span className="text-gray-600 font-semibold">
-                                                {item.value.toFixed(2)} €
-                                            </span>
+                                            <span className="text-gray-600 font-semibold">{item.value.toFixed(2)} €</span>
                                         </li>
                                     ))}
                                 </ul>

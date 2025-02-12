@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit User Profile{% endblock %}
+{% block title %}Modifier le profil utilisateur{% endblock %}
 
 {% block body %}
     <div class="min-h-screen flex items-center justify-center py-8 bg-gray-100">
         <div class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Edit User Profile</h1>
+            <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Modifier le profil utilisateur</h1>
             {{ form_start(form, { 'attr': { 'class': 'space-y-6' } }) }}
             <!-- Champ First Name -->
             <div>
@@ -21,24 +21,24 @@
                 {{ form_errors(form.lastName) }}
             </div>
 
-            <!-- Bouton de mise à jour -->
+            <!-- Update button -->
             <div>
                 <button type="submit"
                         class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    Update
+                    Mise à jour
                 </button>
             </div>
 
             {{ form_end(form) }}
 
             <div class="mt-6 flex justify-between">
-                <!-- Lien vers la liste -->
+                <!-- Link to the list -->
                 <a href="{{ path('app_user_profile_entity_index') }}"
                    class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700">
-                    Back to List
+                    Retour à la liste
                 </a>
 
-                <!-- Formulaire de suppression -->
+                <!-- Deletion form -->
                 {{ include('user_profile_entity/_delete_form.html.twig', { 'attr': { 'class': 'inline' } }) }}
             </div>
         </div>

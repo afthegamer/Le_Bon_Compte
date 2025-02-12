@@ -21,16 +21,6 @@ import {
 } from '@mui/material';
 import PieChartExpenses from './PieChartExpenses';
 
-// Hook personnalisé pour débouncer une valeur (à réutiliser si nécessaire)
-function useDebounce(value, delay) {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    useEffect(() => {
-        const handler = setTimeout(() => setDebouncedValue(value), delay);
-        return () => clearTimeout(handler);
-    }, [value, delay]);
-    return debouncedValue;
-}
-
 const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
 
 export const formatDate = (dateString) => {
@@ -81,6 +71,7 @@ export default function DataTable({
                                       filterableExcluded = [],
                                       noDynamicList = [],
                                       filterImpacte = [],
+                                      keyTranslate = {},
                                   }) {
     if (!Array.isArray(Data) || Data.length === 0) {
         return <div>Aucune donnée à afficher</div>;
@@ -113,8 +104,6 @@ export default function DataTable({
     const [amountOperator, setAmountOperator] = useState('equal');
     const [appliedFilters, setAppliedFilters] = useState([]);
 
-    // (Le hook useDebounce est défini ci-dessus et peut être réutilisé si nécessaire)
-    const debouncedFilterValue = useDebounce(filterValue, 300); // actuellement non utilisé
 
     const isDateFilter = filterColumn && dateRegex.test(Data[0][filterColumn]);
     const isNumericFilter =
@@ -219,9 +208,10 @@ export default function DataTable({
             .filter(key => !exclusions.includes(key))
             .map(key => {
                 const isDate = dateRegex.test(tableData[0][key]);
+                const header = keyTranslate[key] || key.charAt(0).toUpperCase() + key.slice(1);
                 const columnDef = {
                     field: key,
-                    headerName: key.charAt(0).toUpperCase() + key.slice(1),
+                    headerName: header,
                     sortable: true,
                     flex: 1,
                     width: 160,
@@ -238,7 +228,8 @@ export default function DataTable({
                 }
                 return columnDef;
             });
-    }, [tableData, exclusions]);
+    }, [tableData, exclusions, keyTranslate]);
+
 
     // --- Gestion de la modal de confirmation pour la suppression ---
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -346,7 +337,9 @@ export default function DataTable({
                 }}
             >
                 <FormControl size="small" sx={{ minWidth: 150 }}>
-                    <InputLabel id="filter-column-label">Colonne</InputLabel>
+                    <InputLabel id="filter-column-label">
+                        {keyTranslate['filterColumnLabel'] || "Colonne"}
+                    </InputLabel>
                     <Select
                         variant="outlined"
                         labelId="filter-column-label"
@@ -364,7 +357,7 @@ export default function DataTable({
                     >
                         {allFilterableColumns.map((col) => (
                             <MenuItem key={col} value={col}>
-                                {col.charAt(0).toUpperCase() + col.slice(1)}
+                                {keyTranslate[col] || col.charAt(0).toUpperCase() + col.slice(1)}
                             </MenuItem>
                         ))}
                     </Select>

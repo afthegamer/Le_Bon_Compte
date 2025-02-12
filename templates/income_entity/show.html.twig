@@ -1,21 +1,21 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Income Details{% endblock %}
+{% block title %}Détails du revenus{% endblock %}
 
 {% block body %}
     <div class="min-h-screen flex items-center justify-center bg-gray-100 py-8">
         <div class="w-full max-w-4xl bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Income Details</h1>
+            <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Détails du revenus</h1>
 
             <!-- Tableau des détails -->
             <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                 <tbody>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Name</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Nom</th>
                     <td class="px-4 py-2 text-gray-800">{{ income_entity.name }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Amount</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Montant</th>
                     <td class="px-4 py-2 text-gray-800">{{ income_entity.amount }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
@@ -23,7 +23,7 @@
                     <td class="px-4 py-2 text-gray-800">{{ income_entity.type }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">user cause dépense</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Utilisateur lier a la revenus</th>
                     <td class="px-4 py-2 text-gray-800">{{ income_entity.userProfileEntity.firstName }} {{ income_entity.userProfileEntity.lastName }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
@@ -40,7 +40,7 @@
                 {% endif %}
                 {% if income_entity.subcategoryEntity %}
                     <tr class="border-t border-gray-200">
-                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Subcategory</th>
+                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Sous-catégorie</th>
                         <td class="px-4 py-2 text-gray-800">{{ income_entity.subcategoryEntity.name }}</td>
                     </tr>
                 {% endif %}
@@ -52,7 +52,7 @@
                 <a href="{{ path('app_income_entity_edit', {'id': income_entity.id}) }}">
                     <button type="button"
                             class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                        edit
+                        Modifier
                     </button>
                 </a>
             </div>
@@ -62,7 +62,7 @@
                 <!-- Lien vers la liste -->
                 <a href="{{ path('app_home_index') }}"
                    class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700">
-                    Back to List
+                    Retour à la liste
                 </a>
 
                 <!-- Formulaire de suppression -->

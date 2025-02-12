@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Create New User Profile{% endblock %}
+{% block title %}Créer un nouveau profil{% endblock %}
 
 {% block body %}
     <div class="min-h-screen flex items-center justify-center py-8 bg-gray-100">
         <div class="w-full max-w-2xl bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Create New User Profile</h1>
+            <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Créer un nouveau profil</h1>
 
             {{ form_start(form, { 'attr': { 'class': 'space-y-6' } }) }}
 
@@ -23,7 +23,7 @@
                 {{ form_errors(form.lastName) }}
             </div>
 
-            <!-- Bouton de soumission -->
+            <!-- Submission button -->
             <div>
                 <button type="submit"
                         class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">

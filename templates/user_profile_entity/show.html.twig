@@ -1,24 +1,20 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}User Profile Details{% endblock %}
+{% block title %}Détails du profil{% endblock %}
 
 {% block body %}
     <div class="min-h-screen flex items-center justify-center bg-gray-100 py-8">
         <div class="w-full max-w-4xl bg-white shadow-md rounded-lg p-6">
-            <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">User Profile Details</h1>
+            <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Détails du profil</h1>
 
             <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                 <tbody>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Id</th>
-                    <td class="px-4 py-2 text-gray-800">{{ user_profile_entity.id }}</td>
-                </tr>
-                <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">First Name</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Prénom</th>
                     <td class="px-4 py-2 text-gray-800">{{ user_profile_entity.firstName }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Last Name</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Nom de famille</th>
                     <td class="px-4 py-2 text-gray-800">{{ user_profile_entity.lastName }}</td>
                 </tr>
                 </tbody>
@@ -38,7 +34,7 @@
                 <!-- Lien vers la liste -->
                 <a href="{{ path('app_user_profile_entity_index') }}"
                    class="inline-block bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700">
-                    Back to List
+                    Retour à la liste
                 </a>
 
                 <!-- Formulaire de suppression -->

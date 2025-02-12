@@ -119,7 +119,6 @@ const CategoryInput = ({
                         ...(data.predefined || []),
                         ...(data.user || []),
                     ];
-                    console.log("Sous-catégories chargées :", mergedSubcategories);
                     setSubcategories(mergedSubcategories);
                     setFilteredSubcategories(mergedSubcategories);
                     // Si des sous-catégories existent ET que currentSubcategory est non vide, alors cocher la case
@@ -180,7 +179,6 @@ const CategoryInput = ({
     };
 
     const handleSuggestionClick = (category) => {
-        console.log("Catégorie sélectionnée :", category);
         setValue(category.name);
         setFilteredCategories([]);
         setIsFocused(false);
