@@ -72,7 +72,7 @@
 
                 {% if expense_entity.invoice %}
                     <!-- Affichage de la facture actuelle -->
-                    <div class="mt-4 bg-gray-100 p-4 rounded-lg shadow-sm">
+                    <div class="mt-4 p-4 rounded-lg shadow-sm">
                         <p class="text-gray-700 font-medium">Facture actuelle :</p>
                         <div class="mt-2">
                             <div {{ react_component('InvoiceViewer', {'fileUrl': asset('uploads/invoices/' ~ expense_entity.invoice)}) }}></div>

@@ -3,16 +3,15 @@
 {% block title %}Liste des Profiles{% endblock %}
 
 {% block body %}
-    <div class="min-h-screen flex flex-col items-center justify-center py-8 bg-gray-100">
-        <h1 class="text-2xl font-bold mb-6 text-gray-800">Liste des Profiles</h1>
-
+    <div class="min-h-screen flex flex-col items-center justify-center py-8 ">
         <div class="w-full max-w-4xl bg-white shadow-md rounded-lg p-6">
+            <h1 class="text-2xl font-bold mb-6 text-gray-800 text-center">Liste des Profiles</h1>
             <table class="min-w-full border-collapse border border-gray-300">
                 <thead class="bg-gray-200">
                 <tr>
-                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">First Name</th>
-                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">Last Name</th>
-                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700">Actions</th>
+                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700 text-center">Prénom</th>
+                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700 text-center">Nom de famille</th>
+                    <th class="px-4 py-2 border border-gray-300 text-left text-sm font-medium text-gray-700 text-center">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -27,7 +26,6 @@
                             <td class="px-4 py-2 border border-gray-300 text-sm text-gray-700">{{ user_profile_entity.lastName }}</td>
                             <td class="py-2 border border-gray-300 text-sm text-gray-700">
                                 <div class="flex justify-center items-center m-0 p-0">
-                                    <!-- Votre contenu -->
                                 <a href="{{ path('app_user_profile_entity_show', {'id': user_profile_entity.id}) }}"
                                        title="Voir"
                                        class="p-2 rounded-lg hover:bg-gray-200 transition cursor-pointer">
@@ -47,7 +45,6 @@
                                         </svg>
                                     </a>
                                     <form action="{{ path('app_user_profile_entity_delete', {'id': user_profile_entity.id}) }}" method="post" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet élément ?');">
-                                        {# Génération du token CSRF avec une intention (par exemple "delete" suivi de l'id) #}
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ user_profile_entity.id) }}">
 
                                         <button type="submit" title="Supprimer" class="p-2 rounded-lg hover:bg-red-200 transition cursor-pointer">

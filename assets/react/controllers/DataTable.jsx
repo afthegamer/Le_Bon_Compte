@@ -390,7 +390,7 @@ export default function DataTable({
                             <TextField
                                 size="small"
                                 type="date"
-                                label="Date"
+                                label=""
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
                                 onKeyDown={handleKeyDown}

@@ -6,6 +6,7 @@ use App\Entity\UserEntity;
 use App\Form\RegistrationFormType;
 use App\Repository\UserEntityRepository;
 use App\Security\EmailVerifier;
+use App\Service\CategoryService;
 use App\Service\UserProfileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -48,6 +49,8 @@ class RegistrationController extends AbstractController
 //            dd($user->getId());
             $userProfileService = new UserProfileService($entityManager);
             $userProfileService->createFirstProfile($user, $form->get('firstName')->getData(), $form->get('lastName')->getData(),$user->getId());
+            $subcategories = new CategoryService($entityManager);
+            $subcategories->addPredefinedCategories($user);
 
             // generate a signed url and email it to the user
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,

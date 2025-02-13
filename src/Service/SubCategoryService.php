@@ -14,7 +14,77 @@ class SubCategoryService
     // Structure pour les sous-catégories prédéfinies :
     // La clé correspond au nom de la catégorie et la valeur est un tableau de sous-catégories prédéfinies.
     private array $predefinedSubcategories = [
-        'Alimentation' => ['banana', 'petit commerce']
+        "Alimentation"=> [
+            "Courses",
+            "Restaurants",
+            "Fast-food",
+            "Boissons",
+            "Autre",
+        ],
+        "Logement"   => [
+            "Loyer",
+            "Électricité",
+            "Eau",
+            "Gaz",
+            "Internet",
+            "Téléphone",
+            "Autre",
+        ],
+        "Transports" => [
+            "Essence",
+            "Parking",
+            "Métro",
+            "Bus",
+            "Train",
+            "Avion",
+            "Taxi",
+            "Vélo",
+            "Autre",
+        ],
+        "Loisirs"   => [
+            "Cinéma",
+            "Sport",
+            "Jeux vidéo",
+            "Livres",
+            "Musique",
+            "Sorties",
+            "Autre",
+        ],
+        "Santé"=> [
+            "Médecin",
+            "Pharmacie",
+            "Hôpital",
+            "Optique",
+            "Dentiste",
+            "Autre",
+        ],
+        "Impôts" => [
+            "Taxe d'habitation",
+            "Taxe foncière",
+            "Impôt sur le revenu",
+            "Autre",
+        ],
+        "Assurances"=> [
+            "Auto",
+            "Maison",
+            "Santé",
+            "Vie",
+            "Autre",
+        ],
+        "Épargne"=> [
+            "Livret A",
+            "Assurance-vie",
+            "PEA",
+            "PEL",
+            "Autre",
+        ],
+        "Salaire"=> [
+            "Salaire net",
+            "Salaire brut",
+            "Primes",
+            "Autre",
+        ],
+        "Autre"=> ["Autre"],
     ];
 
     public function __construct(EntityManagerInterface $entityManager)

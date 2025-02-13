@@ -331,7 +331,7 @@ export default function PieChartExpenses({ expenses }) {
             selectedSemester,
             selectedWeek
         );
-        const filtered = expenses.filter((expense) => {
+        return expenses.filter((expense) => {
             if (expense.type === "income" || expense.amount >= 0) return false;
             const expenseDate = dayjs.utc(expense.date);
             if (!expenseDate.isValid()) {
@@ -340,7 +340,6 @@ export default function PieChartExpenses({ expenses }) {
             }
             return expenseDate.isSameOrAfter(startDate) && expenseDate.isSameOrBefore(endDate);
         });
-        return filtered;
     }, [expenses, timeFilter, selectedYear, selectedMonth, selectedQuarter, selectedSemester, selectedWeek]);
 
     const hasData = filteredExpenses.length > 0;
@@ -353,7 +352,7 @@ export default function PieChartExpenses({ expenses }) {
             return acc;
         }, {});
         const totalAmount = Object.values(categoryTotals).reduce((sum, val) => sum + val, 0);
-        const data = Object.keys(categoryTotals)
+        return Object.keys(categoryTotals)
             .map((category, index) => {
                 const percentage = totalAmount > 0 ? (categoryTotals[category] / totalAmount) * 100 : 0;
                 return {
@@ -366,7 +365,6 @@ export default function PieChartExpenses({ expenses }) {
                 };
             })
             .sort((a, b) => b.value - a.value);
-        return data;
     }, [filteredExpenses]);
 
     React.useEffect(() => {

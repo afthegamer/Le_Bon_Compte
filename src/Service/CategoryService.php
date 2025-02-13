@@ -73,4 +73,10 @@ class CategoryService
 
         return $category;
     }
+    public function addPredefinedCategories(UserEntity $user): void
+    {
+        foreach ($this->predefinedCategories as $categoryName) {
+            $this->findOrCreateCategory($categoryName, $user);
+        }
+    }
 }
