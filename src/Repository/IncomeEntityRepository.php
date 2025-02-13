@@ -17,48 +17,6 @@ class IncomeEntityRepository extends ServiceEntityRepository
         parent::__construct($registry, IncomeEntity::class);
     }
 
-//    /**
-//     * @return IncomeEntity[] Returns an array of IncomeEntity objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('i')
-//            ->andWhere('i.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('i.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?IncomeEntity
-//    {
-//        return $this->createQueryBuilder('i')
-//            ->andWhere('i.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
-    public function findAllByDateAsc(): array
-    {
-        return $this->createQueryBuilder('i')
-            ->orderBy('i.date', 'ASC')
-            ->getQuery()
-            ->getResult()
-            ;
-    }
-    public function findAllByUserProfile($userProfile)
-    {
-        return $this->createQueryBuilder('e')
-            ->where('e.userProfileEntity = :userProfile')
-            ->setParameter('userProfile', $userProfile)
-            ->orderBy('e.date', 'ASC')
-            ->getQuery()
-            ->getResult();
-    }
-
     public function findAllByUser(UserEntity $user): array
     {
         return $this->createQueryBuilder('e')
@@ -69,5 +27,49 @@ class IncomeEntityRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function filterTransactions(array $filters, int $limit = 10): array
+    {
+        $qb = $this->createQueryBuilder('i');
+
+        if (!empty($filters['userId'])) {
+            $qb->andWhere('i.userEntity = :userId')
+                ->setParameter('userId', $filters['userId']);
+        }
+
+        if (!empty($filters['startDate'])) {
+            $qb->andWhere('i.date >= :startDate')
+                ->setParameter('startDate', $filters['startDate']);
+        }
+
+        if (!empty($filters['endDate'])) {
+            $qb->andWhere('i.date <= :endDate')
+                ->setParameter('endDate', $filters['endDate']);
+        }
+
+        if (!empty($filters['category'])) {
+            $qb->andWhere('i.category = :category')
+                ->setParameter('category', $filters['category']);
+        }
+
+        if (!empty($filters['subcategory'])) {
+            $qb->andWhere('i.subcategory = :subcategory')
+                ->setParameter('subcategory', $filters['subcategory']);
+        }
+
+        if (!empty($filters['minAmount'])) {
+            $qb->andWhere('i.amount >= :minAmount')
+                ->setParameter('minAmount', $filters['minAmount']);
+        }
+
+        if (!empty($filters['maxAmount'])) {
+            $qb->andWhere('i.amount <= :maxAmount')
+                ->setParameter('maxAmount', $filters['maxAmount']);
+        }
+
+        return $qb->setMaxResults($limit)
+            ->orderBy('i.date', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+    }
 
 }

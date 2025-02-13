@@ -17,30 +17,6 @@ class ExpenseEntityRepository extends ServiceEntityRepository
         parent::__construct($registry, ExpenseEntity::class);
     }
 
-    //    /**
-    //     * @return ExpenseEntity[] Returns an array of ExpenseEntity objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('e')
-    //            ->andWhere('e.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('e.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?ExpenseEntity
-    //    {
-    //        return $this->createQueryBuilder('e')
-    //            ->andWhere('e.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
     public function findAllByUser(UserEntity $user): array
     {
         return $this->createQueryBuilder('e')
@@ -51,5 +27,49 @@ class ExpenseEntityRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function filterTransactions(array $filters, int $limit = 10): array
+    {
+        $qb = $this->createQueryBuilder('e');
+
+        if (!empty($filters['userId'])) {
+            $qb->andWhere('e.userEntity = :userId')
+                ->setParameter('userId', $filters['userId']);
+        }
+
+        if (!empty($filters['startDate'])) {
+            $qb->andWhere('e.date >= :startDate')
+                ->setParameter('startDate', $filters['startDate']);
+        }
+
+        if (!empty($filters['endDate'])) {
+            $qb->andWhere('e.date <= :endDate')
+                ->setParameter('endDate', $filters['endDate']);
+        }
+
+        if (!empty($filters['category'])) {
+            $qb->andWhere('e.category = :category')
+                ->setParameter('category', $filters['category']);
+        }
+
+        if (!empty($filters['subcategory'])) {
+            $qb->andWhere('e.subcategory = :subcategory')
+                ->setParameter('subcategory', $filters['subcategory']);
+        }
+
+        if (!empty($filters['minAmount'])) {
+            $qb->andWhere('e.amount >= :minAmount')
+                ->setParameter('minAmount', $filters['minAmount']);
+        }
+
+        if (!empty($filters['maxAmount'])) {
+            $qb->andWhere('e.amount <= :maxAmount')
+                ->setParameter('maxAmount', $filters['maxAmount']);
+        }
+
+        return $qb->setMaxResults($limit)
+            ->orderBy('e.date', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+    }
 
 }

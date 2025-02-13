@@ -1,0 +1,101 @@
+<?php
+namespace App\Controller;
+
+use App\Service\ExportService;
+use App\Repository\IncomeEntityRepository;
+use App\Repository\ExpenseEntityRepository;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+
+class ExportController extends AbstractController
+{
+    private ExportService $exportService;
+    private IncomeEntityRepository $incomeEntityRepository;
+    private ExpenseEntityRepository $expenseEntityRepository;
+
+    public function __construct(ExportService $exportService,
+                                IncomeEntityRepository $incomeEntityRepository,
+                                ExpenseEntityRepository $expenseEntityRepository)
+    {
+        $this->exportService = $exportService;
+        $this->incomeEntityRepository = $incomeEntityRepository;
+        $this->expenseEntityRepository = $expenseEntityRepository;
+    }
+
+    #[Route('/export', name: 'export_csv')]
+    public function index(): Response
+    {
+        return $this->render('export/index.html.twig');
+    }
+
+    #[Route('/api/export', name: 'export_generate', methods: ['POST'])]
+    public function export(Request $request): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $filters = json_decode($request->getContent(), true);
+        if (!$filters) {
+            return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Restriction des données à l'utilisateur connecté
+        $filters['userId'] = $user->getId();
+        $format = $filters['format'] ?? 'csv';
+
+        try {
+            $incomes = $this->incomeEntityRepository->filterTransactions($filters);
+            $expenses = $this->expenseEntityRepository->filterTransactions($filters);
+
+            $data = array_merge($incomes, $expenses);
+
+            // Vérifier si les données sont vides
+            if (empty($data)) {
+                return $this->json(['error' => 'Aucune donnée à exporter'], Response::HTTP_NO_CONTENT);
+            }
+
+            return $this->exportService->generateExport($data, $format);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur lors de l\'export : ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/export/preview', name: 'export_preview', methods: ['POST'])]
+    public function preview(Request $request): JsonResponse
+    {
+        try {
+            $user = $this->getUser();
+            if (!$user) {
+                return $this->json(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
+            }
+
+            $filters = json_decode($request->getContent(), true);
+            if (!$filters) {
+                return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Filtrage des transactions uniquement pour l'utilisateur connecté
+            $filters['userId'] = $user->getId();
+
+            $incomes = $this->incomeEntityRepository->filterTransactions($filters, 10);
+            $expenses = $this->expenseEntityRepository->filterTransactions($filters, 10);
+
+            $data = array_merge($incomes, $expenses);
+            usort($data, function ($a, $b) {
+                $dateA = $a['date'] instanceof \DateTime ? $a['date']->format('Y-m-d H:i:s') : $a['date'];
+                $dateB = $b['date'] instanceof \DateTime ? $b['date']->format('Y-m-d H:i:s') : $b['date'];
+                return strtotime($dateB) - strtotime($dateA);
+            });
+
+            return $this->json(array_slice($data, 0, 10), Response::HTTP_OK, ['Content-Type' => 'application/json']);
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+}

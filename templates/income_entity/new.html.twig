@@ -11,14 +11,14 @@
 
             <!-- Champ Name -->
             <div>
-                {{ form_label(form.name, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_label(form.name, "Nom", { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.name, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.name) }}
             </div>
 
             <!-- Champ Amount -->
             <div>
-                {{ form_label(form.amount, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_label(form.amount, "Montant", { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.amount, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.amount) }}
             </div>
@@ -57,7 +57,7 @@
 
             <!-- Champ User Profile Entity -->
             <div>
-                {{ form_label(form.userProfileEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_label(form.userProfileEntity, "Profil assigner", { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.userProfileEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.userProfileEntity) }}
             </div>

@@ -1,0 +1,13 @@
+{# templates/export/index.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Export des Transactions{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto p-6">
+        <h2 class="text-2xl font-semibold mb-4">Export des Transactions</h2>
+        <div id="export-root"
+            {{ react_component('ExportModal', { open: true }) }}>
+        </div>
+    </div>
+{% endblock %}

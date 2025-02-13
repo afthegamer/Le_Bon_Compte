@@ -11,14 +11,14 @@
 
             <!-- Champ Amount -->
             <div>
-                {{ form_label(form.amount, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_label(form.amount, "Montant", { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.amount, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.amount) }}
             </div>
 
             <!-- Champ Name -->
             <div>
-                {{ form_label(form.name, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_label(form.name, "Nom", { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.name, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.name) }}
             </div>
@@ -58,7 +58,7 @@
 
             <!-- Champ User Profile Entity -->
             <div>
-                {{ form_label(form.userProfileEntity, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_label(form.userProfileEntity, "Profil assigner", { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.userProfileEntity, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.userProfileEntity) }}
             </div>
@@ -66,7 +66,7 @@
 
             <!-- Gestion de la facture -->
             <div>
-                {{ form_label(form.invoiceFile, null, { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
+                {{ form_label(form.invoiceFile, "Facture", { 'label_attr': { 'class': 'block text-sm font-medium text-gray-700' } }) }}
                 {{ form_widget(form.invoiceFile, { 'attr': { 'class': 'mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm' } }) }}
                 {{ form_errors(form.invoiceFile) }}
 
@@ -86,7 +86,7 @@
             <div>
                 <button type="submit"
                         class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    Update Expense
+                    Mettre à jour la dépense
                 </button>
             </div>
             {{ form_end(form) }}
