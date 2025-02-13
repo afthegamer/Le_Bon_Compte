@@ -6,16 +6,24 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExportService
 {
+    private function formatDataForExport(array $data): array
+    {
+        return array_map(function ($row) {
+            if (isset($row['date']) && $row['date'] instanceof \DateTime) {
+                $row['date'] = $row['date']->format('Y-m-d H:i:s'); // Conversion en string
+            }
+            return $row;
+        }, $data);
+    }
+
     public function generateExport(array $data, string $format): StreamedResponse
     {
-        if (empty($data)) {
-            throw new \RuntimeException("Aucune donnée disponible pour l'export.");
-        }
+        $formattedData = $this->formatDataForExport($data); // Appliquer la conversion
 
         if ($format === 'csv') {
-            return $this->generateCsv($data);
+            return $this->generateCsv($formattedData);
         } elseif ($format === 'xlsx') {
-            return $this->generateExcel($data);
+            return $this->generateExcel($formattedData);
         }
 
         throw new \InvalidArgumentException("Format d'export non supporté");

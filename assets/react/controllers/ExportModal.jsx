@@ -23,7 +23,7 @@ const ExportModal = ({ open, onClose }) => {
         subcategory: "",
         minAmount: "",
         maxAmount: "",
-        transactionType: "",
+        transactionType: "", // Ajout du filtre Type de transaction
         format: "csv",
     });
     const [previewData, setPreviewData] = useState([]);
@@ -41,15 +41,10 @@ const ExportModal = ({ open, onClose }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(filters),
             });
-
-            if (!response.ok) {
-                throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
-            }
-
             const data = await response.json();
             setPreviewData(data);
         } catch (error) {
-            console.error("Erreur lors du chargement de l'aperçu:", error);
+            console.error("Erreur lors du chargement de l'aperçu", error);
         }
         setLoading(false);
     };
@@ -75,9 +70,20 @@ const ExportModal = ({ open, onClose }) => {
             <DialogTitle>Exporter les données</DialogTitle>
             <DialogContent>
                 <Box display="flex" flexDirection="column" gap={2}>
-                    {/*InputLabelProps The attribute is marked as deprecated */}
                     <TextField name="startDate" label="Date début" type="date" InputLabelProps={{ shrink: true }} value={filters.startDate} onChange={handleFilterChange} />
                     <TextField name="endDate" label="Date fin" type="date" InputLabelProps={{ shrink: true }} value={filters.endDate} onChange={handleFilterChange} />
+                    <TextField name="category" label="Catégorie" value={filters.category} onChange={handleFilterChange} />
+                    <TextField name="subcategory" label="Sous-catégorie" value={filters.subcategory} onChange={handleFilterChange} />
+                    <TextField name="minAmount" label="Montant min (€)" type="number" value={filters.minAmount} onChange={handleFilterChange} />
+                    <TextField name="maxAmount" label="Montant max (€)" type="number" value={filters.maxAmount} onChange={handleFilterChange} />
+                    <FormControl>
+                        <InputLabel>Type de transaction</InputLabel>
+                        <Select name="transactionType" value={filters.transactionType} onChange={handleFilterChange}>
+                            <MenuItem value="">Tous</MenuItem>
+                            <MenuItem value="income">Revenu 💵</MenuItem>
+                            <MenuItem value="expense">Dépense 🛒</MenuItem>
+                        </Select>
+                    </FormControl>
                     <FormControl>
                         <InputLabel>Format</InputLabel>
                         <Select name="format" value={filters.format} onChange={handleFilterChange}>

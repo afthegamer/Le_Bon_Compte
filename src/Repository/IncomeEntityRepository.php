@@ -27,49 +27,48 @@ class IncomeEntityRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function filterTransactions(array $filters, int $limit = 10): array
+    public function filterTransactions(array $filters, int $limit = null): array
     {
-        $qb = $this->createQueryBuilder('i');
-
-        if (!empty($filters['userId'])) {
-            $qb->andWhere('i.userEntity = :userId')
-                ->setParameter('userId', $filters['userId']);
-        }
+        $qb = $this->createQueryBuilder('t')
+            ->where('t.userEntity = :user')
+            ->setParameter('user', $filters['userId']);
 
         if (!empty($filters['startDate'])) {
-            $qb->andWhere('i.date >= :startDate')
+            $qb->andWhere('t.date >= :startDate')
                 ->setParameter('startDate', $filters['startDate']);
         }
 
         if (!empty($filters['endDate'])) {
-            $qb->andWhere('i.date <= :endDate')
+            $qb->andWhere('t.date <= :endDate')
                 ->setParameter('endDate', $filters['endDate']);
         }
 
         if (!empty($filters['category'])) {
-            $qb->andWhere('i.category = :category')
+            $qb->join('t.categoryEntity', 'c') // Assure-toi que le nom est correct dans l'entité
+            ->andWhere('c.name = :category')
                 ->setParameter('category', $filters['category']);
         }
 
-        if (!empty($filters['subcategory'])) {
-            $qb->andWhere('i.subcategory = :subcategory')
-                ->setParameter('subcategory', $filters['subcategory']);
+        if (!empty($filters['transactionType'])) {
+            $qb->andWhere('t.type = :transactionType')
+                ->setParameter('transactionType', $filters['transactionType']);
         }
 
         if (!empty($filters['minAmount'])) {
-            $qb->andWhere('i.amount >= :minAmount')
+            $qb->andWhere('t.amount >= :minAmount')
                 ->setParameter('minAmount', $filters['minAmount']);
         }
 
         if (!empty($filters['maxAmount'])) {
-            $qb->andWhere('i.amount <= :maxAmount')
+            $qb->andWhere('t.amount <= :maxAmount')
                 ->setParameter('maxAmount', $filters['maxAmount']);
         }
 
-        return $qb->setMaxResults($limit)
-            ->orderBy('i.date', 'DESC')
-            ->getQuery()
-            ->getArrayResult();
+        if ($limit) {
+            $qb->setMaxResults($limit);
+        }
+
+        return $qb->getQuery()->getArrayResult();
     }
 
 }
