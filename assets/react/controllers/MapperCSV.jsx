@@ -78,12 +78,6 @@ const MapperCSV = () => {
         }));
     };
 
-    const handleSubmit = () => {
-        console.log("Mapped Data:", mapping);
-        console.log("CSV Data:", csvData);
-        // Envoyer le mapping et les données au backend ici
-    };
-
     const columns = headers.map((header) => ({
         field: header,
         headerName: header,
@@ -149,7 +143,6 @@ const MapperCSV = () => {
                     <Button
                         variant="contained"
                         color="primary"
-                        onClick={handleSubmit}
                         sx={{ mt: 4 }}
                         type="submit" // Soumet le formulaire parent HTML
                     >

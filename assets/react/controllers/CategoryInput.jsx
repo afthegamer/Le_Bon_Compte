@@ -185,10 +185,7 @@ const CategoryInput = ({
         setFilteredCategories([]);
         setIsFocused(false);
 
-        console.log("Mise à jour de la catégorie dans CategoryInput:", category.name);
-
         if (onCategoryChange) {
-            console.log("Envoi à ExportModal:", category.name); // Vérification
             onCategoryChange(category.name);
         }
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
@@ -223,10 +220,7 @@ const CategoryInput = ({
         setSelectedSubcategory(subcategory.name);
         setFilteredSubcategories([]);
 
-        console.log("Mise à jour de la sous-catégorie dans CategoryInput:", subcategory.name);
-
         if (onSubcategoryChange) {
-            console.log("Envoi à ExportModal:", subcategory.name); // Vérification
             onSubcategoryChange(subcategory.name);
         }
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
