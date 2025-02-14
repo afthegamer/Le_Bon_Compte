@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controller;
 
 use App\Service\ExportService;
@@ -19,11 +20,12 @@ class ExportController extends AbstractController
     private CategoryService $categoryService;
 
     public function __construct(
-        ExportService $exportService,
-        IncomeEntityRepository $incomeEntityRepository,
+        ExportService           $exportService,
+        IncomeEntityRepository  $incomeEntityRepository,
         ExpenseEntityRepository $expenseEntityRepository,
-        CategoryService $categoryService
-    ) {
+        CategoryService         $categoryService
+    )
+    {
         $this->exportService = $exportService;
         $this->incomeEntityRepository = $incomeEntityRepository;
         $this->expenseEntityRepository = $expenseEntityRepository;
@@ -58,24 +60,29 @@ class ExportController extends AbstractController
             return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Restriction des données à l'utilisateur connecté
+        // Ajout de l'ID de l'utilisateur connecté pour restreindre les données
         $filters['userId'] = $user->getId();
         $format = $filters['format'] ?? 'csv';
 
         try {
-            $incomes = $this->incomeEntityRepository->filterTransactions($filters);
-            $expenses = $this->expenseEntityRepository->filterTransactions($filters);
-
-            $data = array_merge($incomes, $expenses);
+            switch ($filters['transactionType']) {
+                case 'income':
+                    $data = $this->incomeEntityRepository->filterTransactions($filters);
+                    break;
+                case 'expense':
+                    $data = $this->expenseEntityRepository->filterTransactions($filters);
+                    break;
+                default:
+                    $incomes = $this->incomeEntityRepository->filterTransactions($filters);
+                    $expenses = $this->expenseEntityRepository->filterTransactions($filters);
+                    $data = array_merge($incomes, $expenses);
+                    break;
+            }
 
             // Vérifier si les données sont vides
             if (empty($data)) {
                 return $this->json(['error' => 'Aucune donnée à exporter'], Response::HTTP_NO_CONTENT);
             }
-            if (!empty($filters['subcategory'])) {
-                error_log("⚠️ Sous-catégorie filtrée dans l'export: " . $filters['subcategory']);
-            }
-
 
             return $this->exportService->generateExport($data, $format);
         } catch (\Exception $e) {
@@ -86,24 +93,35 @@ class ExportController extends AbstractController
     #[Route('/api/export/preview', name: 'export_preview', methods: ['POST'])]
     public function preview(Request $request): JsonResponse
     {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $filters = json_decode($request->getContent(), true);
+        if (!$filters) {
+            return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Filtrage des transactions uniquement pour l'utilisateur connecté
+        $filters['userId'] = $user->getId();
+
         try {
-            $user = $this->getUser();
-            if (!$user) {
-                return $this->json(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
+            switch ($filters['transactionType']) {
+                case 'income':
+                    $data = $this->incomeEntityRepository->filterTransactions($filters);
+                    break;
+                case 'expense':
+                    $data = $this->expenseEntityRepository->filterTransactions($filters);
+                    break;
+                default:
+                    $incomes = $this->incomeEntityRepository->filterTransactions($filters);
+                    $expenses = $this->expenseEntityRepository->filterTransactions($filters);
+                    $data = array_merge($incomes, $expenses);
+                    break;
             }
 
-            $filters = json_decode($request->getContent(), true);
-            if (!$filters) {
-                return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Filtrage des transactions uniquement pour l'utilisateur connecté
-            $filters['userId'] = $user->getId();
-
-            $incomes = $this->incomeEntityRepository->filterTransactions($filters, 10);
-            $expenses = $this->expenseEntityRepository->filterTransactions($filters, 10);
-
-            $data = array_merge($incomes, $expenses);
+            // Tri des transactions par date décroissante
             usort($data, function ($a, $b) {
                 $dateA = $a['date'] instanceof \DateTime ? $a['date']->format('Y-m-d H:i:s') : $a['date'];
                 $dateB = $b['date'] instanceof \DateTime ? $b['date']->format('Y-m-d H:i:s') : $b['date'];
@@ -115,4 +133,5 @@ class ExportController extends AbstractController
             return $this->json(['error' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
 }

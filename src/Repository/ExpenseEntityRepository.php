@@ -44,21 +44,18 @@ class ExpenseEntityRepository extends ServiceEntityRepository
         }
 
         if (!empty($filters['category'])) {
-            $qb->join('t.categoryEntity', 'c') // Assure-toi que le nom est correct dans l'entité
-            ->andWhere('c.name = :category')
+            $qb->join('t.categoryEntity', 'c')
+                ->andWhere('c.name = :category')
                 ->setParameter('category', $filters['category']);
         }
+
         if (!empty($filters['subcategory'])) {
-            $qb->join('t.subcategoryEntity', 's') // Même logique pour ExpenseEntity
-            ->andWhere('s.name = :subcategory')
+            $qb->join('t.subcategoryEntity', 's')
+                ->andWhere('s.name = :subcategory')
                 ->setParameter('subcategory', $filters['subcategory']);
         }
 
-
-        if (!empty($filters['transactionType'])) {
-            $qb->andWhere('t.type = :transactionType')
-                ->setParameter('transactionType', $filters['transactionType']);
-        }
+        // Le filtre transactionType est supprimé ici car l'entité ExpenseEntity est par nature "expense"
 
         if (!empty($filters['minAmount'])) {
             $qb->andWhere('t.amount >= :minAmount')
@@ -76,6 +73,5 @@ class ExpenseEntityRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getArrayResult();
     }
-
 
 }
