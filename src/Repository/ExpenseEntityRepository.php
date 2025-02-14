@@ -48,6 +48,12 @@ class ExpenseEntityRepository extends ServiceEntityRepository
             ->andWhere('c.name = :category')
                 ->setParameter('category', $filters['category']);
         }
+        if (!empty($filters['subcategory'])) {
+            $qb->join('t.subcategoryEntity', 's') // Même logique pour ExpenseEntity
+            ->andWhere('s.name = :subcategory')
+                ->setParameter('subcategory', $filters['subcategory']);
+        }
+
 
         if (!empty($filters['transactionType'])) {
             $qb->andWhere('t.type = :transactionType')

@@ -4,7 +4,7 @@ namespace App\Controller;
 use App\Service\ExportService;
 use App\Repository\IncomeEntityRepository;
 use App\Repository\ExpenseEntityRepository;
-use Psr\Log\LoggerInterface;
+use App\Service\CategoryService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,20 +16,33 @@ class ExportController extends AbstractController
     private ExportService $exportService;
     private IncomeEntityRepository $incomeEntityRepository;
     private ExpenseEntityRepository $expenseEntityRepository;
+    private CategoryService $categoryService;
 
-    public function __construct(ExportService $exportService,
-                                IncomeEntityRepository $incomeEntityRepository,
-                                ExpenseEntityRepository $expenseEntityRepository)
-    {
+    public function __construct(
+        ExportService $exportService,
+        IncomeEntityRepository $incomeEntityRepository,
+        ExpenseEntityRepository $expenseEntityRepository,
+        CategoryService $categoryService
+    ) {
         $this->exportService = $exportService;
         $this->incomeEntityRepository = $incomeEntityRepository;
         $this->expenseEntityRepository = $expenseEntityRepository;
+        $this->categoryService = $categoryService;
     }
 
     #[Route('/export', name: 'export_csv')]
     public function index(): Response
     {
-        return $this->render('export/index.html.twig');
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('Vous devez être connecté pour accéder à cette page.');
+        }
+
+        $categories = $this->categoryService->getMergedCategories($user);
+
+        return $this->render('export/index.html.twig', [
+            'categories' => $categories,
+        ]);
     }
 
     #[Route('/api/export', name: 'export_generate', methods: ['POST'])]
@@ -59,6 +72,10 @@ class ExportController extends AbstractController
             if (empty($data)) {
                 return $this->json(['error' => 'Aucune donnée à exporter'], Response::HTTP_NO_CONTENT);
             }
+            if (!empty($filters['subcategory'])) {
+                error_log("⚠️ Sous-catégorie filtrée dans l'export: " . $filters['subcategory']);
+            }
+
 
             return $this->exportService->generateExport($data, $format);
         } catch (\Exception $e) {

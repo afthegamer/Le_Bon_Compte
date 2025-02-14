@@ -15,6 +15,8 @@ const CategoryInput = ({
                            subcatInputName,
                            currentCategory,
                            currentSubcategory,
+                           onCategoryChange, // Ajout du prop
+                           onSubcategoryChange // Déjà existant
                        }) => {
     // Fusion des catégories prédéfinies et utilisateur en un tableau d'objets { name, isPredefined }
     const combinedCategories = useMemo(() => {
@@ -182,7 +184,15 @@ const CategoryInput = ({
         setValue(category.name);
         setFilteredCategories([]);
         setIsFocused(false);
+
+        console.log("Mise à jour de la catégorie dans CategoryInput:", category.name);
+
+        if (onCategoryChange) {
+            console.log("Envoi à ExportModal:", category.name); // Vérification
+            onCategoryChange(category.name);
+        }
         const hiddenInput = document.querySelector(`input[name="${inputName}"]`);
+
         if (hiddenInput) {
             hiddenInput.value = category.name;
         }
@@ -212,6 +222,13 @@ const CategoryInput = ({
     const handleSubcategorySuggestionClick = (subcategory) => {
         setSelectedSubcategory(subcategory.name);
         setFilteredSubcategories([]);
+
+        console.log("Mise à jour de la sous-catégorie dans CategoryInput:", subcategory.name);
+
+        if (onSubcategoryChange) {
+            console.log("Envoi à ExportModal:", subcategory.name); // Vérification
+            onSubcategoryChange(subcategory.name);
+        }
         const hiddenSubcatInput = document.querySelector(`input[name="${subcatInputName}"]`);
         if (hiddenSubcatInput) {
             hiddenSubcatInput.value = subcategory.name;

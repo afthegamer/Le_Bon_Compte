@@ -49,6 +49,12 @@ class IncomeEntityRepository extends ServiceEntityRepository
                 ->setParameter('category', $filters['category']);
         }
 
+        if (!empty($filters['subcategory'])) {
+            $qb->join('t.subcategoryEntity', 's') // Utilisation du bon champ
+            ->andWhere('s.name = :subcategory')
+                ->setParameter('subcategory', $filters['subcategory']);
+        }
+
         if (!empty($filters['transactionType'])) {
             $qb->andWhere('t.type = :transactionType')
                 ->setParameter('transactionType', $filters['transactionType']);
