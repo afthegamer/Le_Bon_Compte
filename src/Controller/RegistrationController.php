@@ -46,7 +46,6 @@ class RegistrationController extends AbstractController
 
             $entityManager->persist($user);
             $entityManager->flush();
-//            dd($user->getId());
             $userProfileService = new UserProfileService($entityManager);
             $userProfileService->createFirstProfile($user, $form->get('firstName')->getData(), $form->get('lastName')->getData(),$user->getId());
             $subcategories = new CategoryService($entityManager);

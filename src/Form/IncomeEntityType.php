@@ -24,7 +24,7 @@ class IncomeEntityType extends AbstractType
     }
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        // Récupérer l'utilisateur connecté depuis les options
+        // Recover the user connected from the options
         $connectedUser = $options['connected_user'];
 
         $builder
@@ -39,7 +39,7 @@ class IncomeEntityType extends AbstractType
                 'widget' => 'single_text',
             ])
             ->add('categoryEntity', TextType::class, [
-                'mapped' => false, // Ce champ ne correspond pas directement à une propriété
+                'mapped' => false,
                 'required' => false,
                 'label' => 'Catégorie',
             ])
@@ -64,7 +64,7 @@ class IncomeEntityType extends AbstractType
             'data_class' => IncomeEntity::class,
         ]);
 
-        // Déclarer l'option personnalisée `connected_user`
+        // Declare the personalized option `Connected_user`
         $resolver->setDefined(['connected_user']);
     }
 }

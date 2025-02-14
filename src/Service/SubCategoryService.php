@@ -11,8 +11,6 @@ class SubCategoryService
 {
     private EntityManagerInterface $entityManager;
 
-    // Structure pour les sous-catégories prédéfinies :
-    // La clé correspond au nom de la catégorie et la valeur est un tableau de sous-catégories prédéfinies.
     private array $predefinedSubcategories = [
         "Alimentation"=> [
             "Courses",
@@ -105,8 +103,6 @@ class SubCategoryService
     {
         $categoryName = $category->getName();
 
-        // Récupérer les sous-catégories créées par l'utilisateur pour la catégorie donnée,
-        // en les transformant en objets avec "id" et "name".
         $userSubCategories = $this->entityManager
             ->getRepository(SubcategoryEntity::class)
             ->findBy(['categoryEntity' => $category]);
@@ -118,7 +114,7 @@ class SubCategoryService
             ];
         }, $userSubCategories);
 
-        // Récupérer les sous-catégories prédéfinies pour cette catégorie, si elles existent.
+        // Recover predefined subcategories for this category, if they exist.
         $predefinedNames = isset($this->predefinedSubcategories[$categoryName])
             ? $this->predefinedSubcategories[$categoryName]
             : [];
@@ -130,7 +126,7 @@ class SubCategoryService
             ];
         }, $predefinedNames);
 
-        // Filtrer les sous-catégories utilisateur pour exclure celles déjà présentes dans la liste prédéfinie (comparaison insensible à la casse)
+        // Filter user subcategories to exclude those already present in the predefined list (comparison insensitive to breakage)
         $filteredUserSubCategoryObjects = array_filter($userSubCategoryObjects, function($subObj) use ($predefinedNames) {
             foreach ($predefinedNames as $pre) {
                 if (strtolower($subObj['name']) === strtolower($pre)) {
@@ -163,8 +159,6 @@ class SubCategoryService
             throw new \InvalidArgumentException('La catégorie spécifiée est introuvable.');
         }
 
-        // Ici, on retourne uniquement les entités SubcategoryEntity.
-        // Vous pouvez adapter cette méthode selon vos besoins.
         return $this->entityManager
             ->getRepository(SubcategoryEntity::class)
             ->findBy(['categoryEntity' => $category]);
@@ -192,23 +186,6 @@ class SubCategoryService
         return $subCategory;
     }
 
-    public function getSubCategoriesByCategoryNameAndUser(string $categoryName, UserEntity $user): array
-    {
-        // Rechercher la catégorie par nom et utilisateur
-        $category = $this->entityManager
-            ->getRepository(CategoryEntity::class)
-            ->findOneBy(['name' => $categoryName, 'userEntity' => $user]);
-
-        if (!$category) {
-            throw new \InvalidArgumentException('Catégorie introuvable ou non accessible par cet utilisateur.');
-        }
-
-        // Retourner les sous-catégories associées
-        return $this->entityManager
-            ->getRepository(SubcategoryEntity::class)
-            ->findBy(['categoryEntity' => $category]);
-    }
-
     public function createSubCategory(string $categoryName, string $subcategoryName, UserEntity $user): SubcategoryEntity
     {
         $category = $this->entityManager
@@ -219,7 +196,7 @@ class SubCategoryService
             throw new \InvalidArgumentException('Catégorie introuvable ou non accessible par cet utilisateur.');
         }
 
-        // Vérifier si la sous-catégorie existe déjà
+        // Check if the subcategory already exists
         $existingSubcategory = $this->entityManager
             ->getRepository(SubcategoryEntity::class)
             ->findOneBy(['name' => $subcategoryName, 'categoryEntity' => $category]);
@@ -228,7 +205,7 @@ class SubCategoryService
             throw new \InvalidArgumentException('La sous-catégorie existe déjà.');
         }
 
-        // Créer une nouvelle sous-catégorie
+        // Create a new subcategory
         $subcategory = new SubcategoryEntity();
         $subcategory->setName($subcategoryName);
         $subcategory->setCategoryEntity($category);

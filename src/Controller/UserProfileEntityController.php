@@ -54,15 +54,6 @@ final class UserProfileEntityController extends AbstractController
                          RequestStack $requestStack): Response
     {
         if ($userProfileEntity->getUserEntity() !== $this->getUser()) {
-            $request = $requestStack->getCurrentRequest();
-            $referer = $request->headers->get('referer');
-
-            if ($referer) {
-                // Redirige vers la page précédente si disponible
-                return $this->redirect($referer);
-            }
-
-            // Sinon, redirige vers une route par défaut
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
         return $this->render('user_profile_entity/show.html.twig', [
@@ -78,15 +69,7 @@ final class UserProfileEntityController extends AbstractController
     {
         if ($userProfileEntity->isModifiable() === true) {
             if ($userProfileEntity->getUserEntity() !== $this->getUser()) {
-                $request = $requestStack->getCurrentRequest();
-                $referer = $request->headers->get('referer');
 
-                if ($referer) {
-                    // Redirige vers la page précédente si disponible
-                    return $this->redirect($referer);
-                }
-
-                // Sinon, redirige vers une route par défaut
                 return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
             }
             $form = $this->createForm(UserProfileEntityType::class, $userProfileEntity);

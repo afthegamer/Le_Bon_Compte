@@ -55,8 +55,6 @@ class ExpenseEntityRepository extends ServiceEntityRepository
                 ->setParameter('subcategory', $filters['subcategory']);
         }
 
-        // Le filtre transactionType est supprimé ici car l'entité ExpenseEntity est par nature "expense"
-
         if (!empty($filters['minAmount'])) {
             $qb->andWhere('t.amount >= :minAmount')
                 ->setParameter('minAmount', $filters['minAmount']);

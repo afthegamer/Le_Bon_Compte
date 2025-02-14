@@ -6,6 +6,7 @@ use App\Entity\CategoryEntity;
 use App\Entity\ExpenseEntity;
 use App\Entity\IncomeEntity;
 use App\Entity\SubcategoryEntity;
+use App\Entity\UserEntity;
 use App\Entity\UserProfileEntity;
 use App\Service\CategoryService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,7 +22,7 @@ class ImportCVSController extends AbstractController
     {
         $csvFile = $request->files->get('csv_file');
         $mapping = json_decode($request->get('mapping'), true);
-        $profileId = $request->request->get('profile_id'); // Récupération de l'ID du profil utilisateur
+        $profileId = $request->request->get('profile_id');
 
         if ($csvFile === null || !$csvFile->isValid()) {
             return $this->json(['error' => 'Fichier CSV invalide'], Response::HTTP_BAD_REQUEST);
@@ -31,7 +32,7 @@ class ImportCVSController extends AbstractController
             return $this->json(['error' => 'Mappage des colonnes manquant ou invalide'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Récupérer le profil utilisateur sélectionné
+        // Recover the selected user profile
         $profile = $entityManager->getRepository(UserProfileEntity::class)->find($profileId);
         if (!$profile || $profile->getUserEntity() !== $this->getUser()) {
             return $this->json(['error' => 'Profil utilisateur invalide'], Response::HTTP_BAD_REQUEST);
@@ -41,7 +42,7 @@ class ImportCVSController extends AbstractController
         $invalidRows = [];
         $headers = null;
 
-        // Lire le contenu et forcer l'encodage en UTF-8
+        // Read the content and force the encoding in UTF-8
         $csvContent = file_get_contents($csvFile->getPathname());
         if (!mb_check_encoding($csvContent, 'UTF-8')) {
             $csvContent = mb_convert_encoding($csvContent, 'UTF-8', 'ISO-8859-1');
@@ -81,20 +82,19 @@ class ImportCVSController extends AbstractController
 
         $entityManager->flush();
 
-        // Compter le nombre de lignes importées et invalides
+        // Count the number of imported and invalid lines
         $importedCount = count($formattedData);
         $invalidCount = count($invalidRows);
 
-        // Construire le message flash
+        // Build the Flash message
         if ($invalidCount > 0) {
-            $this->addFlash('warning', "Importation partielle : {$importedCount} lignes enregistrées, {$invalidCount} lignes invalides.");
+            $this->addFlash('warning', "Partial import : {$importedCount} registered lines, {$invalidCount} Invalid lines.");
         } elseif ($importedCount > 0) {
-            $this->addFlash('success', "Importation réussie ! {$importedCount} lignes ont été enregistrées.");
+            $this->addFlash('success', "Importation Successful ! {$importedCount} lines have been recorded.");
         } else {
-            $this->addFlash('error', "Échec de l'importation. Aucun enregistrement valide.");
+            $this->addFlash('error', "Import failure. No valid recording.");
         }
 
-        // Rediriger vers la page d'accueil
         return $this->redirectToRoute('app_home_index');
 
     }
@@ -144,7 +144,7 @@ class ImportCVSController extends AbstractController
         }
 
         if (!empty($mappedRow['ExpenseEntity'])) {
-            // Convertir en float et multiplier par 100 pour stocker en centimes
+            // Convert into float and multiply by 100 to store in cents
             $amount = (float) str_replace(',', '.', $mappedRow['ExpenseEntity']);
 
             $expense = new ExpenseEntity();
@@ -214,14 +214,14 @@ class ImportCVSController extends AbstractController
         return null;
     }
 
-    #[Route('/csv', name: 'import_csv', methods: ['GET'])]
+    #[Route('/export-import', name: 'export_import', methods: ['GET'])]
     public function index(CategoryService $categoryService): Response
     {
         $user = $this->getUser();
         if ($user === null) {
             return $this->redirectToRoute('app_login');
         }
-
+        /** @var UserEntity $user */
         $userProfiles = $user->getUserProfileEntities()->toArray();
         $categories = $categoryService->getMergedCategories($user);
 

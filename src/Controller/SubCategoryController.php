@@ -16,7 +16,6 @@ class SubCategoryController extends AbstractController
     #[Route('/api/subcategories/{categoryId}', name: 'get_subcategories', methods: ['GET'])]
     public function getSubcategories(int $categoryId, SubCategoryService $subCategoryService): JsonResponse
     {
-        // Utiliser la méthode getMergedSubCategoriesByCategoryId pour récupérer les sous-catégories
         $subcategories = $subCategoryService->getMergedSubCategoriesByCategoryId($categoryId);
 
         $response = array_map(fn(SubcategoryEntity $sub) => [
@@ -38,7 +37,7 @@ class SubCategoryController extends AbstractController
             return new JsonResponse(['error' => 'Utilisateur non connecté'], 401);
         }
 
-        // Récupérer la catégorie par son nom via l'EntityManager injecté
+        // Recover the category by name via the injected entityManager
         $category = $entityManager->getRepository(CategoryEntity::class)
             ->findOneBy(['name' => $categoryName]);
 
@@ -46,29 +45,27 @@ class SubCategoryController extends AbstractController
             return new JsonResponse(['error' => 'Catégorie introuvable'], 404);
         }
 
-        // Utiliser la méthode getMergedSubCategories pour obtenir l'objet fusionné
+        // Use the Getmergedsubcategories method to obtain the merged object
         $mergedSubcategories = $subCategoryService->getMergedSubCategories($category);
 
-        // La réponse renvoyée aura la structure :
-        // { "predefined": [ {id:null, name: "banana"}, {id:null, name:"petit commerce"} ], "user": [ ... ] }
         return new JsonResponse($mergedSubcategories);
     }
 
     #[Route('/api/subcategories/{id}', name: 'delete_subcategory', methods: ['DELETE'])]
     public function deleteSubcategory(int $id, EntityManagerInterface $entityManager): JsonResponse
     {
-        // Récupérer la sous-catégorie à supprimer
+        // Recover the subcategory to delete
         $subcategory = $entityManager->getRepository(SubcategoryEntity::class)->find($id);
         if (!$subcategory) {
             return new JsonResponse(['error' => 'Sous-catégorie non trouvée'], 404);
         }
 
-        // Dissocier la sous-catégorie des entités Expense
+        // Dissociate the subcategory from Expense entities
         foreach ($subcategory->getExpenseEntity() as $expense) {
             $expense->setSubcategoryEntity(null);
         }
 
-        // Dissocier la sous-catégorie des entités Income
+        // Dissociate the subcategory of incomes
         foreach ($subcategory->getIncomeEntity() as $income) {
             $income->setSubcategoryEntity(null);
         }
@@ -96,6 +93,7 @@ class SubCategoryController extends AbstractController
         }
 
         try {
+            /** @var \App\Entity\UserEntity $user */
             $subcategory = $subCategoryService->createSubCategory($categoryName, $subcategoryName, $user);
             return new JsonResponse([
                 'id' => $subcategory->getId(),

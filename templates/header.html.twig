@@ -13,12 +13,12 @@
                     {
                         'label': app.user.id is defined ? 'Modifier mon compte' : 'Impossible de modifier le compte',
                         'href': app.user.id is defined ? path('app_user_edit', {'id': app.user.id}) : '#',
-                        'textClass': app.user.id is defined ? 'text-green-600' : 'text-gray-500'
+                        'textClass': app.user.id is defined ? 'text-green-600 hover:text-green-700' : 'text-gray-500'
                     },
                     {
                         'label': 'Déconnexion',
                         'href': path('app_logout'),
-                        'textClass': 'text-blue-600'
+                        'textClass': 'text-red-600 hover:text-red-700'
                     }
                 ],
                 'actionItems': [
@@ -30,7 +30,7 @@
                     {
                         'label': 'Ajouter un revenu',
                         'href': path('app_income_entity_new'),
-                        'className': 'bg-gray-600 hover:bg-gray-700'
+                        'className': 'bg-orange-600 hover:bg-orange-700'
                     },
                     {
                         'label': 'Liste des profils',
@@ -38,13 +38,8 @@
                         'className': 'bg-gray-600 hover:bg-gray-700'
                     },
                     {
-                        'label': 'Import CSV',
-                        'href': path('import_csv'),
-                        'className': 'bg-gray-600 hover:bg-gray-700'
-                    },
-                    {
-                        'label': 'Expot CSV',
-                        'href': path('export_csv'),
+                        'label': 'Export/Import',
+                        'href': path('export_import'),
                         'className': 'bg-gray-600 hover:bg-gray-700'
                     }
                 ]

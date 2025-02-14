@@ -40,6 +40,7 @@ class ExportController extends AbstractController
             throw $this->createAccessDeniedException('Vous devez être connecté pour accéder à cette page.');
         }
 
+        /** @var \App\Entity\UserEntity $user */
         $categories = $this->categoryService->getMergedCategories($user);
 
         return $this->render('export/index.html.twig', [
@@ -60,7 +61,6 @@ class ExportController extends AbstractController
             return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Ajout de l'ID de l'utilisateur connecté pour restreindre les données
         $filters['userId'] = $user->getId();
         $format = $filters['format'] ?? 'csv';
 
@@ -79,7 +79,6 @@ class ExportController extends AbstractController
                     break;
             }
 
-            // Vérifier si les données sont vides
             if (empty($data)) {
                 return $this->json(['error' => 'Aucune donnée à exporter'], Response::HTTP_NO_CONTENT);
             }
@@ -103,7 +102,6 @@ class ExportController extends AbstractController
             return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Filtrage des transactions uniquement pour l'utilisateur connecté
         $filters['userId'] = $user->getId();
 
         try {
@@ -121,7 +119,7 @@ class ExportController extends AbstractController
                     break;
             }
 
-            // Tri des transactions par date décroissante
+            // Sorting transactions by decreasing date
             usort($data, function ($a, $b) {
                 $dateA = $a['date'] instanceof \DateTime ? $a['date']->format('Y-m-d H:i:s') : $a['date'];
                 $dateB = $b['date'] instanceof \DateTime ? $b['date']->format('Y-m-d H:i:s') : $b['date'];

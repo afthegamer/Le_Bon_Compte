@@ -10,7 +10,7 @@ class ExportService
     {
         return array_map(function ($row) {
             if (isset($row['date']) && $row['date'] instanceof \DateTime) {
-                $row['date'] = $row['date']->format('Y-m-d H:i:s'); // Conversion en string
+                $row['date'] = $row['date']->format('Y-m-d H:i:s');
             }
             return $row;
         }, $data);
@@ -18,7 +18,7 @@ class ExportService
 
     public function generateExport(array $data, string $format): StreamedResponse
     {
-        $formattedData = $this->formatDataForExport($data); // Appliquer la conversion
+        $formattedData = $this->formatDataForExport($data);
 
         if ($format === 'csv') {
             return $this->generateCsv($formattedData);

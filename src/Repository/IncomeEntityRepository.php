@@ -55,8 +55,6 @@ class IncomeEntityRepository extends ServiceEntityRepository
                 ->setParameter('subcategory', $filters['subcategory']);
         }
 
-        // Le filtre transactionType est supprimé ici car l'entité IncomeEntity est par nature "income"
-
         if (!empty($filters['minAmount'])) {
             $qb->andWhere('t.amount >= :minAmount')
                 ->setParameter('minAmount', $filters['minAmount']);

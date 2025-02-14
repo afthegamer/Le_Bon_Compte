@@ -304,7 +304,6 @@ const CategoryInput = ({
             }
         );
     };
-    console.log("liste récup",categories);
 
     return (
         <div className="relative">

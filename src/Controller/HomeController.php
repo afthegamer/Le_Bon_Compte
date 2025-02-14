@@ -26,17 +26,16 @@ class HomeController extends AbstractController
         CsrfTokenManagerInterface $csrfTokenManager
     ): Response
     {
-        // Récupérer l'utilisateur connecté
         $user = $this->getUser();
         if (!$user) {
             throw $this->createAccessDeniedException('Vous devez être connecté pour accéder à cette page.');
         }
 
-        // Récupérer les revenus et dépenses liés à cet utilisateur
+        /** @var userEntity $user*/
         $incomes = $incomeRepository->findAllByUser($user);
         $expenses = $expenseRepository->findAllByUser($user);
 
-        // Combiner et normaliser les données
+        // Combine and normalize data
         $combinedList = [];
         foreach ($incomes as $income) {
             $combinedList[] = [
@@ -69,10 +68,9 @@ class HomeController extends AbstractController
             ];
         }
 
-        // Trier par date
+        // Sort by date
         usort($combinedList, fn($a, $b) => $b['date'] <=> $a['date']);
 
-        // Passez la liste triée à la vue
         return $this->render('home/index.html.twig', [
             'combinedList' => $combinedList,
         ]);

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\ExpenseEntity;
+use App\Entity\UserEntity;
 use App\Form\ExpenseEntityType;
 use App\Repository\ExpenseEntityRepository;
 use App\Service\CategoryService;
@@ -33,11 +34,10 @@ final class ExpenseEntityController extends AbstractController
         }
 
         $expenseEntity = new ExpenseEntity();
+        /** @var \App\Entity\UserEntity $user */
 
-        // Récupérer les catégories fusionnées
         $categories = $categoryService->getMergedCategories($user);
 
-        // Créer le formulaire
         $form = $this->createForm(ExpenseEntityType::class, $expenseEntity, [
             'connected_user' => $user,
         ]);
@@ -47,10 +47,10 @@ final class ExpenseEntityController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $categoryName = $form->get('categoryEntity')->getData();
 
-            // Vérifier ou créer la catégorie
+            // Check or create the category
+            /** @var userEntity $user*/
             $category = $categoryService->findOrCreateCategory($categoryName, $user);
 
-            // Gestion de la sous-catégorie
             $subCategoryName = $form->get('subcategoryEntity')->getData();
             if ($subCategoryName) {
                 $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
@@ -74,20 +74,10 @@ final class ExpenseEntityController extends AbstractController
 
 
     #[Route('/{id}', name: 'app_expense_entity_show', methods: ['GET'])]
-    public function show(ExpenseEntity $expenseEntity,
-                         RequestStack $requestStack): Response
+    public function show(ExpenseEntity $expenseEntity): Response
     {
 
         if ($expenseEntity->getUserEntity() !== $this->getUser()) {
-            $request = $requestStack->getCurrentRequest();
-            $referer = $request->headers->get('referer');
-
-            if ($referer) {
-                // Redirige vers la page précédente si disponible
-                return $this->redirect($referer);
-            }
-
-            // Sinon, redirige vers une route par défaut
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
         return $this->render('expense_entity/show.html.twig', [
@@ -102,25 +92,20 @@ final class ExpenseEntityController extends AbstractController
         EntityManagerInterface $entityManager,
         RequestStack $requestStack,
         CategoryService $categoryService,
-        SubCategoryService $subCategoryService // Ajout pour gérer la sous-catégorie
+        SubCategoryService $subCategoryService
     ): Response {
         $user = $this->getUser();
 
         if ($expenseEntity->getUserEntity() !== $user) {
-            $referer = $requestStack->getCurrentRequest()->headers->get('referer');
-            return $referer
-                ? $this->redirect($referer)
-                : $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        // Récupérer les catégories fusionnées
         $categories = $categoryService->getMergedCategories($user);
 
-        // Passer la catégorie actuelle associée à React
+        // Pass the current category associated with React
         $currentCategory = $expenseEntity->getCategoryEntity() ? $expenseEntity->getCategoryEntity()->getName() : '';
         $currentSubcategory = $expenseEntity->getSubcategoryEntity() ? $expenseEntity->getSubcategoryEntity()->getName() : '';
 
-        // Créer le formulaire
         $form = $this->createForm(ExpenseEntityType::class, $expenseEntity, [
             'connected_user' => $user,
         ]);
@@ -128,25 +113,23 @@ final class ExpenseEntityController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Gestion de la catégorie
             $categoryName = $form->get('categoryEntity')->getData();
             if ($categoryName) {
                 $category = $categoryService->findOrCreateCategory($categoryName, $user);
                 $expenseEntity->setCategoryEntity($category);
             } else {
-                // Ne réinitialisez la catégorie que si explicitement vide
                 if (!$expenseEntity->getCategoryEntity()) {
                     $expenseEntity->setCategoryEntity(null);
                 }
             }
 
-            // Gestion de la sous-catégorie
+            // Subcategory management
             $subCategoryName = $form->get('subcategoryEntity')->getData();
             if ($subCategoryName) {
                 $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $expenseEntity->getCategoryEntity());
                 $expenseEntity->setSubcategoryEntity($subcategory);
             } else {
-                // Réinitialisez uniquement la sous-catégorie
+                // Reset only the subcategory
                 $expenseEntity->setSubcategoryEntity(null);
             }
 

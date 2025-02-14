@@ -64,7 +64,7 @@ final class UserController extends AbstractController
     ): Response
     {
         /** @var UserEntity $user */
-        $user = $this->getUser(); // Récupérer l'utilisateur connecté
+        $user = $this->getUser();
 
         $form = $this->createForm(UserEntityType::class, $user);
         $form->handleRequest($request);
@@ -76,7 +76,6 @@ final class UserController extends AbstractController
                 $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
             }
             $userProfileService = new UserProfileService($entityManager);
-//            dd($user->getId());
             $userProfileService->updateProfile($form->get('firstName')->getData(), $form->get('lastName')->getData(), $user->getId());
 
             $entityManager->persist($user);

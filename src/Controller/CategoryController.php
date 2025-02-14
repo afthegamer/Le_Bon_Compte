@@ -18,7 +18,7 @@ class CategoryController extends AbstractController
             return new JsonResponse(['error' => 'Utilisateur non authentifié'], 401);
         }
 
-        // Trouver la catégorie par son nom et l'utilisateur
+        // Find the category by name and user
         $category = $entityManager->getRepository(CategoryEntity::class)->findOneBy([
             'name' => $name,
             'userEntity' => $user
@@ -28,7 +28,7 @@ class CategoryController extends AbstractController
             return new JsonResponse(['error' => 'Catégorie non trouvée'], 404);
         }
 
-        // **1. Suppression récursive des sous-catégories**
+        // ** 1. Recursive abolition of subcategories **
         foreach (clone $category->getSubcategoryEntities() as $subcat) {
             foreach (clone $subcat->getExpenseEntity() as $expense) {
                 $expense->setSubcategoryEntity(null);
@@ -40,7 +40,7 @@ class CategoryController extends AbstractController
             $entityManager->remove($subcat);
         }
 
-        // **2. Dissocier toutes les entités Income et Expense reliées à la catégorie**
+        // ** 2. Dissociate all the incomes and expense entities connected to the category **
         foreach ($category->getIncomeEntity() as $income) {
             $income->setCategoryEntity(null);
         }
@@ -48,7 +48,7 @@ class CategoryController extends AbstractController
             $expense->setCategoryEntity(null);
         }
 
-        // **3. Supprimer la catégorie maintenant qu'elle n'a plus d'attachements**
+        // ** 3. Delete the category now that it has no more attachments **
         $entityManager->remove($category);
         $entityManager->flush();
 

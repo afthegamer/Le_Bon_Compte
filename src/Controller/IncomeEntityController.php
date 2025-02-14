@@ -31,11 +31,9 @@ final class IncomeEntityController extends AbstractController
         }
 
         $incomeEntity = new IncomeEntity();
-
-        // Récupérer les catégories fusionnées
+        /** @var \App\Entity\UserEntity $user */
         $categories = $categoryService->getMergedCategories($user);
 
-        // Créer le formulaire
         $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
             'connected_user' => $user,
         ]);
@@ -45,10 +43,8 @@ final class IncomeEntityController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $categoryName = $form->get('categoryEntity')->getData();
 
-            // Vérifier ou créer la catégorie
             $category = $categoryService->findOrCreateCategory($categoryName, $user);
 
-            // Gestion de la sous-catégorie
             $subCategoryName = $form->get('subcategoryEntity')->getData();
             if ($subCategoryName) {
                 $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $category);
@@ -76,15 +72,6 @@ final class IncomeEntityController extends AbstractController
                          RequestStack $requestStack): Response
     {
         if ($incomeEntity->getUserEntity() !== $this->getUser()) {
-            $request = $requestStack->getCurrentRequest();
-            $referer = $request->headers->get('referer');
-
-            if ($referer) {
-                // Redirige vers la page précédente si disponible
-                return $this->redirect($referer);
-            }
-
-            // Sinon, redirige vers une route par défaut
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -100,25 +87,20 @@ final class IncomeEntityController extends AbstractController
         EntityManagerInterface $entityManager,
         RequestStack $requestStack,
         CategoryService $categoryService,
-        SubCategoryService $subCategoryService // Ajout pour gérer la sous-catégorie
+        SubCategoryService $subCategoryService
     ): Response {
         $user = $this->getUser();
 
         if ($incomeEntity->getUserEntity() !== $user) {
-            $referer = $requestStack->getCurrentRequest()->headers->get('referer');
-            return $referer
-                ? $this->redirect($referer)
-                : $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        // Récupérer les catégories fusionnées
         $categories = $categoryService->getMergedCategories($user);
 
-        // Passer la catégorie actuelle associée à React
+        // Pass the current category associated with React
         $currentCategory = $incomeEntity->getCategoryEntity() ? $incomeEntity->getCategoryEntity()->getName() : '';
         $currentSubcategory = $incomeEntity->getSubcategoryEntity() ? $incomeEntity->getSubcategoryEntity()->getName() : '';
 
-        // Créer le formulaire
         $form = $this->createForm(IncomeEntityType::class, $incomeEntity, [
             'connected_user' => $user,
         ]);
@@ -126,25 +108,24 @@ final class IncomeEntityController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Gestion de la catégorie
             $categoryName = $form->get('categoryEntity')->getData();
             if ($categoryName) {
                 $category = $categoryService->findOrCreateCategory($categoryName, $user);
                 $incomeEntity->setCategoryEntity($category);
             } else {
-                // Ne réinitialisez la catégorie que si explicitement vide
+                // Reset the category only so explicitly empty
                 if (!$incomeEntity->getCategoryEntity()) {
                     $incomeEntity->setCategoryEntity(null);
                 }
             }
 
-            // Gestion de la sous-catégorie
+            // Subcategory management
             $subCategoryName = $form->get('subcategoryEntity')->getData();
             if ($subCategoryName) {
                 $subcategory = $subCategoryService->findOrCreateSubCategory($subCategoryName, $incomeEntity->getCategoryEntity());
                 $incomeEntity->setSubcategoryEntity($subcategory);
             } else {
-                // Réinitialisez uniquement la sous-catégorie
+                // Reset only the subcategory
                 $incomeEntity->setSubcategoryEntity(null);
             }
 
