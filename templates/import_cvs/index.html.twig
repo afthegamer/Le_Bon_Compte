@@ -26,15 +26,12 @@
 
             <!-- Composant React pour MapperCSV -->
             <div class="mb-12">
-                <div id="export-root"
-                        {{ react_component('ExportModal', {
-                            'open': false,
+                <h2 class="text-xl font-semibold mb-1">Mapper CSV :</h2>
+                <!-- Modale Export -->
+                <div {{ react_component('MapperCSV', {
                             'categories': categories
                         }) }}>
                 </div>
-                <h2 class="text-xl font-semibold mb-1">Mapper CSV :</h2>
-                <!-- Modale Export -->
-                <div {{ react_component('MapperCSV') }}></div>
                 <input type="file" name="csv_file" id="csv_file" class="hidden">
                 <input type="hidden" name="mapping" id="mapping" value="{}">
             </div>

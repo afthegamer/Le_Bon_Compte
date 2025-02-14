@@ -17,6 +17,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import CategoryInput from "./CategoryInput";
 
 const ExportModal = ({ open, onClose, categories }) => {
+    // console.log("liste récup2",categories);
     const [filters, setFilters] = useState({
         startDate: "",
         endDate: "",
@@ -101,7 +102,7 @@ const ExportModal = ({ open, onClose, categories }) => {
                         <TextField name="startDate" label="Date début" type="date" slotProps={{inputLabel: { shrink: true }}} value={filters.startDate} onChange={(e) => handleFilterChange("startDate", e.target.value)} />
                         <TextField name="endDate" label="Date fin" type="date" slotProps={{inputLabel: { shrink: true }}} value={filters.endDate} onChange={(e) => handleFilterChange("endDate", e.target.value)} />
                         <CategoryInput
-                            predefinedCategories={categories}
+                            predefinedCategories={categories.categories} // CORRECTION : On envoie directement l'objet contenant predefined et user
                             inputName="category"
                             subcatInputName="subcategory"
                             currentCategory={filters.category}
