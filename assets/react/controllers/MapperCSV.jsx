@@ -4,7 +4,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { Box, Button, Select, MenuItem, Typography } from "@mui/material";
 import ExportModal from "./ExportModal";
 
-const MapperCSV = (categories) => {
+const MapperCSV = () => {
     const [csvData, setCsvData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [mapping, setMapping] = useState({});
@@ -23,6 +23,7 @@ const MapperCSV = (categories) => {
     };
 
     useEffect(() => {
+        // Synchronize mapping with the hidden field
         const mappingInput = document.getElementById("mapping");
         if (mappingInput) {
             mappingInput.value = JSON.stringify(mapping);
@@ -33,6 +34,15 @@ const MapperCSV = (categories) => {
         const selectedFile = event.target.files[0];
         if (!selectedFile) return;
 
+        // Synchronization with the HTML form field
+        const fileInput = document.getElementById("csv_file");
+        if (fileInput) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(selectedFile);
+            fileInput.files = dataTransfer.files; // Add the file to the form field
+        }
+
+        // Read the file for the preview
         const reader = new FileReader();
         reader.onload = (e) => {
             const content = e.target.result;
@@ -42,7 +52,7 @@ const MapperCSV = (categories) => {
             });
 
             if (parsedData.errors.length === 0) {
-                setCsvData(parsedData.data.slice(0, 5));
+                setCsvData(parsedData.data.slice(0, 5)); // Limit to the first 5 lines
                 const csvHeaders = Object.keys(parsedData.data[0]);
                 setHeaders(csvHeaders);
 
@@ -51,19 +61,27 @@ const MapperCSV = (categories) => {
                     const matchingEntity = Object.keys(predefinedMappings).find(
                         (key) => header.trim().toLowerCase() === key.toLowerCase()
                     );
-                    initialMapping[header] = matchingEntity ? predefinedMappings[matchingEntity] : "";
+                    initialMapping[header] = matchingEntity ? predefinedMappings[matchingEntity] : undefined;
                 });
 
                 setMapping(initialMapping);
             } else {
-                console.error("Erreur lors du parsing du CSV", parsedData.errors);
+                console.error("Error parsing CSV:", parsedData.errors);
             }
         };
         reader.readAsText(selectedFile);
     };
 
     const handleMappingChange = (header, value) => {
-        setMapping((prev) => ({ ...prev, [header]: value }));
+        setMapping((prev) => ({
+            ...prev,
+            [header]: value,
+        }));
+    };
+
+    const handleSubmit = () => {
+        console.log("Mapped Data:", mapping);
+        console.log("CSV Data:", csvData);
     };
 
     const columns = headers.map((header) => ({
@@ -85,7 +103,15 @@ const MapperCSV = (categories) => {
                     Charger un fichier CSV
                     <input type="file" hidden accept=".csv" onChange={handleFileUpload} />
                 </Button>
-                <ExportModal open={exportOpen} onClose={() => setExportOpen(false)} categories={categories} />
+                {/* Bouton pour ouvrir l'ExportModal */}
+                <Button variant="contained" color="secondary" onClick={() => setExportOpen(true)}>
+                    Ouvrir l'Export Modal
+                </Button>
+                <ExportModal
+                    open={exportOpen}
+                    onClose={() => setExportOpen(false)}
+                    categories={{ categories: Object.values(predefinedMappings) }}
+                />
             </Box>
             {headers.length > 0 && (
                 <Box>
@@ -95,7 +121,9 @@ const MapperCSV = (categories) => {
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}>
                         {headers.map((header) => (
                             <Box key={header} sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                <Typography variant="body1" sx={{ width: "200px" }}>{header}</Typography>
+                                <Typography variant="body1" sx={{ width: "200px" }}>
+                                    {header}
+                                </Typography>
                                 <Select
                                     value={mapping[header] || ""}
                                     onChange={(e) => handleMappingChange(header, e.target.value)}
@@ -104,9 +132,13 @@ const MapperCSV = (categories) => {
                                     variant="outlined"
                                 >
                                     <MenuItem value="">Aucun</MenuItem>
-                                    {Object.values(predefinedMappings).map((value) => (
-                                        <MenuItem key={value} value={value}>{value}</MenuItem>
-                                    ))}
+                                    <MenuItem value="CategoryEntity">Catégorie</MenuItem>
+                                    <MenuItem value="Date">Date</MenuItem>
+                                    <MenuItem value="ExpenseEntity">Dépense</MenuItem>
+                                    <MenuItem value="IncomeEntity">Revenu</MenuItem>
+                                    <MenuItem value="Name">Libelle</MenuItem>
+                                    <MenuItem value="SubcategoryEntity">Sous Catégorie</MenuItem>
+                                    <MenuItem value="Type">Type operation</MenuItem>
                                 </Select>
                             </Box>
                         ))}
@@ -114,10 +146,10 @@ const MapperCSV = (categories) => {
                     <Typography variant="h6" gutterBottom>
                         Aperçu des données (5 premières lignes)
                     </Typography>
-                    <Box sx={{ minHeight: 400, width: "100%" }}>
-                        <DataGrid columns={columns} rows={rows} autoPageSize />
+                    <Box sx={{ minHeight: 400, height: "auto", width: "100%" }}>
+                        <DataGrid columns={columns} rows={rows} disableSelectionOnClick />
                     </Box>
-                    <Button variant="contained" color="primary" sx={{ mt: 4 }} type="submit">
+                    <Button variant="contained" color="primary" onClick={handleSubmit} sx={{ mt: 4 }} type="submit">
                         Soumettre le Mapping
                     </Button>
                 </Box>
