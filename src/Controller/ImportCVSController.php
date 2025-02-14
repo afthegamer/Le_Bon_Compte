@@ -7,6 +7,7 @@ use App\Entity\ExpenseEntity;
 use App\Entity\IncomeEntity;
 use App\Entity\SubcategoryEntity;
 use App\Entity\UserProfileEntity;
+use App\Service\CategoryService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -214,7 +215,7 @@ class ImportCVSController extends AbstractController
     }
 
     #[Route('/csv', name: 'import_csv', methods: ['GET'])]
-    public function index(): Response
+    public function index(CategoryService $categoryService): Response
     {
         $user = $this->getUser();
         if ($user === null) {
@@ -222,10 +223,13 @@ class ImportCVSController extends AbstractController
         }
 
         $userProfiles = $user->getUserProfileEntities()->toArray();
+        $categories = $categoryService->getMergedCategories($user);
+
 
         return $this->render('import_cvs/index.html.twig', [
             'controller_name' => 'ImportCVSController',
             'userProfiles' => $userProfiles,
+            'categories' => $categories,
         ]);
     }
 }

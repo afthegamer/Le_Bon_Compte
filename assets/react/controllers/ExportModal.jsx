@@ -30,6 +30,7 @@ const ExportModal = ({ open, onClose, categories }) => {
     const [previewData, setPreviewData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [subcategories, setSubcategories] = useState([]);
+    const [modalOpen, setModalOpen] = useState(false);
 
     useEffect(() => {
         if (filters.category) {
@@ -50,7 +51,6 @@ const ExportModal = ({ open, onClose, categories }) => {
     const handleCategoryChange = (value) => {
         setFilters((prev) => ({ ...prev, category: value, subcategory: "" }));
     };
-
 
     const fetchPreview = async () => {
         setLoading(true);
@@ -82,66 +82,63 @@ const ExportModal = ({ open, onClose, categories }) => {
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
+        setModalOpen(false);
     };
     const handleSubcategoryChange = (value) => {
         setFilters((prev) => ({ ...prev, subcategory: value }));
     };
 
-
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-            <DialogTitle>Exporter les données</DialogTitle>
-            <DialogContent>
-                <Box display="flex" flexDirection="column" gap={2}>
-                    <TextField  name="startDate" label="Date début" type="date" slotProps={{inputLabel: { shrink: true }}} value={filters.startDate} onChange={(e) => handleFilterChange("startDate", e.target.value)} />
-                    <TextField name="endDate" label="Date fin" type="date" slotProps={{inputLabel: { shrink: true }}} value={filters.endDate} onChange={(e) => handleFilterChange("endDate", e.target.value)} />
-                    <CategoryInput
-                        predefinedCategories={categories}
-                        inputName="category"
-                        subcatInputName="subcategory"
-                        currentCategory={filters.category}
-                        currentSubcategory={filters.subcategory}
-                        onCategoryChange={handleCategoryChange}
-                        onSubcategoryChange={handleSubcategoryChange} // Correction ici
-                    />
-                    <TextField name="minAmount" label="Montant min (€)" type="number" value={filters.minAmount} onChange={(e) => handleFilterChange("minAmount", e.target.value)} />
-                    <TextField name="maxAmount" label="Montant max (€)" type="number" value={filters.maxAmount} onChange={(e) => handleFilterChange("maxAmount", e.target.value)} />
-                    <FormControl>
-                        <InputLabel>Type de transaction</InputLabel>
-                        <Select name="transactionType" value={filters.transactionType} onChange={(e) => handleFilterChange("transactionType", e.target.value)} variant={"outlined"}>
-                            <MenuItem value="">Tous</MenuItem>
-                            <MenuItem value="income">Revenu 💵</MenuItem>
-                            <MenuItem value="expense">Dépense 🛒</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <FormControl>
-                        <InputLabel>Format</InputLabel>
-                        <Select name="format" value={filters.format} onChange={(e) => handleFilterChange("format", e.target.value)} variant={"outlined"}>
-                            <MenuItem value="csv">CSV</MenuItem>
-                            <MenuItem value="xlsx">Excel</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <Button variant="contained" onClick={fetchPreview} disabled={loading}>
-                        {loading ? <CircularProgress size={24} /> : "Prévisualiser"}
-                    </Button>
-                </Box>
-                {previewData.length > 0 && (
-                    <Box mt={2}>
-                        <DataGrid
-                            columns={Object.keys(previewData[0] || {}).map((key) => ({ field: key, headerName: key, flex: 1 }))}
-                            rows={previewData.map((row, index) => ({ id: index, ...row }))}
-                            autoPageSize
+        <>
+            <Button variant="contained" color="primary" onClick={() => setModalOpen(true)}>
+                📤 Exporter les données
+            </Button>
+
+            <Dialog open={modalOpen} onClose={() => setModalOpen(false)} fullWidth maxWidth="md">
+                <DialogTitle>Exporter les données</DialogTitle>
+                <DialogContent>
+                    <Box display="flex" flexDirection="column" gap={2}>
+                        <TextField name="startDate" label="Date début" type="date" slotProps={{inputLabel: { shrink: true }}} value={filters.startDate} onChange={(e) => handleFilterChange("startDate", e.target.value)} />
+                        <TextField name="endDate" label="Date fin" type="date" slotProps={{inputLabel: { shrink: true }}} value={filters.endDate} onChange={(e) => handleFilterChange("endDate", e.target.value)} />
+                        <CategoryInput
+                            predefinedCategories={categories}
+                            inputName="category"
+                            subcatInputName="subcategory"
+                            currentCategory={filters.category}
+                            currentSubcategory={filters.subcategory}
+                            onCategoryChange={handleCategoryChange}
+                            onSubcategoryChange={handleSubcategoryChange}
                         />
+                        <TextField name="minAmount" label="Montant min (€)" type="number" value={filters.minAmount} onChange={(e) => handleFilterChange("minAmount", e.target.value)} />
+                        <TextField name="maxAmount" label="Montant max (€)" type="number" value={filters.maxAmount} onChange={(e) => handleFilterChange("maxAmount", e.target.value)} />
+                        <FormControl>
+                            <InputLabel>Type de transaction</InputLabel>
+                            <Select name="transactionType" value={filters.transactionType} onChange={(e) => handleFilterChange("transactionType", e.target.value)} variant="outlined">
+                                <MenuItem value="">Tous</MenuItem>
+                                <MenuItem value="income">Revenu 💵</MenuItem>
+                                <MenuItem value="expense">Dépense 🛒</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <FormControl>
+                            <InputLabel>Format</InputLabel>
+                            <Select name="format" value={filters.format} onChange={(e) => handleFilterChange("format", e.target.value)} variant="outlined">
+                                <MenuItem value="csv">CSV</MenuItem>
+                                <MenuItem value="xlsx">Excel</MenuItem>
+                            </Select>
+                        </FormControl>
+                        <Button variant="contained" onClick={fetchPreview} disabled={loading}>
+                            {loading ? <CircularProgress size={24} /> : "Prévisualiser"}
+                        </Button>
                     </Box>
-                )}
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose}>Annuler</Button>
-                <Button variant="contained" color="primary" onClick={exportData}>
-                    Télécharger
-                </Button>
-            </DialogActions>
-        </Dialog>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setModalOpen(false)}>Annuler</Button>
+                    <Button variant="contained" color="primary" onClick={exportData}>
+                        Télécharger
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 };
 
