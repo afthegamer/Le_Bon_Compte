@@ -17,9 +17,10 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import CategoryInput from "./CategoryInput";
+import { useTranslation } from "react-i18next";
+
 
 const ExportModal = ({ open, onClose, categories, userProfiles }) => {
-    // Vos filtres spécifiques à l'export
     const [filters, setFilters] = useState({
         startDate: "",
         endDate: "",
@@ -34,10 +35,24 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
     const [previewData, setPreviewData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [subcategories, setSubcategories] = useState([]);
-    // Pour afficher les filtres appliqués sous forme de Chip, par exemple
+    // To display the filters applied as a chip, for example
     const [appliedFilters, setAppliedFilters] = useState([]);
 
-    // Gestion des sous-catégories comme dans votre version existante
+    const { t } = useTranslation();
+
+    // Object of correspondence for translation, used as fallback
+    const translationMapping = {
+        userProfile: "Profil utilisateur",
+        maxAmount: "Montant maximum",
+        minAmount: "Montant minimum",
+        startDate: "Date de début",
+        endDate: "Date de fin",
+        category: "Catégorie",
+        subcategory: "Sous-catégorie",
+        transactionType: "Type de transaction",
+        format: "Format",
+    };
+
     useEffect(() => {
         if (filters.category) {
             fetch(`/api/subcategories/by-name/${encodeURIComponent(filters.category)}`)
@@ -65,13 +80,10 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         setFilters((prev) => ({ ...prev, subcategory: value }));
     };
 
-    // Pour garder trace des filtres "appliqués" (vous pouvez choisir d'afficher un Chip par filtre)
     const addAppliedFilter = useCallback(() => {
-        // Ici, vous pouvez définir comment combiner les filtres à afficher en Chip
         setAppliedFilters(Object.entries(filters).filter(([_, v]) => v !== ""));
     }, [filters]);
 
-    // Appel à addAppliedFilter dès que les filtres changent (optionnel)
     useEffect(() => {
         addAppliedFilter();
     }, [filters, addAppliedFilter]);
@@ -112,7 +124,10 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         window.URL.revokeObjectURL(url);
         onClose();
     };
-
+    const getUserProfileName = (id) => {
+        const user = userProfiles.find((profile) => profile.id === id);
+        return user ? `${user.firstName} ${user.lastName}` : id;
+    };
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>Exporter les données</DialogTitle>
@@ -223,15 +238,23 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                 </Box>
 
                 <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {appliedFilters.map(([key, value], index) => (
-                        <Chip
-                            key={index}
-                            label={`${key} : ${value}`}
-                            onDelete={() =>
-                                handleFilterChange(key, "")
+                    {appliedFilters
+                        .filter(([key, value]) => key !== "format")
+                        .map(([key, value], index) => {
+                            let displayValue = value;
+                            if (key === "userProfile") {
+                                displayValue = getUserProfileName(value);
                             }
-                        />
-                    ))}
+                            // Recovery of translation via i18next with a fallback
+                            const translatedKey = t(`filters.${key}`, translationMapping[key] || key);
+                            return (
+                                <Chip
+                                    key={index}
+                                    label={`${translatedKey} : ${displayValue}`}
+                                    onDelete={() => handleFilterChange(key, "")}
+                                />
+                            );
+                        })}
                 </Box>
 
                 {previewData.length > 0 ? (

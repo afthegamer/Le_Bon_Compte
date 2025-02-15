@@ -37,6 +37,8 @@
         "@mui/x-data-grid": "^7.23.6",
         "@shadcn/ui": "^0.0.4",
         "dayjs": "^1.11.13",
-        "papaparse": "^5.5.1"
+        "i18next": "^24.2.2",
+        "papaparse": "^5.5.1",
+        "react-i18next": "^15.4.0"
     }
 }
