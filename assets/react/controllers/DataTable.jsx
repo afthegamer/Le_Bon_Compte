@@ -123,7 +123,7 @@ export default function DataTable({
         return Array.from(optionsSet);
     }, [tableData, filterColumn, isDateFilter, noDynamicList]);
 
-    // Gestion des filtres appliqués
+    // Management of applied filters
     const handleAddFilter = useCallback(() => {
         if (!filterColumn) return;
         if (isDateFilter) {
@@ -170,7 +170,7 @@ export default function DataTable({
         setAppliedFilters([]);
     }, []);
 
-    // Calcul des données filtrées pour le DataGrid
+    // Calculation of filtered data for Datagrid
     const filteredData = useMemo(() => {
         if (appliedFilters.length === 0) return tableData;
         const filtersByColumn = appliedFilters.reduce((acc, filter) => {
@@ -185,7 +185,7 @@ export default function DataTable({
         );
     }, [tableData, appliedFilters]);
 
-    // Calcul pour le graphique des dépenses filtrées (envoi correct à PieChartExpenses)
+    // Calculation for the graphic of filtered expenses (correct sending to Pirachatexpens)
     const finalExpenses = useMemo(() => {
         const impactFilters = appliedFilters.filter(f => filterImpacte.includes(f.column));
         if (impactFilters.length === 0) return tableData;

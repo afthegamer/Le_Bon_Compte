@@ -224,11 +224,18 @@ class ImportCVSController extends AbstractController
         /** @var UserEntity $user */
         $userProfiles = $user->getUserProfileEntities()->toArray();
         $categories = $categoryService->getMergedCategories($user);
-
+        $plainUserProfiles = array_map(function($profile) {
+            return [
+                'id' => $profile->getId(),
+                'firstName' => $profile->getFirstName(),
+                'lastName' => $profile->getLastName(),
+            ];
+        }, $userProfiles);
 
         return $this->render('import_cvs/index.html.twig', [
             'controller_name' => 'ImportCVSController',
             'userProfiles' => $userProfiles,
+            'userProfilesForCompenent' => $plainUserProfiles,
             'categories' => $categories,
         ]);
     }

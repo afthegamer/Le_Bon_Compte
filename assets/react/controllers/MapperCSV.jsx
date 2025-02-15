@@ -4,7 +4,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { Box, Button, Select, MenuItem, Typography } from "@mui/material";
 import ExportModal from "./ExportModal";
 
-const MapperCSV = () => {
+const MapperCSV = ({categories,userProfiles}) => {
     const [csvData, setCsvData] = useState([]);
     const [headers, setHeaders] = useState([]);
     const [mapping, setMapping] = useState({});
@@ -110,7 +110,8 @@ const MapperCSV = () => {
                 <ExportModal
                     open={exportOpen}
                     onClose={() => setExportOpen(false)}
-                    categories={{ categories: Object.values(predefinedMappings) }}
+                    categories={categories}
+                    userProfiles={userProfiles}
                 />
             </Box>
             {headers.length > 0 && (

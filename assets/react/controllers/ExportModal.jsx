@@ -18,7 +18,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import CategoryInput from "./CategoryInput";
 
-const ExportModal = ({ open, onClose, categories }) => {
+const ExportModal = ({ open, onClose, categories, userProfiles }) => {
     // Vos filtres spécifiques à l'export
     const [filters, setFilters] = useState({
         startDate: "",
@@ -28,6 +28,7 @@ const ExportModal = ({ open, onClose, categories }) => {
         minAmount: "",
         maxAmount: "",
         transactionType: "",
+        userProfile: "",
         format: "csv",
     });
     const [previewData, setPreviewData] = useState([]);
@@ -54,17 +55,14 @@ const ExportModal = ({ open, onClose, categories }) => {
 
     const handleFilterChange = (key, value) => {
         setFilters((prev) => ({ ...prev, [key]: value }));
-        console.log(`Filtre modifié : ${key} = ${value}`);
     };
 
     const handleCategoryChange = (value) => {
         setFilters((prev) => ({ ...prev, category: value, subcategory: "" }));
-        console.log("Catégorie sélectionnée :", value);
     };
 
     const handleSubcategoryChange = (value) => {
         setFilters((prev) => ({ ...prev, subcategory: value }));
-        console.log("Sous-catégorie sélectionnée :", value);
     };
 
     // Pour garder trace des filtres "appliqués" (vous pouvez choisir d'afficher un Chip par filtre)
@@ -80,7 +78,6 @@ const ExportModal = ({ open, onClose, categories }) => {
 
     const fetchPreview = async () => {
         setLoading(true);
-        console.log("Envoi des filtres pour la prévisualisation :", filters);
         try {
             const response = await fetch("/api/export/preview", {
                 method: "POST",
@@ -88,7 +85,6 @@ const ExportModal = ({ open, onClose, categories }) => {
                 body: JSON.stringify(filters),
             });
             const data = await response.json();
-            console.log("Données de prévisualisation reçues :", data);
             if (Array.isArray(data) && data.length > 0) {
                 setPreviewData(data.map((item, index) => ({ id: index, ...item })));
             } else {
@@ -101,14 +97,12 @@ const ExportModal = ({ open, onClose, categories }) => {
     };
 
     const exportData = async () => {
-        console.log("Exportation avec les filtres :", filters);
         const response = await fetch("/api/export", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(filters),
         });
         const blob = await response.blob();
-        console.log("Blob reçu pour l'export :", blob);
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -151,7 +145,7 @@ const ExportModal = ({ open, onClose, categories }) => {
                         sx={{ minWidth: 150 }}
                     />
                     <CategoryInput
-                        predefinedCategories={categories.categories}
+                        predefinedCategories={categories}
                         inputName="category"
                         subcatInputName="subcategory"
                         currentCategory={filters.category}
@@ -177,6 +171,22 @@ const ExportModal = ({ open, onClose, categories }) => {
                         onChange={(e) => handleFilterChange("maxAmount", e.target.value)}
                         sx={{ minWidth: 150 }}
                     />
+                    <FormControl size={"small"} sx={{ minWidth: 150 }}>
+                        <InputLabel>Profil utilisateur</InputLabel>
+                        <Select
+                            name="userProfile"
+                            value={filters.userProfile}
+                            onChange={(e) => handleFilterChange("userProfile", e.target.value)}
+                            label="Profil utilisateur"
+                            variant="outlined">
+                            <MenuItem value="">Tous</MenuItem>
+                            {userProfiles.map((profile) => (
+                                <MenuItem key={profile.id} value={profile.id}>
+                                    {profile.firstName} {profile.lastName}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                     <FormControl size="small" sx={{ minWidth: 150 }}>
                         <InputLabel>Type de transaction</InputLabel>
                         <Select

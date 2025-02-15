@@ -29,7 +29,8 @@
                 <h2 class="text-xl font-semibold mb-1">Mapper CSV :</h2>
                 <!-- Modale Export -->
                 <div {{ react_component('MapperCSV', {
-                            'categories': categories
+                            'categories': categories,
+                            'userProfiles': userProfilesForCompenent
                         }) }}>
                 </div>
                 <input type="file" name="csv_file" id="csv_file" class="hidden">

@@ -64,6 +64,11 @@ class ExpenseEntityRepository extends ServiceEntityRepository
             $qb->andWhere('t.amount <= :maxAmount')
                 ->setParameter('maxAmount', $filters['maxAmount']);
         }
+        if (!empty($filters['userProfile'])) {
+            $qb->join('t.userProfileEntity', 'p')
+                ->andWhere('p.id = :userProfile')
+                ->setParameter('userProfile', $filters['userProfile']);
+        }
 
         if ($limit) {
             $qb->setMaxResults($limit);
