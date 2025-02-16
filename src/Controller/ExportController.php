@@ -51,6 +51,7 @@ class ExportController extends AbstractController
     #[Route('/api/export', name: 'export_generate', methods: ['POST'])]
     public function export(Request $request): Response
     {
+
         $user = $this->getUser();
         if (!$user) {
             return $this->json(['error' => 'Utilisateur non authentifié'], Response::HTTP_UNAUTHORIZED);
@@ -60,6 +61,9 @@ class ExportController extends AbstractController
         if (!$filters) {
             return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
         }
+
+        // Ajoutez cette ligne pour définir transactionType par défaut
+        $filters['transactionType'] = $filters['transactionType'] ?? '';
 
         $filters['userId'] = $user->getId();
         $format = $filters['format'] ?? 'csv';
@@ -102,6 +106,9 @@ class ExportController extends AbstractController
             return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
         }
 
+        // Assurer que la clé transactionType existe
+        $filters['transactionType'] = $filters['transactionType'] ?? '';
+
         $filters['userId'] = $user->getId();
 
         try {
@@ -119,7 +126,7 @@ class ExportController extends AbstractController
                     break;
             }
 
-            // Sorting transactions by decreasing date
+            // Tri par date décroissante
             usort($data, function ($a, $b) {
                 $dateA = $a['date'] instanceof \DateTime ? $a['date']->format('Y-m-d H:i:s') : $a['date'];
                 $dateB = $b['date'] instanceof \DateTime ? $b['date']->format('Y-m-d H:i:s') : $b['date'];

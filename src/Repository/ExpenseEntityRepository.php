@@ -33,41 +33,104 @@ class ExpenseEntityRepository extends ServiceEntityRepository
             ->where('t.userEntity = :user')
             ->setParameter('user', $filters['userId']);
 
-        if (!empty($filters['startDate'])) {
-            $qb->andWhere('t.date >= :startDate')
-                ->setParameter('startDate', $filters['startDate']);
+        // Filtrage sur la date de début
+        if (isset($filters['startDate']) && $filters['startDate'] !== '') {
+            if (is_array($filters['startDate'])) {
+                $orX = $qb->expr()->orX();
+                foreach ($filters['startDate'] as $key => $date) {
+                    $paramKey = 'startDate' . $key;
+                    $orX->add("t.date >= :$paramKey");
+                    $qb->setParameter($paramKey, $date);
+                }
+                $qb->andWhere($orX);
+            } else {
+                $qb->andWhere('t.date >= :startDate')
+                    ->setParameter('startDate', $filters['startDate']);
+            }
         }
 
-        if (!empty($filters['endDate'])) {
-            $qb->andWhere('t.date <= :endDate')
-                ->setParameter('endDate', $filters['endDate']);
+        // Filtrage sur la date de fin
+        if (isset($filters['endDate']) && $filters['endDate'] !== '') {
+            if (is_array($filters['endDate'])) {
+                $orX = $qb->expr()->orX();
+                foreach ($filters['endDate'] as $key => $date) {
+                    $paramKey = 'endDate' . $key;
+                    $orX->add("t.date <= :$paramKey");
+                    $qb->setParameter($paramKey, $date);
+                }
+                $qb->andWhere($orX);
+            } else {
+                $qb->andWhere('t.date <= :endDate')
+                    ->setParameter('endDate', $filters['endDate']);
+            }
         }
 
-        if (!empty($filters['category'])) {
-            $qb->join('t.categoryEntity', 'c')
-                ->andWhere('c.name = :category')
-                ->setParameter('category', $filters['category']);
+        // Filtrage par catégorie
+        if (isset($filters['category']) && $filters['category'] !== '') {
+            $qb->join('t.categoryEntity', 'c');
+            if (is_array($filters['category'])) {
+                $qb->andWhere($qb->expr()->in('c.name', ':categories'))
+                    ->setParameter('categories', $filters['category']);
+            } else {
+                $qb->andWhere('c.name = :category')
+                    ->setParameter('category', $filters['category']);
+            }
         }
 
-        if (!empty($filters['subcategory'])) {
-            $qb->join('t.subcategoryEntity', 's')
-                ->andWhere('s.name = :subcategory')
-                ->setParameter('subcategory', $filters['subcategory']);
+        // Filtrage par sous-catégorie
+        if (isset($filters['subcategory']) && $filters['subcategory'] !== '') {
+            $qb->join('t.subcategoryEntity', 's');
+            if (is_array($filters['subcategory'])) {
+                $qb->andWhere($qb->expr()->in('s.name', ':subcategories'))
+                    ->setParameter('subcategories', $filters['subcategory']);
+            } else {
+                $qb->andWhere('s.name = :subcategory')
+                    ->setParameter('subcategory', $filters['subcategory']);
+            }
         }
 
-        if (!empty($filters['minAmount'])) {
-            $qb->andWhere('t.amount >= :minAmount')
-                ->setParameter('minAmount', $filters['minAmount']);
+        // Filtrage par Montant minimum
+        if (isset($filters['minAmount']) && $filters['minAmount'] !== '') {
+            if (is_array($filters['minAmount'])) {
+                $orX = $qb->expr()->orX();
+                foreach ($filters['minAmount'] as $key => $min) {
+                    $paramKey = 'minAmount' . $key;
+                    $orX->add("t.amount >= :$paramKey");
+                    $qb->setParameter($paramKey, $min);
+                }
+                $qb->andWhere($orX);
+            } else {
+                $qb->andWhere('t.amount >= :minAmount')
+                    ->setParameter('minAmount', $filters['minAmount']);
+            }
         }
 
-        if (!empty($filters['maxAmount'])) {
-            $qb->andWhere('t.amount <= :maxAmount')
-                ->setParameter('maxAmount', $filters['maxAmount']);
+        // Filtrage par Montant maximum
+        if (isset($filters['maxAmount']) && $filters['maxAmount'] !== '') {
+            if (is_array($filters['maxAmount'])) {
+                $orX = $qb->expr()->orX();
+                foreach ($filters['maxAmount'] as $key => $max) {
+                    $paramKey = 'maxAmount' . $key;
+                    $orX->add("t.amount <= :$paramKey");
+                    $qb->setParameter($paramKey, $max);
+                }
+                $qb->andWhere($orX);
+            } else {
+                $qb->andWhere('t.amount <= :maxAmount')
+                    ->setParameter('maxAmount', $filters['maxAmount']);
+            }
         }
-        if (!empty($filters['userProfile'])) {
-            $qb->join('t.userProfileEntity', 'p')
-                ->andWhere('p.id = :userProfile')
-                ->setParameter('userProfile', $filters['userProfile']);
+
+        // Filtrage par Profil utilisateur
+        if (isset($filters['userProfile']) && $filters['userProfile'] !== '') {
+            $qb->join('t.userProfileEntity', 'p');
+            if (is_array($filters['userProfile'])) {
+                $qb->andWhere($qb->expr()->in('p.id', ':userProfiles'))
+                    ->setParameter('userProfiles', $filters['userProfile']);
+            } else {
+                $qb->andWhere('p.id = :userProfile')
+                    ->setParameter('userProfile', $filters['userProfile']);
+            }
         }
 
         if ($limit) {

@@ -23,9 +23,9 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
     // État pour le format d'export (CSV ou Excel)
     const [exportFormat, setExportFormat] = useState("csv");
 
-    // États pour les filtres dynamiques appliqués (hors "category" et "subcategory")
+    // États pour les filtres dynamiques appliqués (pour les autres filtres)
     const [appliedFilters, setAppliedFilters] = useState([]);
-    // États pour le filtre en cours de création (hors "category" et "subcategory")
+    // États pour le filtre en cours de création (pour les autres filtres)
     const [currentFilterColumn, setCurrentFilterColumn] = useState("");
     const [currentFilterValue, setCurrentFilterValue] = useState("");
 
@@ -33,8 +33,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
     const [previewData, setPreviewData] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Pour les filtres "category" et "subcategory"
-    // Construction des options de catégorie à partir de la prop categories
+    // Pour les filtres "Catégorie" et "Sous-catégorie"
     const categoryOptions = useMemo(() => {
         if (categories && typeof categories === "object" && !Array.isArray(categories)) {
             const predefinedList = (categories.predefined || []).map((cat) => ({
@@ -57,11 +56,13 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
 
     // Liste des options de sous-catégorie (initialement vide)
     const [subcategoryOptions, setSubcategoryOptions] = useState([]);
+    // États pour la saisie du filtre "Catégorie" et "Sous-catégorie"
+    const [currentCategoryValue, setCurrentCategoryValue] = useState("");
+    const [currentSubcategoryValue, setCurrentSubcategoryValue] = useState("");
 
     const { t } = useTranslation();
 
-    // Définition des filtres dynamiques, incluant "category" et "subcategory"
-    // Pour le filtre "category", nous utilisons le type "autocomplete"
+    // Définition des filtres dynamiques pour les autres champs
     const dynamicFiltersList = useMemo(() => [
         { key: "startDate", label: "Date de début", type: "date" },
         { key: "endDate", label: "Date de fin", type: "date" },
@@ -86,44 +87,33 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                 label: `${profile.firstName} ${profile.lastName}`,
             })),
         },
-        {
-            key: "category",
-            label: "Catégorie",
-            type: "autocomplete", // Changement ici pour utiliser Autocomplete
-            options: categoryOptions,
-        },
-        {
-            key: "subcategory",
-            label: "Sous-catégorie",
-            type: "select",
-            options: subcategoryOptions,
-        },
-    ], [userProfiles, categoryOptions, subcategoryOptions]);
+    ], [userProfiles]);
 
-    // Calcul des options de filtres disponibles (on retire ceux déjà appliqués)
+    // On ajoute "category" et "subcategory" dans la liste globale des filtres
+    const allFiltersList = useMemo(() => [
+        ...dynamicFiltersList,
+        { key: "category", label: "Catégorie", type: "autocomplete", options: categoryOptions },
+       // { key: "subcategory", label: "Sous-catégorie", type: "select", options: subcategoryOptions },
+    ], [dynamicFiltersList, categoryOptions, subcategoryOptions]);
+
     const availableFilterOptions = useMemo(() => {
-        const options = dynamicFiltersList.filter(
-            (filter) => !appliedFilters.some((applied) => applied.column === filter.key)
-        );
-        console.log("Options de filtres disponibles :", options);
-        return options;
-    }, [dynamicFiltersList, appliedFilters]);
+        console.log("Options de filtres disponibles :", allFiltersList);
+        return allFiltersList;
+    }, [allFiltersList]);
 
     // Récupération de la définition du filtre sélectionné
     const selectedFilterDefinition = useMemo(() => {
-        const def = dynamicFiltersList.find((f) => f.key === currentFilterColumn);
+        const def = allFiltersList.find((f) => f.key === currentFilterColumn);
         console.log("Définition du filtre sélectionné :", def);
         return def;
-    }, [dynamicFiltersList, currentFilterColumn]);
+    }, [allFiltersList, currentFilterColumn]);
 
-    // Lorsqu'un filtre "category" est appliqué, on récupère dynamiquement les sous-catégories
+    // Lorsqu'une catégorie est sélectionnée (filtre "category"), récupérer les sous-catégories
     useEffect(() => {
-        const catFilter = appliedFilters.find((f) => f.column === "category");
-        if (catFilter && catFilter.value) {
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(catFilter.value)}`)
+        if (currentFilterColumn === "category" && currentCategoryValue) {
+            fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategoryValue)}`)
                 .then((res) => res.json())
                 .then((data) => {
-                    // On s'attend à recevoir soit des chaînes, soit des objets { id, name }
                     const merged = [...(data.predefined || []), ...(data.user || [])];
                     const opts = merged.map((subcat) => {
                         if (typeof subcat === "object" && subcat.name) {
@@ -139,46 +129,72 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         } else {
             setSubcategoryOptions([]);
         }
-    }, [appliedFilters]);
+    }, [currentFilterColumn, currentCategoryValue]);
 
-    // Ajout du filtre courant dans la liste des filtres appliqués
+    // Ajout d'un filtre
     const handleAddFilter = useCallback(() => {
-        if (!currentFilterColumn || currentFilterValue === "") return;
-        console.log("Ajout du filtre :", currentFilterColumn, currentFilterValue);
-        setAppliedFilters((prev) => [
-            ...prev,
-            { column: currentFilterColumn, value: currentFilterValue },
-        ]);
-        setCurrentFilterColumn("");
-        setCurrentFilterValue("");
-    }, [currentFilterColumn, currentFilterValue]);
+        if (!currentFilterColumn) return;
+        if (currentFilterColumn === "category") {
+            if (!currentCategoryValue) return;
+            console.log("Ajout du filtre catégorie :", currentCategoryValue, currentSubcategoryValue);
+            // Pour "category", on ajoute toujours un nouvel objet afin de pouvoir avoir plusieurs paires
+            setAppliedFilters((prev) => [
+                ...prev,
+                { column: "category", value: currentCategoryValue, subcategory: currentSubcategoryValue },
+            ]);
+            setCurrentCategoryValue("");
+            setCurrentSubcategoryValue("");
+            setCurrentFilterColumn("");
+        } else {
+            if (currentFilterValue === "") return;
+            console.log("Ajout du filtre :", currentFilterColumn, currentFilterValue);
+            setAppliedFilters((prev) => [
+                ...prev,
+                { column: currentFilterColumn, value: currentFilterValue },
+            ]);
+            setCurrentFilterColumn("");
+            setCurrentFilterValue("");
+        }
+    }, [currentFilterColumn, currentFilterValue, currentCategoryValue, currentSubcategoryValue]);
 
     // Suppression d'un filtre appliqué
-    const handleRemoveFilter = useCallback((columnToRemove) => {
-        console.log("Suppression du filtre :", columnToRemove);
+    const handleRemoveFilter = useCallback((indexToRemove) => {
+        console.log("Suppression du filtre à l'index :", indexToRemove);
         setAppliedFilters((prev) =>
-            prev.filter((filter) => filter.column !== columnToRemove)
+            prev.filter((_, index) => index !== indexToRemove)
         );
     }, []);
 
     // Construction de l'objet des filtres à envoyer à l'API
     const buildFiltersObject = useCallback(() => {
         const filters = {};
-        dynamicFiltersList.forEach((filterDef) => {
-            filters[filterDef.key] = filterDef.type === "number" ? 0 : "";
-        });
+        // Pour tous les filtres autres que "category"
         appliedFilters.forEach((filter) => {
-            const def = dynamicFiltersList.find((f) => f.key === filter.column);
-            if (def && def.type === "number") {
-                filters[filter.column] = Number(filter.value);
-            } else {
-                filters[filter.column] = filter.value;
+            if (filter.column !== "category") {
+                const def = allFiltersList.find((f) => f.key === filter.column);
+                const value = def && def.type === "number" ? Number(filter.value) : filter.value;
+                if (value !== "" && value !== null && value !== undefined) {
+                    if (filters[filter.column] !== undefined) {
+                        if (!Array.isArray(filters[filter.column])) {
+                            filters[filter.column] = [filters[filter.column]];
+                        }
+                        filters[filter.column].push(value);
+                    } else {
+                        filters[filter.column] = value;
+                    }
+                }
             }
         });
+        // Pour les filtres "category", regroupons toutes les paires
+        const catFilters = appliedFilters.filter(f => f.column === "category");
+        if (catFilters.length > 0) {
+            filters.category = catFilters.map(f => f.value);
+            filters.subcategory = catFilters.map(f => f.subcategory || '');
+        }
         filters.format = exportFormat;
         console.log("Objet des filtres envoyé à l'API :", filters);
         return filters;
-    }, [appliedFilters, exportFormat, dynamicFiltersList]);
+    }, [appliedFilters, exportFormat, allFiltersList]);
 
     // Récupération des données de prévisualisation
     const fetchPreview = async () => {
@@ -252,7 +268,13 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                             onChange={(e) => {
                                 console.log("Sélection du filtre :", e.target.value);
                                 setCurrentFilterColumn(e.target.value);
-                                setCurrentFilterValue("");
+                                // Pour "category", on réinitialise les valeurs spécifiques
+                                if (e.target.value === "category") {
+                                    setCurrentCategoryValue("");
+                                    setCurrentSubcategoryValue("");
+                                } else {
+                                    setCurrentFilterValue("");
+                                }
                             }}
                          variant="outlined">
                             {availableFilterOptions.map((filter) => (
@@ -263,27 +285,53 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                         </Select>
                     </FormControl>
 
-                    {selectedFilterDefinition && selectedFilterDefinition.type === "autocomplete" ? (
-                        <Autocomplete
-                            freeSolo
-                            options={selectedFilterDefinition.options}
-                            getOptionLabel={(option) =>
-                                typeof option === "string" ? option : option.label
-                            }
-                            value={currentFilterValue}
-                            onInputChange={(event, newInputValue) => {
-                                console.log("Saisie (autocomplete category):", newInputValue);
-                                setCurrentFilterValue(newInputValue);
-                            }}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label={selectedFilterDefinition.label}
-                                    size="small"
-                                    sx={{ minWidth: 150 }}
+                    {selectedFilterDefinition && selectedFilterDefinition.key === "category" ? (
+                        // Affichage de deux champs côte à côte pour catégorie et sous-catégorie
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <Autocomplete
+                                freeSolo
+                                options={selectedFilterDefinition.options}
+                                getOptionLabel={(option) =>
+                                    typeof option === "string" ? option : option.label
+                                }
+                                value={currentCategoryValue}
+                                onInputChange={(event, newInputValue) => {
+                                    console.log("Saisie (autocomplete category):", newInputValue);
+                                    setCurrentCategoryValue(newInputValue);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Catégorie"
+                                        size="small"
+                                        sx={{ minWidth: 150 }}
+                                    />
+                                )}
+                            />
+                            {/* Affiche le champ sous-catégorie uniquement si des options sont disponibles */}
+                            {subcategoryOptions.length > 0 && (
+                                <Autocomplete
+                                    freeSolo
+                                    options={subcategoryOptions}
+                                    getOptionLabel={(option) =>
+                                        typeof option === "string" ? option : option.label
+                                    }
+                                    value={currentSubcategoryValue}
+                                    onInputChange={(event, newInputValue) => {
+                                        console.log("Saisie (autocomplete subcategory):", newInputValue);
+                                        setCurrentSubcategoryValue(newInputValue);
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            label="Sous-catégorie (optionnel)"
+                                            size="small"
+                                            sx={{ minWidth: 150 }}
+                                        />
+                                    )}
                                 />
                             )}
-                        />
+                        </Box>
                     ) : selectedFilterDefinition && selectedFilterDefinition.type === "date" ? (
                         <TextField
                             size="small"
@@ -344,7 +392,12 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                     <Button
                         variant="contained"
                         onClick={handleAddFilter}
-                        disabled={!currentFilterColumn || currentFilterValue === ""}
+                        disabled={
+                            !currentFilterColumn ||
+                            (currentFilterColumn === "category"
+                                ? currentCategoryValue === ""
+                                : currentFilterValue === "")
+                        }
                         sx={{ height: "40px" }}
                     >
                         Ajouter
@@ -353,7 +406,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
 
                 {/* Affichage des filtres appliqués sous forme de puces */}
                 <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {appliedFilters.map((filter) => {
+                    {appliedFilters.map((filter, index) => {
                         let displayValue = filter.value;
                         if (filter.column === "userProfile") {
                             const user = userProfiles.find(
@@ -363,15 +416,21 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                                 displayValue = `${user.firstName} ${user.lastName}`;
                             }
                         }
+                        if (filter.column === "category") {
+                            displayValue = filter.value;
+                            if (filter.subcategory) {
+                                displayValue += ` / Sous-catégorie : ${filter.subcategory}`;
+                            }
+                        }
                         const translatedLabel = t(
                             `filters.${filter.column}`,
                             translationMapping[filter.column] || filter.column
                         );
                         return (
                             <Chip
-                                key={filter.column}
+                                key={`${filter.column}-${index}`}
                                 label={`${translatedLabel} : ${displayValue}`}
-                                onDelete={() => handleRemoveFilter(filter.column)}
+                                onDelete={() => handleRemoveFilter(index)}
                             />
                         );
                     })}
