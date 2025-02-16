@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -14,91 +14,186 @@ import {
     Box,
     Typography,
     Chip,
+    Autocomplete,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import CategoryInput from "./CategoryInput";
 import { useTranslation } from "react-i18next";
 
-
 const ExportModal = ({ open, onClose, categories, userProfiles }) => {
-    const [filters, setFilters] = useState({
-        startDate: "",
-        endDate: "",
-        category: "",
-        subcategory: "",
-        minAmount: "",
-        maxAmount: "",
-        transactionType: "",
-        userProfile: "",
-        format: "csv",
-    });
+    // État pour le format d'export (CSV ou Excel)
+    const [exportFormat, setExportFormat] = useState("csv");
+
+    // États pour les filtres dynamiques appliqués (hors "category" et "subcategory")
+    const [appliedFilters, setAppliedFilters] = useState([]);
+    // États pour le filtre en cours de création (hors "category" et "subcategory")
+    const [currentFilterColumn, setCurrentFilterColumn] = useState("");
+    const [currentFilterValue, setCurrentFilterValue] = useState("");
+
+    // États pour la prévisualisation
     const [previewData, setPreviewData] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [subcategories, setSubcategories] = useState([]);
-    // To display the filters applied as a chip, for example
-    const [appliedFilters, setAppliedFilters] = useState([]);
+
+    // Pour les filtres "category" et "subcategory"
+    // Construction des options de catégorie à partir de la prop categories
+    const categoryOptions = useMemo(() => {
+        if (categories && typeof categories === "object" && !Array.isArray(categories)) {
+            const predefinedList = (categories.predefined || []).map((cat) => ({
+                value: cat.toString(),
+                label: cat.toString(),
+            }));
+            const userList = (categories.user || [])
+                .filter((userCat) =>
+                    !(categories.predefined || []).some(
+                        (preCat) => preCat.toLowerCase() === userCat.toLowerCase()
+                    )
+                )
+                .map((cat) => ({ value: cat.toString(), label: cat.toString() }));
+            return [...predefinedList, ...userList];
+        } else if (Array.isArray(categories)) {
+            return categories.map((cat) => ({ value: cat.toString(), label: cat.toString() }));
+        }
+        return [];
+    }, [categories]);
+
+    // Liste des options de sous-catégorie (initialement vide)
+    const [subcategoryOptions, setSubcategoryOptions] = useState([]);
 
     const { t } = useTranslation();
 
-    // Object of correspondence for translation, used as fallback
-    const translationMapping = {
-        userProfile: "Profil utilisateur",
-        maxAmount: "Montant maximum",
-        minAmount: "Montant minimum",
-        startDate: "Date de début",
-        endDate: "Date de fin",
-        category: "Catégorie",
-        subcategory: "Sous-catégorie",
-        transactionType: "Type de transaction",
-        format: "Format",
-    };
+    // Définition des filtres dynamiques, incluant "category" et "subcategory"
+    // Pour le filtre "category", nous utilisons le type "autocomplete"
+    const dynamicFiltersList = useMemo(() => [
+        { key: "startDate", label: "Date de début", type: "date" },
+        { key: "endDate", label: "Date de fin", type: "date" },
+        { key: "minAmount", label: "Montant minimum", type: "number" },
+        { key: "maxAmount", label: "Montant maximum", type: "number" },
+        {
+            key: "transactionType",
+            label: "Type de transaction",
+            type: "select",
+            options: [
+                { value: "", label: "Tous" },
+                { value: "income", label: "Revenu 💵" },
+                { value: "expense", label: "Dépense 🛒" },
+            ],
+        },
+        {
+            key: "userProfile",
+            label: "Profil utilisateur",
+            type: "select",
+            options: userProfiles.map((profile) => ({
+                value: profile.id.toString(),
+                label: `${profile.firstName} ${profile.lastName}`,
+            })),
+        },
+        {
+            key: "category",
+            label: "Catégorie",
+            type: "autocomplete", // Changement ici pour utiliser Autocomplete
+            options: categoryOptions,
+        },
+        {
+            key: "subcategory",
+            label: "Sous-catégorie",
+            type: "select",
+            options: subcategoryOptions,
+        },
+    ], [userProfiles, categoryOptions, subcategoryOptions]);
 
+    // Calcul des options de filtres disponibles (on retire ceux déjà appliqués)
+    const availableFilterOptions = useMemo(() => {
+        const options = dynamicFiltersList.filter(
+            (filter) => !appliedFilters.some((applied) => applied.column === filter.key)
+        );
+        console.log("Options de filtres disponibles :", options);
+        return options;
+    }, [dynamicFiltersList, appliedFilters]);
+
+    // Récupération de la définition du filtre sélectionné
+    const selectedFilterDefinition = useMemo(() => {
+        const def = dynamicFiltersList.find((f) => f.key === currentFilterColumn);
+        console.log("Définition du filtre sélectionné :", def);
+        return def;
+    }, [dynamicFiltersList, currentFilterColumn]);
+
+    // Lorsqu'un filtre "category" est appliqué, on récupère dynamiquement les sous-catégories
     useEffect(() => {
-        if (filters.category) {
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(filters.category)}`)
+        const catFilter = appliedFilters.find((f) => f.column === "category");
+        if (catFilter && catFilter.value) {
+            fetch(`/api/subcategories/by-name/${encodeURIComponent(catFilter.value)}`)
                 .then((res) => res.json())
                 .then((data) => {
-                    setSubcategories([...(data.predefined || []), ...(data.user || [])]);
+                    // On s'attend à recevoir soit des chaînes, soit des objets { id, name }
+                    const merged = [...(data.predefined || []), ...(data.user || [])];
+                    const opts = merged.map((subcat) => {
+                        if (typeof subcat === "object" && subcat.name) {
+                            return { value: subcat.name.toString(), label: subcat.name.toString() };
+                        }
+                        return { value: subcat.toString(), label: subcat.toString() };
+                    });
+                    setSubcategoryOptions(opts);
                 })
                 .catch((error) =>
-                    console.error("Erreur de chargement des sous-catégories", error)
+                    console.error("Erreur lors du chargement des sous-catégories", error)
                 );
         } else {
-            setSubcategories([]);
+            setSubcategoryOptions([]);
         }
-    }, [filters.category]);
+    }, [appliedFilters]);
 
-    const handleFilterChange = (key, value) => {
-        setFilters((prev) => ({ ...prev, [key]: value }));
-    };
+    // Ajout du filtre courant dans la liste des filtres appliqués
+    const handleAddFilter = useCallback(() => {
+        if (!currentFilterColumn || currentFilterValue === "") return;
+        console.log("Ajout du filtre :", currentFilterColumn, currentFilterValue);
+        setAppliedFilters((prev) => [
+            ...prev,
+            { column: currentFilterColumn, value: currentFilterValue },
+        ]);
+        setCurrentFilterColumn("");
+        setCurrentFilterValue("");
+    }, [currentFilterColumn, currentFilterValue]);
 
-    const handleCategoryChange = (value) => {
-        setFilters((prev) => ({ ...prev, category: value, subcategory: "" }));
-    };
+    // Suppression d'un filtre appliqué
+    const handleRemoveFilter = useCallback((columnToRemove) => {
+        console.log("Suppression du filtre :", columnToRemove);
+        setAppliedFilters((prev) =>
+            prev.filter((filter) => filter.column !== columnToRemove)
+        );
+    }, []);
 
-    const handleSubcategoryChange = (value) => {
-        setFilters((prev) => ({ ...prev, subcategory: value }));
-    };
+    // Construction de l'objet des filtres à envoyer à l'API
+    const buildFiltersObject = useCallback(() => {
+        const filters = {};
+        dynamicFiltersList.forEach((filterDef) => {
+            filters[filterDef.key] = filterDef.type === "number" ? 0 : "";
+        });
+        appliedFilters.forEach((filter) => {
+            const def = dynamicFiltersList.find((f) => f.key === filter.column);
+            if (def && def.type === "number") {
+                filters[filter.column] = Number(filter.value);
+            } else {
+                filters[filter.column] = filter.value;
+            }
+        });
+        filters.format = exportFormat;
+        console.log("Objet des filtres envoyé à l'API :", filters);
+        return filters;
+    }, [appliedFilters, exportFormat, dynamicFiltersList]);
 
-    const addAppliedFilter = useCallback(() => {
-        setAppliedFilters(Object.entries(filters).filter(([_, v]) => v !== ""));
-    }, [filters]);
-
-    useEffect(() => {
-        addAppliedFilter();
-    }, [filters, addAppliedFilter]);
-
+    // Récupération des données de prévisualisation
     const fetchPreview = async () => {
         setLoading(true);
+        console.log("Lancement de la prévisualisation...");
         try {
             const response = await fetch("/api/export/preview", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(filters),
+                body: JSON.stringify(buildFiltersObject()),
             });
             const data = await response.json();
+            console.log("Réponse de la prévisualisation :", data);
             if (Array.isArray(data) && data.length > 0) {
-                setPreviewData(data.map((item, index) => ({ id: index, ...item })));
+                setPreviewData(data.map((item, index) => ({ ...item, id: index })));
             } else {
                 setPreviewData([]);
             }
@@ -108,121 +203,193 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         setLoading(false);
     };
 
+    // Fonction d'export
     const exportData = async () => {
-        const response = await fetch("/api/export", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(filters),
-        });
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `export.${filters.format}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        onClose();
+        console.log("Export des données avec les filtres :", buildFiltersObject());
+        try {
+            const response = await fetch("/api/export", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(buildFiltersObject()),
+            });
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `export.${exportFormat}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            onClose();
+        } catch (error) {
+            console.error("Erreur lors de l'export", error);
+        }
     };
-    const getUserProfileName = (id) => {
-        const user = userProfiles.find((profile) => profile.id === id);
-        return user ? `${user.firstName} ${user.lastName}` : id;
+
+    const translationMapping = {
+        startDate: "Date de début",
+        endDate: "Date de fin",
+        minAmount: "Montant minimum",
+        maxAmount: "Montant maximum",
+        transactionType: "Type de transaction",
+        userProfile: "Profil utilisateur",
+        category: "Catégorie",
+        subcategory: "Sous-catégorie",
     };
+
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>Exporter les données</DialogTitle>
             <DialogContent>
-                <Box
-                    sx={{
-                        mb: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        flexWrap: "wrap",
-                        gap: 2,
-                    }}
-                >
-                    <TextField
-                        size="small"
-                        name="startDate"
-                        label="Date début"
-                        type="date"
-                        value={filters.startDate}
-                        onChange={(e) => handleFilterChange("startDate", e.target.value)}
-                        sx={{ minWidth: 150 }}
-                    />
-                    <TextField
-                        size="small"
-                        name="endDate"
-                        label="Date fin"
-                        type="date"
-                        value={filters.endDate}
-                        onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                        sx={{ minWidth: 150 }}
-                    />
-                    <CategoryInput
-                        predefinedCategories={categories}
-                        inputName="category"
-                        subcatInputName="subcategory"
-                        currentCategory={filters.category}
-                        currentSubcategory={filters.subcategory}
-                        onCategoryChange={handleCategoryChange}
-                        onSubcategoryChange={handleSubcategoryChange}
-                    />
-                    <TextField
-                        size="small"
-                        name="minAmount"
-                        label="Montant min (€)"
-                        type="number"
-                        value={filters.minAmount}
-                        onChange={(e) => handleFilterChange("minAmount", e.target.value)}
-                        sx={{ minWidth: 150 }}
-                    />
-                    <TextField
-                        size="small"
-                        name="maxAmount"
-                        label="Montant max (€)"
-                        type="number"
-                        value={filters.maxAmount}
-                        onChange={(e) => handleFilterChange("maxAmount", e.target.value)}
-                        sx={{ minWidth: 150 }}
-                    />
-                    <FormControl size={"small"} sx={{ minWidth: 150 }}>
-                        <InputLabel>Profil utilisateur</InputLabel>
+                {/* Zone de création des filtres dynamiques */}
+                <Box sx={{ mb: 2, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+                    <FormControl size="small" sx={{ minWidth: 150 }}>
+                        <InputLabel id="select-filter-label">Filtre</InputLabel>
                         <Select
-                            name="userProfile"
-                            value={filters.userProfile}
-                            onChange={(e) => handleFilterChange("userProfile", e.target.value)}
-                            label="Profil utilisateur"
-                            variant="outlined">
-                            <MenuItem value="">Tous</MenuItem>
-                            {userProfiles.map((profile) => (
-                                <MenuItem key={profile.id} value={profile.id}>
-                                    {profile.firstName} {profile.lastName}
+                            labelId="select-filter-label"
+                            value={currentFilterColumn}
+                            label="Filtre"
+                            onChange={(e) => {
+                                console.log("Sélection du filtre :", e.target.value);
+                                setCurrentFilterColumn(e.target.value);
+                                setCurrentFilterValue("");
+                            }}
+                         variant="outlined">
+                            {availableFilterOptions.map((filter) => (
+                                <MenuItem key={filter.key} value={filter.key}>
+                                    {filter.label}
                                 </MenuItem>
                             ))}
                         </Select>
                     </FormControl>
+
+                    {selectedFilterDefinition && selectedFilterDefinition.type === "autocomplete" ? (
+                        <Autocomplete
+                            freeSolo
+                            options={selectedFilterDefinition.options}
+                            getOptionLabel={(option) =>
+                                typeof option === "string" ? option : option.label
+                            }
+                            value={currentFilterValue}
+                            onInputChange={(event, newInputValue) => {
+                                console.log("Saisie (autocomplete category):", newInputValue);
+                                setCurrentFilterValue(newInputValue);
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label={selectedFilterDefinition.label}
+                                    size="small"
+                                    sx={{ minWidth: 150 }}
+                                />
+                            )}
+                        />
+                    ) : selectedFilterDefinition && selectedFilterDefinition.type === "date" ? (
+                        <TextField
+                            size="small"
+                            type="date"
+                            label={selectedFilterDefinition.label}
+                            value={currentFilterValue}
+                            onChange={(e) => {
+                                console.log("Saisie (date):", e.target.value);
+                                setCurrentFilterValue(e.target.value);
+                            }}
+                            sx={{ minWidth: 150 }}
+                        />
+                    ) : selectedFilterDefinition && selectedFilterDefinition.type === "number" ? (
+                        <TextField
+                            size="small"
+                            type="number"
+                            label={selectedFilterDefinition.label}
+                            value={currentFilterValue}
+                            onChange={(e) => {
+                                console.log("Saisie (number):", e.target.value);
+                                setCurrentFilterValue(e.target.value);
+                            }}
+                            sx={{ minWidth: 150 }}
+                        />
+                    ) : selectedFilterDefinition && selectedFilterDefinition.type === "text" ? (
+                        <TextField
+                            size="small"
+                            type="text"
+                            label={selectedFilterDefinition.label}
+                            value={currentFilterValue}
+                            onChange={(e) => {
+                                console.log("Saisie (text):", e.target.value);
+                                setCurrentFilterValue(e.target.value);
+                            }}
+                            sx={{ minWidth: 150 }}
+                        />
+                    ) : selectedFilterDefinition && selectedFilterDefinition.type === "select" ? (
+                        <FormControl size="small" sx={{ minWidth: 150 }}>
+                            <InputLabel id="select-value-label">{selectedFilterDefinition.label}</InputLabel>
+                            <Select
+                                labelId="select-value-label"
+                                value={currentFilterValue}
+                                label={selectedFilterDefinition.label}
+                                onChange={(e) => {
+                                    console.log("Saisie (select):", e.target.value);
+                                    setCurrentFilterValue(e.target.value);
+                                }}
+                             variant="outlined">
+                                {selectedFilterDefinition.options.map((opt) => (
+                                    <MenuItem key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    ) : null}
+
+                    <Button
+                        variant="contained"
+                        onClick={handleAddFilter}
+                        disabled={!currentFilterColumn || currentFilterValue === ""}
+                        sx={{ height: "40px" }}
+                    >
+                        Ajouter
+                    </Button>
+                </Box>
+
+                {/* Affichage des filtres appliqués sous forme de puces */}
+                <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                    {appliedFilters.map((filter) => {
+                        let displayValue = filter.value;
+                        if (filter.column === "userProfile") {
+                            const user = userProfiles.find(
+                                (profile) => profile.id.toString() === filter.value
+                            );
+                            if (user) {
+                                displayValue = `${user.firstName} ${user.lastName}`;
+                            }
+                        }
+                        const translatedLabel = t(
+                            `filters.${filter.column}`,
+                            translationMapping[filter.column] || filter.column
+                        );
+                        return (
+                            <Chip
+                                key={filter.column}
+                                label={`${translatedLabel} : ${displayValue}`}
+                                onDelete={() => handleRemoveFilter(filter.column)}
+                            />
+                        );
+                    })}
+                </Box>
+
+                {/* Sélection du format d'export */}
+                <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 2 }}>
                     <FormControl size="small" sx={{ minWidth: 150 }}>
-                        <InputLabel>Type de transaction</InputLabel>
+                        <InputLabel id="select-format-label">Format</InputLabel>
                         <Select
-                            name="transactionType"
-                            value={filters.transactionType}
-                            onChange={(e) => handleFilterChange("transactionType", e.target.value)}
-                            label="Type de transaction"
-                            variant="outlined">
-                            <MenuItem value="">Tous</MenuItem>
-                            <MenuItem value="income">Revenu 💵</MenuItem>
-                            <MenuItem value="expense">Dépense 🛒</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <FormControl size="small" sx={{ minWidth: 150 }}>
-                        <InputLabel>Format</InputLabel>
-                        <Select
-                            name="format"
-                            value={filters.format}
-                            onChange={(e) => handleFilterChange("format", e.target.value)}
+                            labelId="select-format-label"
+                            value={exportFormat}
                             label="Format"
-                            variant="outlined">
+                            onChange={(e) => {
+                                console.log("Changement de format:", e.target.value);
+                                setExportFormat(e.target.value);
+                            }}
+                         variant="outlined">
                             <MenuItem value="csv">CSV</MenuItem>
                             <MenuItem value="xlsx">Excel</MenuItem>
                         </Select>
@@ -237,26 +404,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                     </Button>
                 </Box>
 
-                <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {appliedFilters
-                        .filter(([key, value]) => key !== "format")
-                        .map(([key, value], index) => {
-                            let displayValue = value;
-                            if (key === "userProfile") {
-                                displayValue = getUserProfileName(value);
-                            }
-                            // Recovery of translation via i18next with a fallback
-                            const translatedKey = t(`filters.${key}`, translationMapping[key] || key);
-                            return (
-                                <Chip
-                                    key={index}
-                                    label={`${translatedKey} : ${displayValue}`}
-                                    onDelete={() => handleFilterChange(key, "")}
-                                />
-                            );
-                        })}
-                </Box>
-
+                {/* Prévisualisation dans un DataGrid */}
                 {previewData.length > 0 ? (
                     <Box mt={2} style={{ height: 400, width: "100%" }}>
                         <DataGrid
