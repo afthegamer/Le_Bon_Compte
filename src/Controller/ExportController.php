@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use Psr\Log\LoggerInterface;
 use App\Service\ExportService;
 use App\Repository\IncomeEntityRepository;
 use App\Repository\ExpenseEntityRepository;
@@ -10,7 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class ExportController extends AbstractController
 {
@@ -94,7 +95,7 @@ class ExportController extends AbstractController
     }
 
     #[Route('/api/export/preview', name: 'export_preview', methods: ['POST'])]
-    public function preview(Request $request): JsonResponse
+    public function preview(Request $request,LoggerInterface $logger): JsonResponse
     {
         $user = $this->getUser();
         if (!$user) {
@@ -125,7 +126,6 @@ class ExportController extends AbstractController
                     $data = array_merge($incomes, $expenses);
                     break;
             }
-
             // Tri par date décroissante
             usort($data, function ($a, $b) {
                 $dateA = $a['date'] instanceof \DateTime ? $a['date']->format('Y-m-d H:i:s') : $a['date'];

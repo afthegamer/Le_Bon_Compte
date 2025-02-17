@@ -209,7 +209,22 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
             const data = await response.json();
             console.log("Réponse de la prévisualisation :", data);
             if (Array.isArray(data) && data.length > 0) {
-                setPreviewData(data.map((item, index) => ({ ...item, id: index })));
+                setPreviewData(
+                    data.map((item, index) => ({
+                        ...item,
+                        id: index,
+                        categoryEntity: item.categoryEntity && typeof item.categoryEntity === "object"
+                            ? item.categoryEntity.name || JSON.stringify(item.categoryEntity)
+                            : item.categoryEntity,
+                        subcategoryEntity: item.subcategoryEntity && typeof item.subcategoryEntity === "object"
+                            ? item.subcategoryEntity.name || JSON.stringify(item.subcategoryEntity)
+                            : item.subcategoryEntity,
+                        userProfileEntity: item.userProfileEntity && typeof item.userProfileEntity === "object"
+                            ? `${item.userProfileEntity.firstName} ${item.userProfileEntity.lastName}` || JSON.stringify(item.userProfileEntity)
+                            : item.userProfileEntity,
+                    }))
+                );
+
             } else {
                 setPreviewData([]);
             }
