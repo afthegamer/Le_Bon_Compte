@@ -16,7 +16,7 @@ dayjs.extend(utc);
 dayjs.extend(dayOfYear);
 
 /**
- * Retourne une couleur en fonction de l'index.
+ * Returns a color depending on the index.
  */
 function getColor(index) {
     const colors = [
@@ -35,7 +35,7 @@ function getColor(index) {
 }
 
 /**
- * Calcule les bornes de filtrage en fonction du filtre et des sélections.
+ * Calculate the filtering terminals as a function of the filter and selections.
  */
 const calculateDateBounds = (filter, year, month, quarter, semester, week) => {
     let startDate, endDate;
@@ -70,7 +70,7 @@ const calculateDateBounds = (filter, year, month, quarter, semester, week) => {
 };
 
 /**
- * Composant pour les sélecteurs de filtre.
+ * Component for filter selectors.
  */
 function FilterSelectors({
                              timeFilter,
@@ -91,7 +91,7 @@ function FilterSelectors({
                          }) {
     return (
         <div className="flex flex-wrap justify-center space-x-4 w-full">
-            {/* Filtrer par période */}
+           {/* Filter by period */}
             <div className="w-1/4">
                 <label className="block text-gray-700 font-medium mb-2 text-center">
                     Filtrer par période :
@@ -109,7 +109,7 @@ function FilterSelectors({
                 </select>
             </div>
 
-            {/* Sélection de l'année */}
+            {/* Year selection */}
             <div className="w-1/4">
                 <label className="block text-gray-700 font-medium mb-2 text-center">
                     Sélectionner une année :
@@ -127,7 +127,7 @@ function FilterSelectors({
                 </select>
             </div>
 
-            {/* Sélection du mois (si filtre "mois") */}
+            {/* Selection of the month (if filter "month") */}
             {timeFilter === "mois" && (
                 <div className="w-1/4">
                     <label className="block text-gray-700 font-medium mb-2 text-center">
@@ -147,7 +147,7 @@ function FilterSelectors({
                 </div>
             )}
 
-            {/* Sélection du trimestre (si filtre "trimestriel") */}
+            {/* Quarter selection (if "quarterly" filter)) */}
             {timeFilter === "trimestriel" && (
                 <div className="w-1/4">
                     <label className="block text-gray-700 font-medium mb-2 text-center">
@@ -167,7 +167,7 @@ function FilterSelectors({
                 </div>
             )}
 
-            {/* Sélection du semestre (si filtre "semestriel") */}
+            {/* Selection of the semester (if "half -yearly" filter)) */}
             {timeFilter === "semestriel" && (
                 <div className="w-1/4">
                     <label className="block text-gray-700 font-medium mb-2 text-center">
@@ -187,7 +187,7 @@ function FilterSelectors({
                 </div>
             )}
 
-            {/* Sélection de la semaine (si filtre "semaine") */}
+            {/* Selection of the week (if "week" filter) */}
             {timeFilter === "semaine" && (
                 <div className="w-1/4">
                     <label className="block text-gray-700 font-medium mb-2 text-center">
@@ -419,7 +419,7 @@ export default function PieChartExpenses({ expenses }) {
                     availableWeeks={availableWeeks}
                 />
                 <div className="flex flex-col md:flex-row w-full md:space-x-6 space-y-6 md:space-y-0">
-                    {/* Graphique PieChart avec tooltip personnalisé */}
+                    {/* Piechart graphic with personalized tooltip */}
                     <div className="flex-1 bg-white shadow-lg rounded-lg p-4 flex justify-center items-center">
                         {hasData ? (
                             <PieChart
@@ -434,7 +434,7 @@ export default function PieChartExpenses({ expenses }) {
                             </p>
                         )}
                     </div>
-                    {/* Détails par catégorie */}
+                    {/* Details per category */}
                     {hasData && (
                         <div className="flex-1 bg-white shadow-md rounded-lg p-4">
                             <h3 className="text-lg font-bold text-gray-700 text-center mb-4">

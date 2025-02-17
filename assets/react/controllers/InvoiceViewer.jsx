@@ -7,7 +7,7 @@ function InvoiceViewer({ fileUrl }) {
 
     return (
         <div className="flex justify-center items-center">
-            {/* Ajout de type="button" pour éviter la soumission du formulaire */}
+            {/* Addition of type = "button" to avoid submission of the form */}
             <button
                 type="button"
                 onClick={() => setIsOpen(true)}

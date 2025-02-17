@@ -93,18 +93,15 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
     const allFiltersList = useMemo(() => [
         ...dynamicFiltersList,
         { key: "category", label: "Catégorie", type: "autocomplete", options: categoryOptions },
-       // { key: "subcategory", label: "Sous-catégorie", type: "select", options: subcategoryOptions },
     ], [dynamicFiltersList, categoryOptions, subcategoryOptions]);
 
     const availableFilterOptions = useMemo(() => {
-        console.log("Options de filtres disponibles :", allFiltersList);
         return allFiltersList;
     }, [allFiltersList]);
 
     // Récupération de la définition du filtre sélectionné
     const selectedFilterDefinition = useMemo(() => {
         const def = allFiltersList.find((f) => f.key === currentFilterColumn);
-        console.log("Définition du filtre sélectionné :", def);
         return def;
     }, [allFiltersList, currentFilterColumn]);
 
@@ -136,7 +133,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         if (!currentFilterColumn) return;
         if (currentFilterColumn === "category") {
             if (!currentCategoryValue) return;
-            console.log("Ajout du filtre catégorie :", currentCategoryValue, currentSubcategoryValue);
             // Pour "category", on ajoute toujours un nouvel objet afin de pouvoir avoir plusieurs paires
             setAppliedFilters((prev) => [
                 ...prev,
@@ -147,7 +143,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
             setCurrentFilterColumn("");
         } else {
             if (currentFilterValue === "") return;
-            console.log("Ajout du filtre :", currentFilterColumn, currentFilterValue);
             setAppliedFilters((prev) => [
                 ...prev,
                 { column: currentFilterColumn, value: currentFilterValue },
@@ -159,7 +154,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
 
     // Suppression d'un filtre appliqué
     const handleRemoveFilter = useCallback((indexToRemove) => {
-        console.log("Suppression du filtre à l'index :", indexToRemove);
         setAppliedFilters((prev) =>
             prev.filter((_, index) => index !== indexToRemove)
         );
@@ -192,14 +186,12 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
             filters.subcategory = catFilters.map(f => f.subcategory || '');
         }
         filters.format = exportFormat;
-        console.log("Objet des filtres envoyé à l'API :", filters);
         return filters;
     }, [appliedFilters, exportFormat, allFiltersList]);
 
     // Récupération des données de prévisualisation
     const fetchPreview = async () => {
         setLoading(true);
-        console.log("Lancement de la prévisualisation...");
         try {
             const response = await fetch("/api/export/preview", {
                 method: "POST",
@@ -207,7 +199,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                 body: JSON.stringify(buildFiltersObject()),
             });
             const data = await response.json();
-            console.log("Réponse de la prévisualisation :", data);
             if (Array.isArray(data) && data.length > 0) {
                 setPreviewData(
                     data.map((item, index) => ({
@@ -236,7 +227,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
 
     // Fonction d'export
     const exportData = async () => {
-        console.log("Export des données avec les filtres :", buildFiltersObject());
         try {
             const response = await fetch("/api/export", {
                 method: "POST",
@@ -272,7 +262,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <DialogTitle>Exporter les données</DialogTitle>
             <DialogContent>
-                {/* Zone de création des filtres dynamiques */}
+                {/* Dynamic filters creation area */}
                 <Box sx={{ mb: 2, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
                     <FormControl size="small" sx={{ minWidth: 150 }}>
                         <InputLabel id="select-filter-label">Filtre</InputLabel>
@@ -281,7 +271,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                             value={currentFilterColumn}
                             label="Filtre"
                             onChange={(e) => {
-                                console.log("Sélection du filtre :", e.target.value);
                                 setCurrentFilterColumn(e.target.value);
                                 // Pour "category", on réinitialise les valeurs spécifiques
                                 if (e.target.value === "category") {
@@ -311,7 +300,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                                 }
                                 value={currentCategoryValue}
                                 onInputChange={(event, newInputValue) => {
-                                    console.log("Saisie (autocomplete category):", newInputValue);
                                     setCurrentCategoryValue(newInputValue);
                                 }}
                                 renderInput={(params) => (
@@ -323,7 +311,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                                     />
                                 )}
                             />
-                            {/* Affiche le champ sous-catégorie uniquement si des options sont disponibles */}
+                            {/* Displays the subcategory field only if options are available */}
                             {subcategoryOptions.length > 0 && (
                                 <Autocomplete
                                     freeSolo
@@ -333,7 +321,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                                     }
                                     value={currentSubcategoryValue}
                                     onInputChange={(event, newInputValue) => {
-                                        console.log("Saisie (autocomplete subcategory):", newInputValue);
                                         setCurrentSubcategoryValue(newInputValue);
                                     }}
                                     renderInput={(params) => (
@@ -354,7 +341,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                             label={selectedFilterDefinition.label}
                             value={currentFilterValue}
                             onChange={(e) => {
-                                console.log("Saisie (date):", e.target.value);
                                 setCurrentFilterValue(e.target.value);
                             }}
                             sx={{ minWidth: 150 }}
@@ -366,7 +352,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                             label={selectedFilterDefinition.label}
                             value={currentFilterValue}
                             onChange={(e) => {
-                                console.log("Saisie (number):", e.target.value);
                                 setCurrentFilterValue(e.target.value);
                             }}
                             sx={{ minWidth: 150 }}
@@ -378,7 +363,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                             label={selectedFilterDefinition.label}
                             value={currentFilterValue}
                             onChange={(e) => {
-                                console.log("Saisie (text):", e.target.value);
                                 setCurrentFilterValue(e.target.value);
                             }}
                             sx={{ minWidth: 150 }}
@@ -391,7 +375,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                                 value={currentFilterValue}
                                 label={selectedFilterDefinition.label}
                                 onChange={(e) => {
-                                    console.log("Saisie (select):", e.target.value);
                                     setCurrentFilterValue(e.target.value);
                                 }}
                              variant="outlined">
@@ -419,7 +402,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                     </Button>
                 </Box>
 
-                {/* Affichage des filtres appliqués sous forme de puces */}
+                {/* Display of filters applied in the form of fleas */}
                 <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
                     {appliedFilters.map((filter, index) => {
                         let displayValue = filter.value;
@@ -451,7 +434,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                     })}
                 </Box>
 
-                {/* Sélection du format d'export */}
+                {/* Export format selection */}
                 <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 2 }}>
                     <FormControl size="small" sx={{ minWidth: 150 }}>
                         <InputLabel id="select-format-label">Format</InputLabel>
@@ -460,7 +443,6 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                             value={exportFormat}
                             label="Format"
                             onChange={(e) => {
-                                console.log("Changement de format:", e.target.value);
                                 setExportFormat(e.target.value);
                             }}
                          variant="outlined">
@@ -478,7 +460,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                     </Button>
                 </Box>
 
-                {/* Prévisualisation dans un DataGrid */}
+                {/* Preview in a datagrid */}
                 {previewData.length > 0 ? (
                     <Box mt={2} style={{ height: 400, width: "100%" }}>
                         <DataGrid

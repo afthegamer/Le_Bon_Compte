@@ -79,11 +79,6 @@ const MapperCSV = ({categories,userProfiles}) => {
         }));
     };
 
-    const handleSubmit = () => {
-        console.log("Mapped Data:", mapping);
-        console.log("CSV Data:", csvData);
-    };
-
     const columns = headers.map((header) => ({
         field: header,
         headerName: header,
@@ -103,7 +98,7 @@ const MapperCSV = ({categories,userProfiles}) => {
                     Charger un fichier CSV
                     <input type="file" hidden accept=".csv" onChange={handleFileUpload} />
                 </Button>
-                {/* Bouton pour ouvrir l'ExportModal */}
+                {/* Button to open exportmodal */}
                 <Button variant="contained" color="secondary" onClick={() => setExportOpen(true)}>
                     Ouvrir l'Export Modal
                 </Button>
@@ -150,7 +145,7 @@ const MapperCSV = ({categories,userProfiles}) => {
                     <Box sx={{ minHeight: 400, height: "auto", width: "100%" }}>
                         <DataGrid columns={columns} rows={rows} disableSelectionOnClick />
                     </Box>
-                    <Button variant="contained" color="primary" onClick={handleSubmit} sx={{ mt: 4 }} type="submit">
+                    <Button variant="contained" color="primary" sx={{ mt: 4 }} type="submit">
                         Soumettre le Mapping
                     </Button>
                 </Box>

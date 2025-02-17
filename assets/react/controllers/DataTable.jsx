@@ -321,12 +321,12 @@ export default function DataTable({
 
     return (
         <div>
-            {/* Envoi des dépenses filtrées à PieChartExpenses */}
+            {/* Sending filtered expenses to Pirachatexpens */}
             <Box sx={{ mt: 4, mb: 2 }}>
                 <PieChartExpenses expenses={finalExpenses} />
             </Box>
 
-            {/* Interface de filtrage */}
+            {/* Filtering interface */}
             <Box
                 sx={{
                     mb: 2,
@@ -523,7 +523,7 @@ export default function DataTable({
                 />
             </Paper>
 
-            {/* Modal de confirmation pour la suppression */}
+            {/* Confirmation modal for deletion */}
             <Dialog open={deleteModalOpen} onClose={closeDeleteModal}>
                 <DialogTitle>Confirmation de suppression</DialogTitle>
                 <DialogContent>

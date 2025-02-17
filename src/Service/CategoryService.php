@@ -29,9 +29,9 @@ class CategoryService
     }
 
     /**
-     * Renvoie un tableau associatif contenant deux clés :
-     * - 'predefined' : les catégories prédéfinies
-     * - 'user'       : les catégories créées par l'utilisateur
+     * Returns an associative table containing two keys:
+     * - 'predefined': predefined categories
+     * - 'User': the categories created by the user
      */
     public function getMergedCategories(UserEntity $user): array
     {
@@ -50,7 +50,7 @@ class CategoryService
     }
 
     /**
-     * Vérifie si une catégorie existe pour l'utilisateur ou la crée.
+     * Check if a category exists for the user or created it.
      */
     public function findOrCreateCategory(string $name, UserEntity $user): CategoryEntity
     {

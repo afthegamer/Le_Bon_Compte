@@ -307,7 +307,7 @@ const CategoryInput = ({
 
     return (
         <div className="relative">
-            {/* Input de catégorie */}
+            {/* Category input */}
             <input
                 type="text"
                 value={value}
@@ -343,7 +343,7 @@ const CategoryInput = ({
                 </ul>
             )}
 
-            {/* Checkbox pour afficher le champ des sous-catégories */}
+            {/* Checkbox to display the field of subcategories */}
             {isCheckboxVisible && (
                 <div className="mt-2">
                     <label className="inline-flex items-center">
@@ -358,7 +358,7 @@ const CategoryInput = ({
                 </div>
             )}
 
-            {/* Input de sous-catégorie */}
+            {/* Subcategory input */}
             {isSubcategoryInputVisible && (
                 <div className="mt-4 relative">
                     <label htmlFor="subcategory">Sous-catégorie :</label>
@@ -406,7 +406,7 @@ const CategoryInput = ({
                 </div>
             )}
 
-            {/* Modal de confirmation */}
+            {/* Confirmation modal */}
             <Dialog
                 open={confirmationModalOpen}
                 onClose={() => setConfirmationModalOpen(false)}
@@ -435,7 +435,7 @@ const CategoryInput = ({
                 </DialogActions>
             </Dialog>
 
-            {/* Modal de notification */}
+            {/* Notification modal */}
             <Dialog open={notificationModalOpen} onClose={closeNotificationModal}>
                 <DialogTitle>{notificationModalData.title}</DialogTitle>
                 <DialogContent>

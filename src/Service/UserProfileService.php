@@ -18,10 +18,10 @@ class UserProfileService
     }
 
     /**
-     * Récupère les profils utilisateur pour l'utilisateur connecté.
+     * Recover the user profiles for the connected user.
      *
-     * @param UserEntity $user L'utilisateur connecté.
-     * @return UserProfileEntity[] Les profils associés à cet utilisateur.
+     * @param UserEntity $user The connected user.
+     * @return UserProfileEntity[] Profiles associated with this user.
      */
     public function getUserProfiles(UserEntity $user): array
     {

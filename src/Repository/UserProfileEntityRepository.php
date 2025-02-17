@@ -22,7 +22,6 @@ class UserProfileEntityRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('e')
             ->where('e.userEntity = :user')
             ->setParameter('user', $user)
-//            ->orderBy('e.date', 'ASC')
             ->getQuery()
             ->getResult();
     }

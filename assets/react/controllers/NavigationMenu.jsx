@@ -3,16 +3,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 /**
- * Composant NavigationMenu
+ * Navigation component
  *
- * Ce composant affiche un menu de navigation dynamique pour l'utilisateur connecté.
- * Les éléments du menu sont définis via les props, y compris un texte dynamique intégrant l'email.
+ * This component displays a dynamic navigation menu for the connected user.
+ * The menu items are defined via the props, including a dynamic text incorporating email.
  *
  * @param {Object} props
- * @param {string} props.texteDuMenu - Texte affiché dans le bouton, par exemple "Vous êtes connecté en tant que user@example.com".
- * @param {number|string|null} props.userId - L'identifiant de l'utilisateur.
- * @param {Array} props.menuItems - Tableau des éléments du menu (première section).
- * @param {Array} props.actionItems - Tableau des actions principales (deuxième section).
+ * @param {string} props.texteDuMenu - Text displayed in the button, for example "you are connected as a user@example.com".
+ * @param {number|string|null} props.userId - User identifier.
+ * @param {Array} props.menuItems - Table of menu elements (first section).
+ * @param {Array} props.actionItems - Table of main actions (second section).
  */
 const NavigationMenu = ({ texteDuMenu, userId, menuItems, actionItems }) => {
     const [open, setOpen] = useState(false);
@@ -32,7 +32,7 @@ const NavigationMenu = ({ texteDuMenu, userId, menuItems, actionItems }) => {
 
     return (
         <div ref={menuRef} className="relative">
-            {/* Bouton pour ouvrir/fermer le menu */}
+            {/* Button to open/close the menu */}
             <button onClick={() => setOpen(!open)} className="flex items-center focus:outline-none">
                 <span className="text-gray-700 mr-2">
                     {texteDuMenu}
@@ -42,7 +42,7 @@ const NavigationMenu = ({ texteDuMenu, userId, menuItems, actionItems }) => {
                 </svg>
             </button>
 
-            {/* Menu déroulant */}
+            {/* Drop -down menu */}
             {open && (
                 <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow-lg py-4">
                     <div className="px-4 mb-4">

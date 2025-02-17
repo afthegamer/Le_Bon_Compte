@@ -63,7 +63,6 @@ class ExportController extends AbstractController
             return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Ajoutez cette ligne pour définir transactionType par défaut
         $filters['transactionType'] = $filters['transactionType'] ?? '';
 
         $filters['userId'] = $user->getId();
@@ -107,7 +106,7 @@ class ExportController extends AbstractController
             return $this->json(['error' => 'Filtres invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Assurer que la clé transactionType existe
+        // Ensure that the transactiontype key exists
         $filters['transactionType'] = $filters['transactionType'] ?? '';
 
         $filters['userId'] = $user->getId();
@@ -126,7 +125,7 @@ class ExportController extends AbstractController
                     $data = array_merge($incomes, $expenses);
                     break;
             }
-            // Tri par date décroissante
+            // Sorting by decreasing date
             usort($data, function ($a, $b) {
                 $dateA = $a['date'] instanceof \DateTime ? $a['date']->format('Y-m-d H:i:s') : $a['date'];
                 $dateB = $b['date'] instanceof \DateTime ? $b['date']->format('Y-m-d H:i:s') : $b['date'];

@@ -91,10 +91,10 @@ class SubCategoryService
     }
 
     /**
-     * Fusionne les sous-catégories prédéfinies et celles de l'utilisateur pour une catégorie donnée.
-     * Retourne un tableau associatif avec les clés "predefined" et "user".
+     * Merges the predefined subcategories and those of the user for a given category.
+     * Return an associative table with the keys "predefined" and "user".
      *
-     * La structure de chaque sous-catégorie est un tableau avec les clés "id" et "name".
+     * The structure of each subcategory is a table with the keys "ID" and "name".
      *
      * @param CategoryEntity $category
      * @return array
@@ -143,7 +143,7 @@ class SubCategoryService
     }
 
     /**
-     * Récupère les sous-catégories associées à une catégorie donnée via son identifiant.
+     * Recovers the subcategories associated with a given category via its identifier.
      *
      * @param int $categoryId
      * @return array
