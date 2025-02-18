@@ -20,20 +20,20 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
 const ExportModal = ({ open, onClose, categories, userProfiles }) => {
-    // État pour le format d'export (CSV ou Excel)
+    // State for the export format (CSV or Excel)
     const [exportFormat, setExportFormat] = useState("csv");
 
-    // États pour les filtres dynamiques appliqués (pour les autres filtres)
+    // States for dynamic filters applied (for other filters)
     const [appliedFilters, setAppliedFilters] = useState([]);
-    // États pour le filtre en cours de création (pour les autres filtres)
+    // States for the filter being created (for other filters)
     const [currentFilterColumn, setCurrentFilterColumn] = useState("");
     const [currentFilterValue, setCurrentFilterValue] = useState("");
 
-    // États pour la prévisualisation
+    // States for preview
     const [previewData, setPreviewData] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Pour les filtres "Catégorie" et "Sous-catégorie"
+    // For "category" and "subcategory" filters
     const categoryOptions = useMemo(() => {
         if (categories && typeof categories === "object" && !Array.isArray(categories)) {
             const predefinedList = (categories.predefined || []).map((cat) => ({
@@ -54,15 +54,15 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         return [];
     }, [categories]);
 
-    // Liste des options de sous-catégorie (initialement vide)
+    // List of subcategory options (initially empty)
     const [subcategoryOptions, setSubcategoryOptions] = useState([]);
-    // États pour la saisie du filtre "Catégorie" et "Sous-catégorie"
+    // States for entry of the filter "category" and "subcategory"
     const [currentCategoryValue, setCurrentCategoryValue] = useState("");
     const [currentSubcategoryValue, setCurrentSubcategoryValue] = useState("");
 
     const { t } = useTranslation();
 
-    // Définition des filtres dynamiques pour les autres champs
+    // Definition of dynamic filters for other fields
     const dynamicFiltersList = useMemo(() => [
         { key: "startDate", label: "Date de début", type: "date" },
         { key: "endDate", label: "Date de fin", type: "date" },
@@ -89,7 +89,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         },
     ], [userProfiles]);
 
-    // On ajoute "category" et "subcategory" dans la liste globale des filtres
+    // we add "Category" and "Subcategory" to the overall list of filters
     const allFiltersList = useMemo(() => [
         ...dynamicFiltersList,
         { key: "category", label: "Catégorie", type: "autocomplete", options: categoryOptions },
@@ -99,13 +99,13 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         return allFiltersList;
     }, [allFiltersList]);
 
-    // Récupération de la définition du filtre sélectionné
+    // Recovery of the definition of the selected filter
     const selectedFilterDefinition = useMemo(() => {
         const def = allFiltersList.find((f) => f.key === currentFilterColumn);
         return def;
     }, [allFiltersList, currentFilterColumn]);
 
-    // Lorsqu'une catégorie est sélectionnée (filtre "category"), récupérer les sous-catégories
+    // When a category is selected ("Category" filter), recover the subcategories
     useEffect(() => {
         if (currentFilterColumn === "category" && currentCategoryValue) {
             fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategoryValue)}`)
@@ -128,12 +128,12 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         }
     }, [currentFilterColumn, currentCategoryValue]);
 
-    // Ajout d'un filtre
+    // Adding a filter
     const handleAddFilter = useCallback(() => {
         if (!currentFilterColumn) return;
         if (currentFilterColumn === "category") {
             if (!currentCategoryValue) return;
-            // Pour "category", on ajoute toujours un nouvel objet afin de pouvoir avoir plusieurs paires
+            // For "Category", we always add a new object in order to be able to have several pairs
             setAppliedFilters((prev) => [
                 ...prev,
                 { column: "category", value: currentCategoryValue, subcategory: currentSubcategoryValue },
@@ -152,17 +152,17 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         }
     }, [currentFilterColumn, currentFilterValue, currentCategoryValue, currentSubcategoryValue]);
 
-    // Suppression d'un filtre appliqué
+    // Delete a applied filter
     const handleRemoveFilter = useCallback((indexToRemove) => {
         setAppliedFilters((prev) =>
             prev.filter((_, index) => index !== indexToRemove)
         );
     }, []);
 
-    // Construction de l'objet des filtres à envoyer à l'API
+    // Construction of the object of the filters to be sent to the API
     const buildFiltersObject = useCallback(() => {
         const filters = {};
-        // Pour tous les filtres autres que "category"
+        // For all filters other than "Category"
         appliedFilters.forEach((filter) => {
             if (filter.column !== "category") {
                 const def = allFiltersList.find((f) => f.key === filter.column);
@@ -179,7 +179,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                 }
             }
         });
-        // Pour les filtres "category", regroupons toutes les paires
+        // For "Category" filters, let us bring together all the pairs
         const catFilters = appliedFilters.filter(f => f.column === "category");
         if (catFilters.length > 0) {
             filters.category = catFilters.map(f => f.value);
@@ -189,7 +189,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         return filters;
     }, [appliedFilters, exportFormat, allFiltersList]);
 
-    // Récupération des données de prévisualisation
+    // Recovery of preview data
     const fetchPreview = async () => {
         setLoading(true);
         try {
@@ -225,7 +225,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
         setLoading(false);
     };
 
-    // Fonction d'export
+    // Export function
     const exportData = async () => {
         try {
             const response = await fetch("/api/export", {
@@ -272,7 +272,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                             label="Filtre"
                             onChange={(e) => {
                                 setCurrentFilterColumn(e.target.value);
-                                // Pour "category", on réinitialise les valeurs spécifiques
+                                // For "Category", we reset the specific values
                                 if (e.target.value === "category") {
                                     setCurrentCategoryValue("");
                                     setCurrentSubcategoryValue("");
@@ -290,7 +290,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                     </FormControl>
 
                     {selectedFilterDefinition && selectedFilterDefinition.key === "category" ? (
-                        // Affichage de deux champs côte à côte pour catégorie et sous-catégorie
+                        // Display of two fields side by side for category and subcategory
                         <Box sx={{ display: "flex", gap: 1 }}>
                             <Autocomplete
                                 freeSolo

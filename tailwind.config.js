@@ -7,7 +7,7 @@ module.exports = {
   ],
   theme: {
     screens: {
-      xs: '425px', // Parfait pour la taille 425x701 que vous avez testée
+      xs: '425px',
       sm: '640px',
       md: '768px',
       lg: '1024px',

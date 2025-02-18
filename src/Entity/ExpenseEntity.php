@@ -77,7 +77,7 @@ class ExpenseEntity implements UserRelatedEntityInterface
 
     public function setAmount(float $amount): static
     {
-        $this->amount = $amount;
+        $this->amount = -$amount;
 
         return $this;
     }

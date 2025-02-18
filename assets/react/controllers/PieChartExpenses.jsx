@@ -379,12 +379,6 @@ export default function PieChartExpenses({ expenses }) {
         innerRadius: 50,
         dataKey: "value",
         labelKey: "label",
-        /*arcLabel: (datum) => {
-            // Datum directly contains Chartdata data here in this part we will display the name of the category and the percentage
-            const name = datum.label || "Autre";
-            const perc = typeof datum.percentage === "number" ? datum.percentage : 0;
-            return `${name} (${perc.toFixed(1)}%)`;
-        },*/
         valueFormatter: (value, datum) => {
             // Here, Datum contains only the data index; we use this index to find the full object in Chartdata and display the data we want to show on mouse hover
             const index = datum.dataIndex;

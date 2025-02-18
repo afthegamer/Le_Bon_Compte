@@ -7,6 +7,7 @@ use App\Entity\UserProfileEntity;
 use App\Service\UserProfileService;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -28,15 +29,31 @@ class IncomeEntityType extends AbstractType
         $connectedUser = $options['connected_user'];
 
         $builder
-            ->add('name')
+            ->add('name', TextType::class, [
+                'label' => 'Nom du revenu',
+            ])
             ->add('amount',MoneyType::class,[
                 'constraints' => [
                     new Assert\Positive()
-                ]
+                ],
+                'label' => 'Montant',
             ])
-            ->add('type')
+            ->add('type',ChoiceType::class, [
+                'choices' => [
+                    'Virement bancaire'          => 'Virement bancaire',
+                    'Chèque'                     => 'Chèque',
+                    'Espèces'                    => 'Espèces',
+                    'Carte bancaire'             => 'Carte bancaire',
+                    'Prélèvement automatique'    => 'Prélèvement automatique',
+                    'Paiement en ligne'          => 'Paiement en ligne',
+                ],
+                'placeholder' => 'Sélectionnez un TYpe de movement de fond',
+                'label' => 'Type de movement de fond',
+                'required'    => true,
+            ])
             ->add('date', DateType::class, [
                 'widget' => 'single_text',
+                "label" => "Date de réception",
             ])
             ->add('categoryEntity', TextType::class, [
                 'mapped' => false,
@@ -54,7 +71,7 @@ class IncomeEntityType extends AbstractType
                 'choice_label' => function (UserProfileEntity $profile) {
                     return sprintf('%s %s', $profile->getFirstName(), $profile->getLastName());
                 },
-                'label' => 'Assign to Profile',
+                'label' => 'Utilisateur lier à ce revenu',
             ]);
     }
 

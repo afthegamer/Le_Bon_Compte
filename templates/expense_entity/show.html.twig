@@ -11,15 +11,15 @@
             <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                 <tbody>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Name</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Nom de la dépense</th>
                     <td class="px-4 py-2 text-gray-800">{{ expense_entity.name }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Amount</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Montent de cette dépense</th>
                     <td class="px-4 py-2 text-gray-800">{{ expense_entity.amount }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
-                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Type</th>
+                    <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Type de mouvement bancaire </th>
                     <td class="px-4 py-2 text-gray-800">{{ expense_entity.type }}</td>
                 </tr>
                 <tr class="border-t border-gray-200">
@@ -34,13 +34,13 @@
                 </tr>
                 {% if expense_entity.categoryEntity %}
                     <tr class="border-t border-gray-200">
-                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Category</th>
+                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Catégorie</th>
                         <td class="px-4 py-2 text-gray-800">{{ expense_entity.categoryEntity.name }}</td>
                     </tr>
                 {% endif %}
                 {% if expense_entity.subcategoryEntity %}
                     <tr class="border-t border-gray-200">
-                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Subcategory</th>
+                        <th class="px-4 py-2 text-left text-gray-700 font-medium bg-gray-50">Sous-catégorie</th>
                         <td class="px-4 py-2 text-gray-800">{{ expense_entity.subcategoryEntity.name }}</td>
                     </tr>
                 {% endif %}

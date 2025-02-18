@@ -10,15 +10,15 @@ import {
 } from "@mui/material";
 
 const CategoryInput = ({
-                           predefinedCategories, // Objet { predefined: [...], user: [...] } ou tableau simple
+                           predefinedCategories,
                            inputName,
                            subcatInputName,
                            currentCategory,
                            currentSubcategory,
-                           onCategoryChange, // Ajout du prop
-                           onSubcategoryChange // Déjà existant
+                           onCategoryChange,
+                           onSubcategoryChange
                        }) => {
-    // Fusion des catégories prédéfinies et utilisateur en un tableau d'objets { name, isPredefined }
+    // Fusion of predefined categories and user into a table of objects {name, ispredefined}
     const combinedCategories = useMemo(() => {
         if (
             predefinedCategories &&
@@ -48,13 +48,13 @@ const CategoryInput = ({
         return [];
     }, [predefinedCategories]);
 
-    // États pour la gestion des catégories et sous-catégories
+    // States for the management of categories and subcategories
     const [categories, setCategories] = useState(combinedCategories);
     const [filteredCategories, setFilteredCategories] = useState(combinedCategories);
     const [value, setValue] = useState(currentCategory || "");
     const [isFocused, setIsFocused] = useState(false);
 
-    // État pour mémoriser la catégorie sélectionnée localement
+    // State to memorize the selected category locally
     const [selectedCategory, setSelectedCategory] = useState(currentCategory || "");
 
     const [subcategories, setSubcategories] = useState([]);
@@ -62,7 +62,7 @@ const CategoryInput = ({
     const [selectedSubcategory, setSelectedSubcategory] = useState(currentSubcategory || "");
 
     const [isCheckboxVisible, setIsCheckboxVisible] = useState(false);
-    // Initialisation en fonction de currentSubcategory
+    // Initialization according to Currentsubcategory
     const [isCheckboxChecked, setIsCheckboxChecked] = useState(
         currentSubcategory && currentSubcategory.trim() !== ""
     );
@@ -72,7 +72,7 @@ const CategoryInput = ({
 
     const [isSubcatFocused, setIsSubcatFocused] = useState(false);
 
-    // États pour les modals
+    // States for modals
     const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
     const [confirmationModalData, setConfirmationModalData] = useState({
         title: "",
@@ -86,7 +86,7 @@ const CategoryInput = ({
     });
     const [loadingSubcategories, setLoadingSubcategories] = useState(false);
 
-    // Fonctions d'ouverture/fermeture des modals
+    // Opening/closing functions of modals
     const openConfirmationModal = (title, message, onConfirm) => {
         setConfirmationModalData({ title, message, onConfirm });
         setConfirmationModalOpen(true);
@@ -101,12 +101,12 @@ const CategoryInput = ({
         setNotificationModalOpen(false);
     };
 
-    // Effet déclenché lorsque la catégorie sélectionnée change
+    // Triggered effect when the selected category changes
     useEffect(() => {
         if (selectedCategory && selectedCategory.trim() !== "") {
             setIsCheckboxVisible(true);
-            // Réinitialiser immédiatement les sous-catégories et l'input associé,
-            // et réinitialiser le checkbox à false (la case ne doit pas être cochée automatiquement si aucune valeur n'est présente)
+            // immediately reset the subcategories and the associated input,
+            // and reset the checkbox to False (the box should not be checked automatically if no value is present)
             setSubcategories([]);
             setFilteredSubcategories([]);
             setSelectedSubcategory("");
@@ -123,13 +123,13 @@ const CategoryInput = ({
                     ];
                     setSubcategories(mergedSubcategories);
                     setFilteredSubcategories(mergedSubcategories);
-                    // Si des sous-catégories existent ET que currentSubcategory est non vide, alors cocher la case
+                    // If subcategories exist and Currentsubcategory is not empty, then check the box
                     if (mergedSubcategories.length > 0 && currentSubcategory && currentSubcategory.trim() !== "") {
                         setIsCheckboxChecked(true);
                         setIsSubcategoryInputVisible(true);
                         setSelectedSubcategory(currentSubcategory);
                     }
-                    // Sinon, si l'utilisateur n'a pas de sous-catégorie renseignée, laisser le checkbox décoché
+                    // Otherwise, if the user has not provided a subcategory, leave the checkbox unchecked.
                     setLoadingSubcategories(false);
                 })
                 .catch((error) => {
@@ -139,7 +139,7 @@ const CategoryInput = ({
         }
     }, [selectedCategory, currentSubcategory, currentCategory]);
 
-    // Filtrage des catégories
+    // Category filtering
     useEffect(() => {
         const filtered = categories.filter((cat) =>
             cat.name.toLowerCase().includes(value.toLowerCase())
@@ -147,7 +147,7 @@ const CategoryInput = ({
         setFilteredCategories(filtered);
     }, [value, categories]);
 
-    // Filtrage dynamique des sous-catégories en fonction de l'input de sous-catégorie
+    // Dynamic subcategories filtering according to the subcategory input
     useEffect(() => {
         const filtered = subcategories.filter((sub) =>
             sub.name.toLowerCase().includes(selectedSubcategory.toLowerCase())
@@ -155,7 +155,7 @@ const CategoryInput = ({
         setFilteredSubcategories(filtered);
     }, [selectedSubcategory, subcategories]);
 
-    // Gestion du focus sur l'input de catégorie
+    // Focus management on category input
     const handleFocus = () => setIsFocused(true);
     const handleBlur = () => setTimeout(() => setIsFocused(false), 200);
 
@@ -193,7 +193,7 @@ const CategoryInput = ({
         if (hiddenInput) {
             hiddenInput.value = category.name;
         }
-        // Vider immédiatement les sous-catégories pour rafraîchir l'UI
+        // Immediately empty the subcategories to refresh the IU
         setSubcategories([]);
         setFilteredSubcategories([]);
         setSelectedSubcategory("");
@@ -229,13 +229,13 @@ const CategoryInput = ({
         }
     };
 
-    // Gestion de la suppression via modal
+    // Deletion management via modal
     const handleDeleteSubcategory = (subcategoryId) => {
         openConfirmationModal(
             "Confirmation de suppression",
             "Êtes-vous sûr de vouloir supprimer cette sous-catégorie ?",
             () => {
-                // Mise à jour optimiste : retirer immédiatement l'élément
+                // Optimistic update: immediately remove the element
                 setSubcategories((prev) =>
                     prev.filter((sub) => sub.id !== subcategoryId)
                 );
@@ -323,7 +323,7 @@ const CategoryInput = ({
                         <li
                             key={index}
                             className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                            onClick={() => handleSuggestionClick(category)}
+                            onMouseDown={() => handleSuggestionClick(category)}
                         >
                             <span>{category.name}</span>
                             {!category.isPredefined && (
@@ -342,7 +342,6 @@ const CategoryInput = ({
                     ))}
                 </ul>
             )}
-
             {/* Checkbox to display the field of subcategories */}
             {isCheckboxVisible && (
                 <div className="mt-2">
@@ -371,6 +370,7 @@ const CategoryInput = ({
                         className="border p-2 rounded w-full mt-2"
                         placeholder="Entrez ou sélectionnez une sous-catégorie"
                     />
+                    {/* Suggestions de sous-catégories */}
                     {isSubcatFocused && (
                         <ul className="absolute z-10 bg-white border mt-1 w-full max-h-40 overflow-y-auto shadow-lg">
                             {loadingSubcategories ? (
@@ -383,7 +383,7 @@ const CategoryInput = ({
                                     <li
                                         key={subcategory.id ? subcategory.id : subcategory.name}
                                         className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                                        onClick={() => handleSubcategorySuggestionClick(subcategory)}
+                                        onMouseDown={() => handleSubcategorySuggestionClick(subcategory)}
                                     >
                                         <span>{subcategory.name}</span>
                                         {subcategory.id !== null && (

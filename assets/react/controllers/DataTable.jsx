@@ -39,7 +39,7 @@ export const formatAmount = (value) => {
 
 const checkFiltersForCell = (cellValue, filters) => {
     if (cellValue === undefined) return false;
-    // Cas date
+    // Date
     if (typeof cellValue === 'string' && dateRegex.test(cellValue)) {
         const rowDate = cellValue.substring(0, 10);
         return filters.some(filter =>
@@ -48,7 +48,7 @@ const checkFiltersForCell = (cellValue, filters) => {
                 : rowDate === filter.value
         );
     }
-    // Cas numérique
+    // Digital
     if (!isNaN(cellValue) && isFinite(cellValue)) {
         const cellNumber = Number(cellValue);
         return filters.every(filter => {
@@ -60,7 +60,7 @@ const checkFiltersForCell = (cellValue, filters) => {
             return String(cellNumber).includes(String(filter.value));
         });
     }
-    // Cas texte
+    // text
     const lowerValue = String(cellValue).toLowerCase();
     return filters.some(filter => lowerValue.includes(filter.value.toLowerCase()));
 };
@@ -77,7 +77,7 @@ export default function DataTable({
         return <div>Aucune donnée à afficher</div>;
     }
 
-    // Stockage des données dans un state local
+    // Data storage in a local state
     const [tableData, setTableData] = useState(Data);
     useEffect(() => {
         setTableData(Data);
@@ -86,7 +86,7 @@ export default function DataTable({
     const defaultExclusions = ['showUrl', 'editUrl'];
     const exclusions = useMemo(() => [...defaultExclusions, ...excludeCollum], [excludeCollum]);
 
-    // Calcul des colonnes filtrables
+    // Calculation of filter columns
     const allFilterableColumns = useMemo(() => {
         return Array.from(new Set([
             ...Object.keys(Data[0]).filter(key => !exclusions.includes(key)),
@@ -94,7 +94,7 @@ export default function DataTable({
         ]));
     }, [Data, exclusions, filterableExcluded]);
 
-    // États pour le filtrage
+    // States for filtering
     const [filterColumn, setFilterColumn] = useState(allFilterableColumns[0] || '');
     const [filterValue, setFilterValue] = useState('');
     const [filterDate, setFilterDate] = useState('');
@@ -201,7 +201,7 @@ export default function DataTable({
         );
     }, [tableData, appliedFilters, filterImpacte]);
 
-    // Définition des colonnes du DataGrid
+    // Definition of the columns of Datagrid
     const baseColumns = useMemo(() => {
         if (!tableData[0]) return [];
         return Object.keys(tableData[0])
@@ -231,7 +231,7 @@ export default function DataTable({
     }, [tableData, exclusions, keyTranslate]);
 
 
-    // --- Gestion de la modal de confirmation pour la suppression ---
+    // --- Management of the confirmation modal for deletion ---
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteParams, setDeleteParams] = useState({ id: null, deleteUrl: '', csrfToken: '' });
 
@@ -245,10 +245,10 @@ export default function DataTable({
     }, []);
 
     const confirmDelete = useCallback(async () => {
-        // Fermer immédiatement la modal
+        // immediately close the modal
         setDeleteModalOpen(false);
         const previousData = tableData;
-        // Mise à jour optimiste : retirer l'élément du state
+        // Optimistic update: Remove the element from the State
         setTableData(prevData => prevData.filter(item => item.id !== deleteParams.id));
         const formData = new FormData();
         formData.append('_token', deleteParams.csrfToken);

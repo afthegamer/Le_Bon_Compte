@@ -1,4 +1,3 @@
-// NavigationMenu.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 
@@ -18,7 +17,7 @@ const NavigationMenu = ({ texteDuMenu, userId, menuItems, actionItems }) => {
     const [open, setOpen] = useState(false);
     const menuRef = useRef(null);
 
-    // Ferme le menu si l'utilisateur clique en dehors du composant
+    // Closes the menu if the user clicks outside the component
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (menuRef.current && !menuRef.current.contains(event.target)) {

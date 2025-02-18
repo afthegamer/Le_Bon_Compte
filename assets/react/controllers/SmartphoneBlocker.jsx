@@ -9,13 +9,13 @@ const SmartphoneBlocker = ({ children }) => {
             setIsSmartphone(mediaQuery.matches);
         };
 
-        // Détection initiale
+        // initial detection
         handleResize();
 
-        // Écoute des changements de taille de l'écran
+        // Listen to screen size changes
         mediaQuery.addEventListener("change", handleResize);
 
-        // Nettoyage
+        // cleaning
         return () => {
             mediaQuery.removeEventListener("change", handleResize);
         };

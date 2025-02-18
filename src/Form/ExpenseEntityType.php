@@ -7,7 +7,9 @@ use App\Entity\UserProfileEntity;
 use App\Service\UserProfileService;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -29,11 +31,28 @@ class ExpenseEntityType extends AbstractType
         $connectedUser = $options['connected_user'];
 
         $builder
-            ->add('amount')
-            ->add('name')
-            ->add('type')
+            ->add('amount', MoneyType::class, [
+                'label' => 'Montant',
+            ])
+            ->add('name', TextType::class, [
+                'label' => 'Nom de la dépense',
+            ])
+            ->add('type',ChoiceType::class, [
+                'choices' => [
+                    'Virement bancaire'          => 'Virement bancaire',
+                    'Chèque'                     => 'Chèque',
+                    'Espèces'                    => 'Espèces',
+                    'Carte bancaire'             => 'Carte bancaire',
+                    'Prélèvement automatique'    => 'Prélèvement automatique',
+                    'Paiement en ligne'          => 'Paiement en ligne',
+                ],
+                'placeholder' => 'Sélectionnez un type de mouvement de fond',
+                'required'    => true,
+                "label" => "Type de mouvement de fond",
+            ])
             ->add('date', DateType::class, [
                 'widget' => 'single_text',
+                "label" => "Date de dépense",
             ])
             ->add('categoryEntity', TextType::class, [
                 'mapped' => false,
@@ -51,7 +70,7 @@ class ExpenseEntityType extends AbstractType
                 'choice_label' => function (UserProfileEntity $profile) {
                     return sprintf('%s %s', $profile->getFirstName(), $profile->getLastName());
                 },
-                'label' => 'Assign to Profile',
+                'label' => 'Utilisateur lier à cette dépense',
             ])
             ->add('invoiceFile', VichFileType::class, [
                 'required' => false,
