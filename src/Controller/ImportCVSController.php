@@ -46,12 +46,15 @@ class ImportCVSController extends AbstractController
         $csvContent = file_get_contents($csvFile->getPathname());
         if (!mb_check_encoding($csvContent, 'UTF-8')) {
             $csvContent = mb_convert_encoding($csvContent, 'UTF-8', 'ISO-8859-1');
-            file_put_contents($csvFile->getPathname(), $csvContent);
         }
 
-        $separator = $this->detectSeparator($csvFile->getPathname());
+        // Write the UTF-8 content to a temporary file for processing
+        $tempFile = tempnam(sys_get_temp_dir(), 'csv_');
+        file_put_contents($tempFile, $csvContent);
 
-        if (($handle = fopen($csvFile->getPathname(), 'r')) !== false) {
+        $separator = $this->detectSeparator($tempFile);
+
+        if (($handle = fopen($tempFile, 'r')) !== false) {
             $rowNumber = 0;
             while (($row = fgetcsv($handle, 1000, $separator)) !== false) {
                 $rowNumber++;
@@ -78,6 +81,11 @@ class ImportCVSController extends AbstractController
             }
 
             fclose($handle);
+        }
+
+        // Clean up temporary file
+        if (isset($tempFile) && file_exists($tempFile)) {
+            unlink($tempFile);
         }
 
         $entityManager->flush();
@@ -109,7 +117,11 @@ class ImportCVSController extends AbstractController
         $user = $this->getUser();
         $mappedRow = $this->mapRowToEntities($mapping, $row);
 
-        $date = !empty($mappedRow['Date']) ? \DateTime::createFromFormat('d/m/Y', $mappedRow['Date']) : null;
+        $date = null;
+        if (!empty($mappedRow['Date'])) {
+            $parsedDate = \DateTime::createFromFormat('d/m/Y', $mappedRow['Date']);
+            $date = $parsedDate !== false ? $parsedDate : null;
+        }
 
         $categoryEntity = null;
         if (!empty($mappedRow['CategoryEntity'])) {
@@ -191,7 +203,7 @@ class ImportCVSController extends AbstractController
 
     private function detectSeparator(string $filePath): string
     {
-        $separators = [',', ';', '\t'];
+        $separators = [',', ';', "\t"];
         $handle = fopen($filePath, 'r');
         $line = fgets($handle);
         fclose($handle);

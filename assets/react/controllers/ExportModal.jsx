@@ -109,7 +109,10 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
     useEffect(() => {
         if (currentFilterColumn === "category" && currentCategoryValue) {
             fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategoryValue)}`)
-                .then((res) => res.json())
+                .then((res) => {
+                    if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
+                    return res.json();
+                })
                 .then((data) => {
                     const merged = [...(data.predefined || []), ...(data.user || [])];
                     const opts = merged.map((subcat) => {
@@ -198,6 +201,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(buildFiltersObject()),
             });
+            if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
             const data = await response.json();
             if (Array.isArray(data) && data.length > 0) {
                 setPreviewData(
@@ -233,6 +237,7 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(buildFiltersObject()),
             });
+            if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");

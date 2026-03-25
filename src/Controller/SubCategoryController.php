@@ -37,9 +37,9 @@ class SubCategoryController extends AbstractController
             return new JsonResponse(['error' => 'Utilisateur non connecté'], 401);
         }
 
-        // Recover the category by name via the injected entityManager
+        // Recover the category by name for the current user
         $category = $entityManager->getRepository(CategoryEntity::class)
-            ->findOneBy(['name' => $categoryName]);
+            ->findOneBy(['name' => $categoryName, 'userEntity' => $user]);
 
         if (!$category) {
             return new JsonResponse(['error' => 'Catégorie introuvable'], 404);
@@ -54,10 +54,21 @@ class SubCategoryController extends AbstractController
     #[Route('/api/subcategories/{id}', name: 'delete_subcategory', methods: ['DELETE'])]
     public function deleteSubcategory(int $id, EntityManagerInterface $entityManager): JsonResponse
     {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non connecté'], 401);
+        }
+
         // Recover the subcategory to delete
         $subcategory = $entityManager->getRepository(SubcategoryEntity::class)->find($id);
         if (!$subcategory) {
             return new JsonResponse(['error' => 'Sous-catégorie non trouvée'], 404);
+        }
+
+        // Verify ownership through the category
+        $category = $subcategory->getCategoryEntity();
+        if (!$category || $category->getUserEntity() !== $user) {
+            return new JsonResponse(['error' => 'Accès non autorisé'], 403);
         }
 
         // Dissociate the subcategory from Expense entities

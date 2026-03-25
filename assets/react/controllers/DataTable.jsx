@@ -259,12 +259,11 @@ export default function DataTable({
             });
             if (!response.ok) {
                 setTableData(previousData);
-                alert("Erreur lors de la suppression.");
+                console.error("Erreur lors de la suppression.");
             }
         } catch (error) {
             setTableData(previousData);
-            console.error("Erreur lors de la suppression :", error);
-            alert("Erreur de connexion.");
+            console.error("Erreur de connexion :", error);
         }
     }, [deleteParams, tableData]);
 
@@ -493,7 +492,7 @@ export default function DataTable({
             <Box sx={{ mb: 2 }}>
                 {appliedFilters.map((filter, index) => (
                     <Chip
-                        key={index}
+                        key={`${filter.column}-${filter.value || filter.start}-${index}`}
                         label={
                             isDateFilter
                                 ? filter.type === 'range'

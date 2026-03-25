@@ -29,7 +29,7 @@ class UserProfileService
             ->findBy(['userEntity' => $user]);
     }
 
-    public function createFirstProfile(userEntity $user,
+    public function createFirstProfile(UserEntity $user,
                                        string $firstName,
                                        string $lastName,
                                        int $defaultProfileId ): void
@@ -54,7 +54,7 @@ class UserProfileService
             ->findOneBy(['defaultProfileId' => $defaultProfileId]);
 
         if (null === $userProfileEntity) {
-            throw new \Exception("Aucun profil trouvé pour default_profile_id {$defaultProfileId}.");
+            throw new \RuntimeException("Aucun profil trouvé pour default_profile_id {$defaultProfileId}.");
         }
 
         $userProfileEntity->setFirstName($firstName);

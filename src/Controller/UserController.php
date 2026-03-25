@@ -17,6 +17,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/user')]
 final class UserController extends AbstractController
 {
+    public function __construct(
+        private UserProfileService $userProfileService,
+    ) {
+    }
+
     #[Route(name: 'app_user_index', methods: ['GET'])]
     #[isGranted('ROLE_ADMIN')]
     public function index(UserEntityRepository $userEntityRepository): Response
@@ -75,8 +80,7 @@ final class UserController extends AbstractController
                 $plainPassword = $form->get('plainPassword')->getData();
                 $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
             }
-            $userProfileService = new UserProfileService($entityManager);
-            $userProfileService->updateProfile($form->get('firstName')->getData(), $form->get('lastName')->getData(), $user->getId());
+            $this->userProfileService->updateProfile($form->get('firstName')->getData(), $form->get('lastName')->getData(), $user->getId());
 
             $entityManager->persist($user);
             $entityManager->flush();

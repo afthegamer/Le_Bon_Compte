@@ -22,8 +22,11 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 class RegistrationController extends AbstractController
 {
-    public function __construct(private EmailVerifier $emailVerifier)
-    {
+    public function __construct(
+        private EmailVerifier $emailVerifier,
+        private UserProfileService $userProfileService,
+        private CategoryService $categoryService,
+    ) {
     }
 
     #[Route('/register', name: 'app_register')]
@@ -46,10 +49,8 @@ class RegistrationController extends AbstractController
 
             $entityManager->persist($user);
             $entityManager->flush();
-            $userProfileService = new UserProfileService($entityManager);
-            $userProfileService->createFirstProfile($user, $form->get('firstName')->getData(), $form->get('lastName')->getData(),$user->getId());
-            $subcategories = new CategoryService($entityManager);
-            $subcategories->addPredefinedCategories($user);
+            $this->userProfileService->createFirstProfile($user, $form->get('firstName')->getData(), $form->get('lastName')->getData(), $user->getId());
+            $this->categoryService->addPredefinedCategories($user);
 
             // generate a signed url and email it to the user
             $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
@@ -94,9 +95,8 @@ class RegistrationController extends AbstractController
             return $this->redirectToRoute('app_register');
         }
 
-        // @TODO Change the redirect on success and handle or remove the flash message in your templates
-        $this->addFlash('success', 'Your email address has been verified.');
+        $this->addFlash('success', 'Votre adresse email a été vérifiée.');
 
-        return $this->redirectToRoute('app_register');
+        return $this->redirectToRoute('app_home_index');
     }
 }

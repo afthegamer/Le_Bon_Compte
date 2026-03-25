@@ -115,7 +115,10 @@ const CategoryInput = ({
             setLoadingSubcategories(true);
 
             fetch(`/api/subcategories/by-name/${encodeURIComponent(selectedCategory)}`)
-                .then((response) => response.json())
+                .then((response) => {
+                    if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
+                    return response.json();
+                })
                 .then((data) => {
                     const mergedSubcategories = [
                         ...(data.predefined || []),
@@ -319,9 +322,9 @@ const CategoryInput = ({
             />
             {isFocused && filteredCategories.length > 0 && (
                 <ul className="absolute z-10 bg-white border mt-1 w-full max-h-40 overflow-y-auto shadow-lg">
-                    {filteredCategories.map((category, index) => (
+                    {filteredCategories.map((category) => (
                         <li
-                            key={index}
+                            key={category.name}
                             className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                             onMouseDown={() => handleSuggestionClick(category)}
                         >

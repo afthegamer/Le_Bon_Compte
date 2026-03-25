@@ -20,6 +20,10 @@ class IncomeEntityRepository extends ServiceEntityRepository
     public function findAllByUser(UserEntity $user): array
     {
         return $this->createQueryBuilder('e')
+            ->leftJoin('e.userProfileEntity', 'p')
+            ->addSelect('p')
+            ->leftJoin('e.categoryEntity', 'c')
+            ->addSelect('c')
             ->where('e.userEntity = :user')
             ->setParameter('user', $user)
             ->orderBy('e.date', 'ASC')

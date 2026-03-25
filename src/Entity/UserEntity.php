@@ -286,15 +286,9 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
     /**
-     * @ORM\OneToOne(targetEntity=UserProfileEntity::class, inversedBy="user")
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $userProfileEntity;
-
-    /**
      * @var Collection<int, CategoryEntity>
      */
-    #[ORM\OneToMany(mappedBy: 'users', targetEntity: CategoryEntity::class)]
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: CategoryEntity::class)]
     private Collection $categoryEntities;
 
     public function getUserProfileEntity(): ?UserProfileEntity
@@ -321,7 +315,7 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->categoryEntities->contains($categoryEntity)) {
             $this->categoryEntities->add($categoryEntity);
-            $categoryEntity->setUsers($this);
+            $categoryEntity->setUserEntity($this);
         }
 
         return $this;
@@ -331,8 +325,8 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->categoryEntities->removeElement($categoryEntity)) {
             // set the owning side to null (unless already changed)
-            if ($categoryEntity->getUsers() === $this) {
-                $categoryEntity->setUsers(null);
+            if ($categoryEntity->getUserEntity() === $this) {
+                $categoryEntity->setUserEntity(null);
             }
         }
 

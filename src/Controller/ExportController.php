@@ -127,9 +127,9 @@ class ExportController extends AbstractController
             }
             // Sorting by decreasing date
             usort($data, function ($a, $b) {
-                $dateA = $a['date'] instanceof \DateTime ? $a['date']->format('Y-m-d H:i:s') : $a['date'];
-                $dateB = $b['date'] instanceof \DateTime ? $b['date']->format('Y-m-d H:i:s') : $b['date'];
-                return strtotime($dateB) - strtotime($dateA);
+                $dateA = $a['date'] instanceof \DateTime ? $a['date'] : new \DateTime($a['date']);
+                $dateB = $b['date'] instanceof \DateTime ? $b['date'] : new \DateTime($b['date']);
+                return $dateB <=> $dateA;
             });
 
             return $this->json(array_slice($data, 0, 10), Response::HTTP_OK, ['Content-Type' => 'application/json']);

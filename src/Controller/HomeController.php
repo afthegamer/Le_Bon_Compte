@@ -31,21 +31,23 @@ class HomeController extends AbstractController
             throw $this->createAccessDeniedException('Vous devez être connecté pour accéder à cette page.');
         }
 
-        /** @var userEntity $user*/
+        /** @var UserEntity $user */
         $incomes = $incomeRepository->findAllByUser($user);
         $expenses = $expenseRepository->findAllByUser($user);
 
         // Combine and normalize data
         $combinedList = [];
         foreach ($incomes as $income) {
+            $profile = $income->getUserProfileEntity();
+            $profileName = $profile ? $profile->getFirstName() . ' ' . $profile->getLastName() : 'N/A';
             $combinedList[] = [
                 'type' => 'income',
                 'id' => 'income-' . $income->getId(),
                 'name' => $income->getName(),
                 'amount' => $income->getAmount(),
                 'date' => $income->getDate()->format('Y-m-d H:i:s'),
-                'userProfileEntity' => $income->getUserProfileEntity()->getFirstName() . ' ' . $income->getUserProfileEntity()->getLastName(),
-                'category' => $income->getCategoryEntity()?$income->getCategoryEntity()->getName():'Autre',
+                'userProfileEntity' => $profileName,
+                'category' => $income->getCategoryEntity() ? $income->getCategoryEntity()->getName() : 'Autre',
                 'showUrl' => $urlGenerator->generate('app_income_entity_show', ['id' => $income->getId()]),
                 'editUrl' => $urlGenerator->generate('app_income_entity_edit', ['id' => $income->getId()]),
                 'deleteUrl' => $urlGenerator->generate('app_income_entity_delete', ['id' => $income->getId()]),
@@ -53,14 +55,16 @@ class HomeController extends AbstractController
             ];
         }
         foreach ($expenses as $expense) {
+            $profile = $expense->getUserProfileEntity();
+            $profileName = $profile ? $profile->getFirstName() . ' ' . $profile->getLastName() : 'N/A';
             $combinedList[] = [
                 'type' => 'expense',
                 'id' => 'expense-' . $expense->getId(),
                 'name' => $expense->getName(),
                 'amount' => $expense->getAmount(),
                 'date' => $expense->getDate()->format('Y-m-d H:i:s'),
-                'userProfileEntity' => $expense->getUserProfileEntity()->getFirstName() . ' ' . $expense->getUserProfileEntity()->getLastName(),
-                'category' => $expense->getCategoryEntity()?$expense->getCategoryEntity()->getName():'Autre',
+                'userProfileEntity' => $profileName,
+                'category' => $expense->getCategoryEntity() ? $expense->getCategoryEntity()->getName() : 'Autre',
                 'showUrl' => $urlGenerator->generate('app_expense_entity_show', ['id' => $expense->getId()]),
                 'editUrl' => $urlGenerator->generate('app_expense_entity_edit', ['id' => $expense->getId()]),
                 'deleteUrl' => $urlGenerator->generate('app_expense_entity_delete', ['id' => $expense->getId()]),
