@@ -183,7 +183,7 @@ class ExpenseEntity implements UserRelatedEntityInterface
         return $this->invoiceFile;
     }
 
-    public function setInvoice(?string $invoice): self
+    public function setInvoice(?string $invoice): static
     {
         $this->invoice = $invoice;
         return $this;

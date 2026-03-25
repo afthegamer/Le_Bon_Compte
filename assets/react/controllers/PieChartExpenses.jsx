@@ -390,7 +390,7 @@ export default function PieChartExpenses({ expenses }) {
     };
 
     return (
-        <Modal button="Show Statistics">
+        <Modal button="Afficher les statistiques">
             <div className="flex flex-col items-center w-full space-y-6">
                 <p className="text-gray-700 font-semibold text-center">
                     Total transactions affichées : {filteredExpenses.length}
