@@ -45,9 +45,9 @@ const NavigationMenu = ({ texteDuMenu, userId, menuItems, actionItems }) => {
             {open && (
                 <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow-lg py-4">
                     <div className="px-4 mb-4">
-                        {menuItems.map((item, index) => (
+                        {menuItems.map((item) => (
                             <a
-                                key={index}
+                                key={item.href}
                                 href={item.href}
                                 className={`block ${item.textClass} hover:underline mb-2`}
                             >
@@ -56,9 +56,9 @@ const NavigationMenu = ({ texteDuMenu, userId, menuItems, actionItems }) => {
                         ))}
                     </div>
                     <div className="flex flex-col space-y-4 px-4">
-                        {actionItems.map((item, index) => (
+                        {actionItems.map((item) => (
                             <a
-                                key={index}
+                                key={item.href}
                                 href={item.href}
                                 className={`${item.className} text-white py-2 px-4 rounded-lg focus:ring-2 focus:ring-offset-2 text-center`}
                             >

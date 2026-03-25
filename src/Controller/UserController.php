@@ -23,7 +23,7 @@ final class UserController extends AbstractController
     }
 
     #[Route(name: 'app_user_index', methods: ['GET'])]
-    #[isGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_ADMIN')]
     public function index(UserEntityRepository $userEntityRepository): Response
     {
         return $this->render('user/index.html.twig', [
@@ -32,7 +32,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/new', name: 'app_user_new', methods: ['GET', 'POST'])]
-    #[isGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_ADMIN')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $userEntity = new UserEntity();
@@ -53,7 +53,7 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_user_show', methods: ['GET'])]
-    #[isGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_ADMIN')]
     public function show(UserEntity $userEntity): Response
     {
         return $this->render('user/show.html.twig', [

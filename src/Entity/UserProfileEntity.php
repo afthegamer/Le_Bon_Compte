@@ -6,6 +6,7 @@ use App\Repository\UserProfileEntityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserProfileEntityRepository::class)]
 class UserProfileEntity
@@ -16,9 +17,13 @@ class UserProfileEntity
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private ?string $lastName = null;
 
     #[ORM\ManyToOne(inversedBy: 'userProfileEntities')]

@@ -59,7 +59,7 @@ validator:
 # Créer une commande console
 command:
 	$(CONSOLE) make:command
-# Créer une commande console
+# Créer un contrôleur
 controller:
 	$(CONSOLE) make:controller
 #créer fixture
