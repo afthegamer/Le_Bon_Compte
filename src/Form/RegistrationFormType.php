@@ -48,10 +48,18 @@ class RegistrationFormType extends AbstractType
             ->add('firstName', TextType::class, [
                 'label' => 'Prénom',
                 'required' => true,
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez saisir votre prénom']),
+                    new Length(['max' => 255]),
+                ],
             ])
             ->add('lastName', TextType::class, [
                 'label' => 'Nom',
                 'required' => true,
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez saisir votre nom']),
+                    new Length(['max' => 255]),
+                ],
             ])
             ->add('wallet', MoneyType::class, [
                 'label' => 'Portefeuille',

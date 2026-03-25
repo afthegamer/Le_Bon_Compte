@@ -47,8 +47,8 @@ class IncomeEntityType extends AbstractType
                     'Prélèvement automatique'    => 'Prélèvement automatique',
                     'Paiement en ligne'          => 'Paiement en ligne',
                 ],
-                'placeholder' => 'Sélectionnez un TYpe de movement de fond',
-                'label' => 'Type de movement de fond',
+                'placeholder' => 'Sélectionnez un type de mouvement de fond',
+                'label' => 'Type de mouvement de fond',
                 'required'    => true,
             ])
             ->add('date', DateType::class, [

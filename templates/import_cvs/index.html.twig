@@ -17,7 +17,8 @@
             <!-- Sélection de profil -->
             <div class="mb-12">
                 <h2 class="text-xl font-semibold mb-4">Profils associés :</h2>
-                <select name="profile_id" class="form-select border border-gray-300 rounded-md p-4 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                <label for="profile_id" class="sr-only">Profil utilisateur</label>
+                <select name="profile_id" id="profile_id" class="form-select border border-gray-300 rounded-md p-4 w-full focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     {% for profile in userProfiles %}
                         <option value="{{ profile.id }}">{{ profile.firstName }} {{ profile.lastName }}</option>
                     {% endfor %}
@@ -30,7 +31,7 @@
                 <!-- Modale Export -->
                 <div {{ react_component('MapperCSV', {
                             'categories': categories,
-                            'userProfiles': userProfilesForCompenent
+                            'userProfiles': userProfilesForComponent
                         }) }}>
                 </div>
                 <input type="file" name="csv_file" id="csv_file" class="hidden">

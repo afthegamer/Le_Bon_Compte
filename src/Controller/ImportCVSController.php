@@ -28,6 +28,11 @@ class ImportCVSController extends AbstractController
             return $this->json(['error' => 'Fichier CSV invalide'], Response::HTTP_BAD_REQUEST);
         }
 
+        $allowedMimeTypes = ['text/csv', 'text/plain', 'application/csv', 'application/vnd.ms-excel'];
+        if (!in_array($csvFile->getMimeType(), $allowedMimeTypes)) {
+            return $this->json(['error' => 'Type de fichier non autorisé. Seuls les fichiers CSV sont acceptés.'], Response::HTTP_BAD_REQUEST);
+        }
+
         if (!$mapping || !is_array($mapping)) {
             return $this->json(['error' => 'Mappage des colonnes manquant ou invalide'], Response::HTTP_BAD_REQUEST);
         }
@@ -96,11 +101,11 @@ class ImportCVSController extends AbstractController
 
         // Build the Flash message
         if ($invalidCount > 0) {
-            $this->addFlash('warning', "Partial import : {$importedCount} registered lines, {$invalidCount} Invalid lines.");
+            $this->addFlash('warning', "Import partiel : {$importedCount} lignes enregistrées, {$invalidCount} lignes invalides.");
         } elseif ($importedCount > 0) {
-            $this->addFlash('success', "Importation Successful ! {$importedCount} lines have been recorded.");
+            $this->addFlash('success', "Importation réussie ! {$importedCount} lignes ont été enregistrées.");
         } else {
-            $this->addFlash('error', "Import failure. No valid recording.");
+            $this->addFlash('error', "Échec de l'import. Aucun enregistrement valide.");
         }
 
         return $this->redirectToRoute('app_home_index');
@@ -247,7 +252,7 @@ class ImportCVSController extends AbstractController
         return $this->render('import_cvs/index.html.twig', [
             'controller_name' => 'ImportCVSController',
             'userProfiles' => $userProfiles,
-            'userProfilesForCompenent' => $plainUserProfiles,
+            'userProfilesForComponent' => $plainUserProfiles,
             'categories' => $categories,
         ]);
     }

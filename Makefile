@@ -25,7 +25,7 @@ help:
 	@echo "  watch        Pour surveiller les changements de l'application"
 	@echo "  start        Pour démarrer l'application"
 	@echo "  stop         Pour arrêter l'application"
-	@echo "  watch        Pour surveiller les changements de l'application"
+	@echo "  down         Pour arrêter les conteneurs Docker"
 	@echo "  dev          Pour démarrer l'application en mode développement"
 
 # Créer une entité
@@ -66,7 +66,7 @@ controller:
 fixtures:
 	echo 'yes'|$(CONSOLE) doctrine:fixtures:load
 
-.PHONY: help entity crud form migration migrate user validator command
+.PHONY: help entity crud form migration migrate user validator command controller fixtures build watch down start stop init default dev
 
 # Build application
 build:
@@ -90,7 +90,6 @@ init:
 	docker compose up -d
 	composer install
 	echo "yes" | npm install
-	#echo "yes" | $(CONSOLE) doctrine:migrations:migrate
-	#echo "yes" | $(CONSOLE) doctrine:fixtures:load
+	echo "yes" | $(CONSOLE) doctrine:migrations:migrate
 	$(RUN) dev
 	symfony serve

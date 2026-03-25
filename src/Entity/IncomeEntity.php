@@ -21,6 +21,7 @@ class IncomeEntity implements UserRelatedEntityInterface
 
     #[ORM\Column]
     #[Assert\Positive]
+    #[Assert\NotNull]
     private ?float $amount = null;
 
     #[ORM\Column(length: 255, nullable: true)]

@@ -107,8 +107,9 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
 
     // When a category is selected ("Category" filter), recover the subcategories
     useEffect(() => {
+        const controller = new AbortController();
         if (currentFilterColumn === "category" && currentCategoryValue) {
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategoryValue)}`)
+            fetch(`/api/subcategories/by-name/${encodeURIComponent(currentCategoryValue)}`, { signal: controller.signal })
                 .then((res) => {
                     if (!res.ok) throw new Error(`Erreur HTTP ${res.status}`);
                     return res.json();
@@ -123,12 +124,15 @@ const ExportModal = ({ open, onClose, categories, userProfiles }) => {
                     });
                     setSubcategoryOptions(opts);
                 })
-                .catch((error) =>
-                    console.error("Erreur lors du chargement des sous-catégories", error)
-                );
+                .catch((error) => {
+                    if (error.name !== 'AbortError') {
+                        console.error("Erreur lors du chargement des sous-catégories", error);
+                    }
+                });
         } else {
             setSubcategoryOptions([]);
         }
+        return () => controller.abort();
     }, [currentFilterColumn, currentCategoryValue]);
 
     // Adding a filter

@@ -46,7 +46,7 @@ security:
     access_control:
         - { path: ^/login$, roles: PUBLIC_ACCESS }   # La page de connexion doit être publique
         - { path: ^/register$, roles: PUBLIC_ACCESS } # La page d'inscription doit être publique
-#        - { path: ^/admin, roles: ROLE_ADMIN }                      # Accès restreint aux administrateurs
+        - { path: ^/admin, roles: ROLE_ADMIN }                      # Accès restreint aux administrateurs
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }               # Le reste nécessite une authentification complète
 
 

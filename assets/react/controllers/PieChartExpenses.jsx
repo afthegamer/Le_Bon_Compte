@@ -436,8 +436,8 @@ export default function PieChartExpenses({ expenses }) {
                             </h3>
                             <div className="h-[350px] overflow-y-auto">
                                 <ul className="space-y-3">
-                                    {chartData.map((item, index) => (
-                                        <li key={index} className="flex justify-between items-center border-b pb-2">
+                                    {chartData.map((item) => (
+                                        <li key={item.id} className="flex justify-between items-center border-b pb-2">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }}></div>
                                                 <span className="text-gray-800 font-medium">{item.label}</span>

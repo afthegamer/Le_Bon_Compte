@@ -9,7 +9,6 @@ use App\Service\SubCategoryService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -68,8 +67,7 @@ final class IncomeEntityController extends AbstractController
 
 
     #[Route('/{id}', name: 'app_income_entity_show', methods: ['GET'])]
-    public function show(IncomeEntity $incomeEntity,
-                         RequestStack $requestStack): Response
+    public function show(IncomeEntity $incomeEntity): Response
     {
         if ($incomeEntity->getUserEntity() !== $this->getUser()) {
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
@@ -85,7 +83,6 @@ final class IncomeEntityController extends AbstractController
         Request $request,
         IncomeEntity $incomeEntity,
         EntityManagerInterface $entityManager,
-        RequestStack $requestStack,
         CategoryService $categoryService,
         SubCategoryService $subCategoryService
     ): Response {

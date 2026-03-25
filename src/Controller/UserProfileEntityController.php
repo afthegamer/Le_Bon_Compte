@@ -9,7 +9,6 @@ use App\Repository\UserProfileEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -50,8 +49,7 @@ final class UserProfileEntityController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_user_profile_entity_show', methods: ['GET'])]
-    public function show(UserProfileEntity $userProfileEntity,
-                         RequestStack $requestStack): Response
+    public function show(UserProfileEntity $userProfileEntity): Response
     {
         if ($userProfileEntity->getUserEntity() !== $this->getUser()) {
             return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
@@ -64,8 +62,7 @@ final class UserProfileEntityController extends AbstractController
     #[Route('/{id}/edit', name: 'app_user_profile_entity_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request,
                          UserProfileEntity $userProfileEntity,
-                         EntityManagerInterface $entityManager,
-                         RequestStack $requestStack): Response
+                         EntityManagerInterface $entityManager): Response
     {
         if ($userProfileEntity->isModifiable() === true) {
             if ($userProfileEntity->getUserEntity() !== $this->getUser()) {
@@ -94,6 +91,10 @@ final class UserProfileEntityController extends AbstractController
     #[Route('/{id}', name: 'app_user_profile_entity_delete', methods: ['POST'])]
     public function delete(Request $request, UserProfileEntity $userProfileEntity, EntityManagerInterface $entityManager): Response
     {
+        if ($userProfileEntity->getUserEntity() !== $this->getUser()) {
+            return $this->redirectToRoute('app_home_index', [], Response::HTTP_SEE_OTHER);
+        }
+
         if ($this->isCsrfTokenValid('delete'.$userProfileEntity->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($userProfileEntity);
             $entityManager->flush();

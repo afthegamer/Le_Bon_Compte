@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserEntityRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
@@ -39,9 +40,13 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     private bool $isVerified = false;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private ?string $lastName = null;
 
     #[ORM\Column(nullable: true)]
@@ -50,19 +55,19 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, ExpenseEntity>
      */
-    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: ExpenseEntity::class)]
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: ExpenseEntity::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $expense;
 
     /**
      * @var Collection<int, IncomeEntity>
      */
-    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: IncomeEntity::class)]
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: IncomeEntity::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $incomeEntities;
 
     /**
      * @var Collection<int, UserProfileEntity>
      */
-    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: UserProfileEntity::class)]
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: UserProfileEntity::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $userProfileEntities;
 
     public function __construct()
@@ -288,20 +293,8 @@ class UserEntity implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, CategoryEntity>
      */
-    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: CategoryEntity::class)]
+    #[ORM\OneToMany(mappedBy: 'userEntity', targetEntity: CategoryEntity::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $categoryEntities;
-
-    public function getUserProfileEntity(): ?UserProfileEntity
-    {
-        return $this->userProfileEntity;
-    }
-
-    public function setUserProfileEntity(?UserProfileEntity $userProfileEntity): self
-    {
-        $this->userProfileEntity = $userProfileEntity;
-
-        return $this;
-    }
 
     /**
      * @return Collection<int, CategoryEntity>

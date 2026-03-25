@@ -12,7 +12,6 @@ use App\Service\UserProfileService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -48,7 +47,7 @@ final class ExpenseEntityController extends AbstractController
             $categoryName = $form->get('categoryEntity')->getData();
 
             // Check or create the category
-            /** @var userEntity $user*/
+            /** @var UserEntity $user */
             $category = $categoryService->findOrCreateCategory($categoryName, $user);
 
             $subCategoryName = $form->get('subcategoryEntity')->getData();
@@ -90,7 +89,6 @@ final class ExpenseEntityController extends AbstractController
         Request $request,
         ExpenseEntity $expenseEntity,
         EntityManagerInterface $entityManager,
-        RequestStack $requestStack,
         CategoryService $categoryService,
         SubCategoryService $subCategoryService
     ): Response {

@@ -103,10 +103,9 @@ const CategoryInput = ({
 
     // Triggered effect when the selected category changes
     useEffect(() => {
+        const controller = new AbortController();
         if (selectedCategory && selectedCategory.trim() !== "") {
             setIsCheckboxVisible(true);
-            // immediately reset the subcategories and the associated input,
-            // and reset the checkbox to False (the box should not be checked automatically if no value is present)
             setSubcategories([]);
             setFilteredSubcategories([]);
             setSelectedSubcategory("");
@@ -114,7 +113,7 @@ const CategoryInput = ({
             setIsSubcategoryInputVisible(false);
             setLoadingSubcategories(true);
 
-            fetch(`/api/subcategories/by-name/${encodeURIComponent(selectedCategory)}`)
+            fetch(`/api/subcategories/by-name/${encodeURIComponent(selectedCategory)}`, { signal: controller.signal })
                 .then((response) => {
                     if (!response.ok) throw new Error(`Erreur HTTP ${response.status}`);
                     return response.json();
@@ -126,20 +125,21 @@ const CategoryInput = ({
                     ];
                     setSubcategories(mergedSubcategories);
                     setFilteredSubcategories(mergedSubcategories);
-                    // If subcategories exist and Currentsubcategory is not empty, then check the box
                     if (mergedSubcategories.length > 0 && currentSubcategory && currentSubcategory.trim() !== "") {
                         setIsCheckboxChecked(true);
                         setIsSubcategoryInputVisible(true);
                         setSelectedSubcategory(currentSubcategory);
                     }
-                    // Otherwise, if the user has not provided a subcategory, leave the checkbox unchecked.
                     setLoadingSubcategories(false);
                 })
                 .catch((error) => {
-                    console.error("Erreur lors du chargement des sous-catégories", error);
-                    setLoadingSubcategories(false);
+                    if (error.name !== 'AbortError') {
+                        console.error("Erreur lors du chargement des sous-catégories", error);
+                        setLoadingSubcategories(false);
+                    }
                 });
         }
+        return () => controller.abort();
     }, [selectedCategory, currentSubcategory, currentCategory]);
 
     // Category filtering

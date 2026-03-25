@@ -7,16 +7,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class CategoryController extends AbstractController
 {
     #[Route('/api/categories/{name}', name: 'delete_category', methods: ['DELETE'])]
-    public function deleteCategory(string $name, EntityManagerInterface $entityManager, UserInterface $user): JsonResponse
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function deleteCategory(string $name, EntityManagerInterface $entityManager): JsonResponse
     {
-        if (!$user) {
-            return new JsonResponse(['error' => 'Utilisateur non authentifié'], 401);
-        }
+        $user = $this->getUser();
 
         // Find the category by name and user
         $category = $entityManager->getRepository(CategoryEntity::class)->findOneBy([
